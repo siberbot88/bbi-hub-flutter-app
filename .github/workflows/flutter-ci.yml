@@ -1,21 +1,38 @@
-# .github/workflows/flutter-ci.yml
 name: Flutter CI (mobile)
+
 on:
- push:
- branches: [ main, develop ]
- paths: [ 'mobile/**', '.github/workflows/flutter-ci.yml' ]
- pull_request:
- branches: [ main, develop ]
- paths: [ 'mobile/**', '.github/workflows/flutter-ci.yml' ]
+  push:
+    branches: [ main, develop ]
+    paths: [ 'mobile/**', '.github/workflows/flutter-ci.yml' ]
+  pull_request:
+    branches: [ main, develop ]
+    paths: [ 'mobile/**', '.github/workflows/flutter-ci.yml' ]
+
 jobs:
- build-test:
- runs-on: ubuntu-latest
- steps:
- - uses: actions/checkout@v4
- - uses: subosito/flutter-action@v2
- with: { channel: stable, cache: true }
- - run: flutter --version
- - run: cd mobile && flutter pub get
- - run: cd mobile && dart format --set-exit-if-changed .
- - run: cd mobile && flutter analyze
- - run: cd mobile && flutter test --coverage
+  build-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Install dependencies
+        run: cd mobile && flutter pub get
+
+      - name: Format check
+        run: cd mobile && dart format --set-exit-if-changed .
+
+      - name: Analyze
+        run: cd mobile && flutter analyze
+
+      - name: Run tests
+        run: cd mobile && flutter test --coverage
