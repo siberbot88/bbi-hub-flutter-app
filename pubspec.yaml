@@ -22,6 +22,11 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
+  assets :
+  - assets/icons/
+  - assets/image/
+
+
 dependency_overrides:
   characters: ^1.4.1
   material_color_utilities: ^0.13.0
