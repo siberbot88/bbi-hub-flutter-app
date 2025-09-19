@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:bengkel_online_flutter/screens/register.dart';
+import 'package:bengkel_online_flutter/screens/registeruser.dart';
 import 'package:bengkel_online_flutter/screens/login.dart';
 import 'package:bengkel_online_flutter/screens/service_page.dart';
 import 'package:bengkel_online_flutter/widgets/bottom_nav.dart';
