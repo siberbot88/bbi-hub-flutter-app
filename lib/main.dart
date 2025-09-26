@@ -1,3 +1,4 @@
+import 'package:bengkel_online_flutter/screens/homepage.dart';
 import 'package:flutter/material.dart';
 
 // 🔹 Import screens
@@ -27,6 +28,8 @@ class MyApp extends StatelessWidget {
       // 🔹 daftar route
       routes: {
         "/login": (context) => const LoginPage(),
+        "/home": (context) =>
+            const HomePage(), // Ganti dengan HomeScreen jika ada
         "/register": (context) => const RegisterRoleScreen(),
         "/registerBengkel": (context) => const RegisterBengkelScreen(),
         "/changePassword": (context) => const ChangePasswordPage(),

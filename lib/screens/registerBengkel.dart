@@ -361,7 +361,6 @@ class _RegisterBengkelScreenState extends State<RegisterBengkelScreen> {
     );
   }
 
-  /// 🔹 Dropdown Reusable Widget
   Widget _buildDropdown({
     required String label,
     required String hint,
@@ -372,9 +371,19 @@ class _RegisterBengkelScreenState extends State<RegisterBengkelScreen> {
     return DropdownButtonFormField<String>(
       value: value,
       items: items.map((item) {
-        return DropdownMenuItem(value: item, child: Text(item));
+        return DropdownMenuItem(
+          value: item,
+          child: Text(
+            item,
+            style: GoogleFonts.poppins(
+              color: Colors.black,
+              fontSize: 14,
+            ),
+          ),
+        );
       }).toList(),
       onChanged: onChanged,
+      dropdownColor: Colors.white,
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
@@ -396,7 +405,14 @@ class _RegisterBengkelScreenState extends State<RegisterBengkelScreen> {
         filled: true,
         fillColor: const Color.fromARGB(222, 255, 255, 255).withOpacity(0.3),
       ),
-      style: GoogleFonts.poppins(),
+      style: GoogleFonts.poppins(
+        color: Colors.black,
+        fontSize: 14,
+      ),
+      icon: const Icon(
+        Icons.keyboard_arrow_down, // 🔹 ikon lebih umum untuk dropdown
+        color: Color.fromARGB(255, 215, 43, 28),
+      ),
     );
   }
 }
