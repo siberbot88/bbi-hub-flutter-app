@@ -5,14 +5,16 @@ publish_to: "none"
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
   google_fonts: ^6.3.1
+  img_picker: ^1.0.2
   http: ^1.5.0
+  image_picker: ^1.2.0
 
 dev_dependencies:
   flutter_test:
@@ -22,7 +24,8 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/
+    - assets/images/
+    - assets/icons/
 
 dependency_overrides:
   characters: ^1.4.1
