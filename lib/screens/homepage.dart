@@ -32,6 +32,7 @@ class MyApp extends StatelessWidget {
 
 // ---------------- HomePage ----------------
 import 'service_page.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 void main() {
   runApp(const MyApp());
@@ -459,20 +460,12 @@ class _HomeContentState extends State<HomeContent> {
   // sample banner list (admin can manipulate these)
   final List<BannerData> banners = [
     BannerData(
-        title: 'Promo Sparepart',
-        subtitle: 'Diskon hingga 30% untuk oli motor',
         imagePath: 'assets/image/banner1.png'),
     BannerData(
-        title: 'Service Express',
-        subtitle: 'Servis cepat dalam 30 menit',
         imagePath: 'assets/image/banner2.png'),
     BannerData(
-        title: 'Paket Hemat',
-        subtitle: 'Servis + ganti oli mulai 150k',
         imagePath: 'assets/image/banner3.png'),
     BannerData(
-        title: 'Member Special',
-        subtitle: 'Cashback 10% untuk member',
         imagePath: 'assets/image/banner4.png'),
   ];
 
@@ -601,8 +594,9 @@ class _HomeContentState extends State<HomeContent> {
         duration: const Duration(milliseconds: 450),
         curve: Curves.easeInOut,
       );
-    });
-  }
+    }
+  });
+}
 
   void _stopAutoScroll() {
     _autoScrollTimer?.cancel();
@@ -705,6 +699,7 @@ class _HomeContentState extends State<HomeContent> {
             _StatCard(title: "Servis Hari ini", value: "24"),
             _StatCard(title: "Servis Selesai", value: "12"),
             _StatCard(title: "Teknisi Aktiff", value: "58"),
+            _StatCard(title: "Pendapatan", value: "Rp. 145.000"),
             _StatCard(title: "Pendapatan", value: "Rp. Rp. 145.000"),
             _StatCard(title: "Teknisi Aktiff", value: "58"),
             _StatCard(title: "Pendapatan", value: "Rp. Rp. 145.000"),
@@ -800,7 +795,6 @@ class _HomeContentState extends State<HomeContent> {
         // removed extra gap - langsung Warning card
 
 
-        // removed extra gap - langsung Warning card
 
         Card(
           shape:
@@ -1282,6 +1276,167 @@ class _HomeContentState extends State<HomeContent> {
         ),
 
         const SizedBox(height: 24),
+
+        // Banner carousel + controls (auto scroll + add/remove)
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text('Promo & Banner',
+                style: TextStyle(fontWeight: FontWeight.w600)),
+            // Row(
+            //   children: [
+            //     // IconButton(
+            //     //   tooltip:
+            //     //       autoScroll ? 'Stop auto-scroll' : 'Start auto-scroll',
+            //     //   icon:
+            //     //       Icon(autoScroll ? Icons.pause_circle : Icons.play_circle),
+            //     //   color: brandColor,
+            //     //   onPressed: () {
+            //     //     setState(() {
+            //     //       autoScroll = !autoScroll;
+            //     //       if (autoScroll) {
+            //     //         _startAutoScroll();
+            //     //       } else {
+            //     //         _stopAutoScroll();
+            //     //       }
+            //     //     });
+            //     //   },
+            //     // ),
+            //     // IconButton(
+            //     //   tooltip: 'Tambah banner (demo)',
+            //     //   icon: const Icon(Icons.add),
+            //     //   color: brandColor,
+            //     //   onPressed: _addBanner,
+            //     // ),
+            //     // IconButton(
+            //     //   tooltip: 'Hapus banner terakhir',
+            //     //   icon: const Icon(Icons.delete_outline),
+            //     //   color: brandColor,
+            //     //   onPressed: _removeBanner,
+            //     // ),
+            //   ],
+            // )
+          ],
+        ),
+
+        const SizedBox(height: 8),
+
+        // PageView banner
+        SizedBox(
+          height: 400,
+          child: Stack(
+            children: [
+              PageView.builder(
+                controller: _bannerController,
+                itemCount: banners.length,
+                onPageChanged: (index) {
+                  setState(() {
+                    _currentBannerIndex = index;
+                  });
+                },
+                itemBuilder: (context, index) {
+                  final b = banners[index];
+                  return Container(
+                    margin: EdgeInsets.only(
+                        right: index == banners.length - 1 ? 0 : 12),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          // Image with error fallback to gradient
+                          Image.asset(
+                            b.imagePath,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              // fallback gradient with texts
+                              return Container(
+                                decoration: BoxDecoration(
+                                    gradient: _getBannerGradient(index)),
+                                child: Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 14.0),
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          // overlay gradient for readability
+                          Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.transparent,
+                                  Colors.black.withOpacity(0.45)
+                                ],
+                              ),
+                            ),
+                          ),
+                          // bottom texts
+                          Positioned(
+                            left: 16,
+                            bottom: 12,
+                            right: 16,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+
+              // custom progress bar scrollbar (brand color) at top
+              Positioned(
+                top: 8,
+                left: 0,
+                right: 0,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                  child: LinearProgressIndicator(
+                    value: banners.isEmpty
+                        ? 0
+                        : (_currentBannerIndex + 1) / banners.length,
+                    color: brandColor,
+                    backgroundColor: brandColor.withOpacity(0.12),
+                    minHeight: 4,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        // dots indicator
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(banners.length, (i) {
+            final isActive = _currentBannerIndex == i;
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              width: isActive ? 18 : 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: isActive ? brandColor : Colors.grey.withOpacity(0.25),
+                borderRadius: BorderRadius.circular(8),
+              ),
+            );
+          }),
+        ),
+
+        const SizedBox(height: 24),
       ],
     );
   }
@@ -1314,11 +1469,19 @@ class _StatCard extends StatelessWidget {
             style: const TextStyle(
                 fontSize: 20, fontWeight: FontWeight.bold, color: Colors.red)),
         const SizedBox(height: 6),
-        Text(title,
-            style: const TextStyle(fontSize: 13), textAlign: TextAlign.center),
-      ]),
-    );
-  }
+        Text(
+          title,
+          style: GoogleFonts.poppins(
+            fontSize: 13,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    ),
+  );
+}
+
+
 }
 
 // ---------------- Quick Feature (interactive) ----------------
@@ -1497,10 +1660,39 @@ class _QuickFeatureState extends State<_QuickFeature>
     return interactive;
   }
         Text(widget.label,
-            style: const TextStyle(fontSize: 11), textAlign: TextAlign.center),
+            style:  GoogleFonts.poppins(fontSize: 11), textAlign: TextAlign.center),
       ],
     );
 
+    Widget interactive = GestureDetector(
+      onTapDown: (_) => _animationController.forward(),
+      onTapCancel: () => _animationController.reverse(),
+      onTapUp: (_) {
+        _animationController.reverse();
+        widget.onTap?.call();
+      },
+      child: ScaleTransition(scale: _scaleAnimation, child: child),
+    );
+
+    if (kIsWeb ||
+        Theme.of(context).platform == TargetPlatform.macOS ||
+        Theme.of(context).platform == TargetPlatform.windows ||
+        Theme.of(context).platform == TargetPlatform.linux) {
+      // wrap with MouseRegion for hover effect on web/desktop
+      interactive = MouseRegion(
+        onEnter: (_) => setState(() => _hovering = true),
+        onExit: (_) => setState(() => _hovering = false),
+        cursor: SystemMouseCursors.click,
+        child: AnimatedScale(
+            scale: _hovering ? 1.03 : 1.0,
+            duration: const Duration(milliseconds: 120),
+            child: interactive),
+      );
+    }
+
+    return interactive;
+  }
+    
     Widget interactive = GestureDetector(
       onTapDown: (_) => _animationController.forward(),
       onTapCancel: () => _animationController.reverse(),

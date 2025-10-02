@@ -26,6 +26,23 @@ class MyApp extends StatelessWidget {
       title: 'BBI HUB PLUS',
       theme: ThemeData(
         primarySwatch: Colors.red,
+        fontFamily: 'Poppins',
+        textTheme: TextTheme(
+          bodyLarge: TextStyle(),
+          bodyMedium: TextStyle(),
+          displayLarge: TextStyle(),
+          displayMedium: TextStyle(),
+          displaySmall: TextStyle(),
+      ).apply(
+          bodyColor: Colors.black, displayColor: Colors.black),
+      ),
+      // 🔹 halaman pertama aplikasi
+      initialRoute: "/login",
+
+      // 🔹 daftar route
+      title: 'BBI HUB PLUS',
+      theme: ThemeData(
+        primarySwatch: Colors.red,
       ),
       // 🔹 halaman pertama aplikasi
       initialRoute: "/login",

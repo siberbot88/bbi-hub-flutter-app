@@ -15,7 +15,6 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.8
   google_fonts: ^6.3.1
-  img_picker: ^1.0.2
   http: ^1.5.0
   image_picker: ^1.2.0
 
@@ -29,9 +28,21 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-  - assets/icons/
-  - assets/image/
-
+    - assets/image/
+    - assets/icons/
+  
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins-Regular.ttf
+        - asset: assets/fonts/Poppins-Semibold.ttf
+          weight: 600
+        - asset: assets/fonts/Poppins-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Poppins-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Poppins-Italic.ttf
+          style: italic
 
 dependency_overrides:
   characters: ^1.4.1
