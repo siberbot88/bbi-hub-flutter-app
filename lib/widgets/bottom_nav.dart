@@ -26,7 +26,7 @@ class CustomBottomNavBar extends StatelessWidget {
       {
         'label': 'Dashboard',
         'icon_inactive': 'assets/icons/dashboard_tipis.png',
-        'icon_active': 'assets/icons/dashboard_tebal.png',
+        'icon_active': 'assets/icons/Dashboard_tebal.png',
       },
       {
         'label': 'Profile',

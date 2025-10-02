@@ -1,3 +1,4 @@
+import 'package:bengkel_online_flutter/screens/registeruser.dart';
 import 'package:flutter/material.dart';
 import 'package:bengkel_online_flutter/screens/service_page.dart';
 import 'package:bengkel_online_flutter/widgets/bottom_nav.dart';
@@ -45,6 +46,8 @@ class MyApp extends StatelessWidget {
             const MainPage(), //
         "/register": (context) => const RegisterRoleScreen(),
         "/registerBengkel": (context) => const RegisterBengkelScreen(),
+        "/registeruser": (context) => const RegisterScreen(),
+        "/dashboard": (context) => const DashboardPage(),
         "/changePassword": (context) => const change_screen.ChangePasswordPage(),
       },
     );
