@@ -411,6 +411,7 @@ class _HomeContentState extends State<HomeContent> {
     if (autoScroll) _startAutoScroll();
   }
 
+
 void _startAutoScroll() {
   _autoScrollTimer?.cancel();
   _autoScrollTimer = Timer.periodic(const Duration(seconds: 5), (_) {
@@ -426,7 +427,6 @@ void _startAutoScroll() {
     }
   });
 }
-
 
   void _stopAutoScroll() {
     _autoScrollTimer?.cancel();
@@ -501,6 +501,7 @@ void _startAutoScroll() {
               child:  Text("Lihat detail",
                   style: GoogleFonts.poppins(color: Color(0xFFDC2626))),
             ),
+
           ],
         ),
         const SizedBox(height: 8),
@@ -527,7 +528,7 @@ void _startAutoScroll() {
         Center(
           child: Text(
             'Fitur Cepat',
-            style: GoogleFonts.poppins(
+            style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: Colors.black87),
@@ -599,6 +600,7 @@ void _startAutoScroll() {
                       ),
                     ),
                   ),
+
                    SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -613,6 +615,7 @@ void _startAutoScroll() {
                         Text(
                           "Klik tombol dibawah ini untuk masuk menu Service",
                           style: GoogleFonts.poppins(fontSize: 12),
+
                         ),
                       ],
                     ),
@@ -715,6 +718,7 @@ void _startAutoScroll() {
                                                 fontSize: 18,
                                                 fontWeight: FontWeight.w600),
                                             textAlign: TextAlign.center),
+
                                          SizedBox(height: 8),
                                         Text(b.subtitle,
                                             style:  GoogleFonts.poppins(
