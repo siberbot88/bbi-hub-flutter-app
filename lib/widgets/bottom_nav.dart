@@ -81,42 +81,53 @@ class CustomBottomNavBar extends StatelessWidget {
                       final entry = items[index];
                       final active = index == selectedIndex;
 
+                      double iconSize = 22.0; // Ukuran default
+                      if (index == 1) {
+                        iconSize = 24.0;
+                      } else if (index == 3) {
+                        iconSize = 20.0;
+                      }
+
                       return Expanded(
                         child: InkWell(
                           onTap: () => onTap(index),
                           splashColor: Colors.transparent,
                           highlightColor: Colors.transparent,
+                          // PERBAIKAN UTAMA: Mengganti Column dengan Stack
                           child: SizedBox(
                             height: 70,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                            child: Stack(
+                              alignment: Alignment.center,
                               children: [
-                                // PERBAIKAN 1: Bungkus Image dengan SizedBox
-                                // agar ukurannya konsisten dan tidak "melompat".
-                                SizedBox(
-                                  width: 24, // Beri area yang sedikit lebih besar
-                                  height: 24,
-                                  child: Image.asset(
-                                    active
-                                        ? entry['icon_active']!
-                                        : entry['icon_inactive']!,
-                                    width: 22,
-                                    height: 22,
+                                // Posisi Ikon diatur dari atas
+                                Positioned(
+                                  top: 12,
+                                  child: SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: Image.asset(
+                                      active
+                                          ? entry['icon_active']!
+                                          : entry['icon_inactive']!,
+                                      width: iconSize,
+                                      height: iconSize,
+                                      fit: BoxFit.contain,
+                                    ),
                                   ),
                                 ),
-                                const SizedBox(height: 2), // Sedikit kurangi jarak
-                                Text(
-                                  entry['label']!,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    // PERBAIKAN 2 (KUNCI UTAMA):
-                                    // Properti 'height' ini akan memaksa teks
-                                    // untuk selalu punya tinggi yang sama, baik tebal maupun tidak.
-                                    height: 1.2,
-                                    color: active
-                                        ? Colors.white
-                                        : const Color(0xFF9A9A9A),
+                                // Posisi Teks diatur dari bawah
+                                // Ini memastikan semua teks akan sejajar
+                                Positioned(
+                                  bottom: 12,
+                                  child: Text(
+                                    entry['label']!,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: active
+                                          ? Colors.white
+                                          : const Color(0xFF9A9A9A),
+                                    ),
                                   ),
                                 ),
                               ],
@@ -135,3 +146,4 @@ class CustomBottomNavBar extends StatelessWidget {
     );
   }
 }
+
