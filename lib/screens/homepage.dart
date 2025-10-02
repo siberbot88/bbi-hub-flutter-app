@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'package:flutter/services.dart';
 import 'service_page.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 void main() {
   runApp(const MyApp());
@@ -17,7 +18,8 @@ class MyApp extends StatelessWidget {
       title: 'BBI HUB+',
       theme: ThemeData(
         primarySwatch: Colors.red,
-        fontFamily: 'Roboto',
+         fontFamily: GoogleFonts.poppins().fontFamily,
+        textTheme: GoogleFonts.poppinsTextTheme(),
       ),
       home: const HomePage(),
       debugShowCheckedModeBanner: false,
@@ -149,7 +151,7 @@ class RoundelAppBar extends StatelessWidget implements PreferredSizeWidget {
                           children: [
                             Text(
                               'BBI HUB +',
-                              style: TextStyle(
+                              style: GoogleFonts.poppins(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w700,
                                 fontSize: appNameSize,
@@ -158,10 +160,11 @@ class RoundelAppBar extends StatelessWidget implements PreferredSizeWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            const SizedBox(height: 2),
+                            
+                           SizedBox(height: 2),
                             Text(
                               roleLabel,
-                              style: TextStyle(
+                              style: GoogleFonts.poppins(
                                 color: Colors.white.withOpacity(0.85),
                                 fontSize: roleSize,
                               ),
@@ -184,11 +187,11 @@ class RoundelAppBar extends StatelessWidget implements PreferredSizeWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 76),
-                  const Padding(padding: EdgeInsets.only(left: 20)),
+                   SizedBox(height: 76),
+                   Padding(padding: EdgeInsets.only(left: 20)),
                   Text(
                     'Selamat $waktu, $userName',
-                    style: TextStyle(
+                    style: GoogleFonts.poppins(
                       color: Colors.white,
                       fontSize: greetingSize,
                       fontWeight: FontWeight.w700,
@@ -197,10 +200,10 @@ class RoundelAppBar extends StatelessWidget implements PreferredSizeWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
+                   SizedBox(height: 4),
                   Text(
                     'workshop Anda untuk hari ini',
-                    style: TextStyle(
+                    style: GoogleFonts.poppins(
                       color: Colors.white.withOpacity(0.92),
                       fontSize: subtitleSize,
                     ),
@@ -312,15 +315,15 @@ class _StatsPill extends StatelessWidget {
               children: [
                 Text(
                   'Tanggal sekarang',
-                  style: TextStyle(
+                  style: GoogleFonts.poppins(
                     color: Colors.white.withOpacity(0.85),
                     fontSize: labelSize,
                   ),
                 ),
-                const SizedBox(height: 4),
+                 SizedBox(height: 4),
                 Text(
                   tanggal,
-                  style: const TextStyle(
+                  style: GoogleFonts.poppins(
                     color: Colors.white,
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
@@ -343,7 +346,7 @@ class _StatsPill extends StatelessWidget {
               children: [
                 Text(
                   'Tugas hari ini',
-                  style: TextStyle(
+                  style: GoogleFonts.poppins(
                     color: Colors.white.withOpacity(0.85),
                     fontSize: labelSize,
                   ),
@@ -351,7 +354,7 @@ class _StatsPill extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   '$tasks',
-                  style: TextStyle(
+                  style: GoogleFonts.poppins(
                     color: Colors.white,
                     fontSize: taskValueSize,
                     fontWeight: FontWeight.w700,
@@ -408,18 +411,22 @@ class _HomeContentState extends State<HomeContent> {
     if (autoScroll) _startAutoScroll();
   }
 
-  void _startAutoScroll() {
-    _autoScrollTimer?.cancel();
-    _autoScrollTimer = Timer.periodic(const Duration(seconds: 5), (_) {
-      if (!mounted || banners.isEmpty) return;
-      final next = (_currentBannerIndex + 1) % banners.length;
+void _startAutoScroll() {
+  _autoScrollTimer?.cancel();
+  _autoScrollTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+    if (!mounted || banners.isEmpty) return;
+    final next = (_currentBannerIndex + 1) % banners.length;
+
+    if (_bannerController.hasClients) {
       _bannerController.animateToPage(
         next,
         duration: const Duration(milliseconds: 450),
         curve: Curves.easeInOut,
       );
-    });
-  }
+    }
+  });
+}
+
 
   void _stopAutoScroll() {
     _autoScrollTimer?.cancel();
@@ -485,14 +492,14 @@ class _HomeContentState extends State<HomeContent> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+             Text(
               "Kinerja Harian Bengkel",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             TextButton(
               onPressed: () {},
-              child: const Text("Lihat detail",
-                  style: TextStyle(color: Color(0xFFDC2626))),
+              child:  Text("Lihat detail",
+                  style: GoogleFonts.poppins(color: Color(0xFFDC2626))),
             ),
           ],
         ),
@@ -520,7 +527,7 @@ class _HomeContentState extends State<HomeContent> {
         Center(
           child: Text(
             'Fitur Cepat',
-            style: TextStyle(
+            style: GoogleFonts.poppins(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: Colors.black87),
@@ -592,20 +599,20 @@ class _HomeContentState extends State<HomeContent> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  const Expanded(
+                   SizedBox(width: 12),
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           "Cek list antrian pelanggan kamu!!",
-                          style: TextStyle(
+                          style: GoogleFonts.poppins(
                               fontSize: 14, fontWeight: FontWeight.w600),
                         ),
                         SizedBox(height: 4),
                         Text(
                           "Klik tombol dibawah ini untuk masuk menu Service",
-                          style: TextStyle(fontSize: 12),
+                          style: GoogleFonts.poppins(fontSize: 12),
                         ),
                       ],
                     ),
@@ -622,8 +629,8 @@ class _HomeContentState extends State<HomeContent> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('Promo & Banner',
-                style: TextStyle(fontWeight: FontWeight.w600)),
+             Text('Promo & Banner',
+                style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
             Row(
               children: [
                 IconButton(
@@ -703,14 +710,14 @@ class _HomeContentState extends State<HomeContent> {
                                           MainAxisAlignment.center,
                                       children: [
                                         Text(b.title,
-                                            style: const TextStyle(
+                                            style:  GoogleFonts.poppins(
                                                 color: Colors.white,
                                                 fontSize: 18,
                                                 fontWeight: FontWeight.w600),
                                             textAlign: TextAlign.center),
-                                        const SizedBox(height: 8),
+                                         SizedBox(height: 8),
                                         Text(b.subtitle,
-                                            style: const TextStyle(
+                                            style:  GoogleFonts.poppins(
                                                 color: Colors.white70,
                                                 fontSize: 12),
                                             textAlign: TextAlign.center),
@@ -743,13 +750,13 @@ class _HomeContentState extends State<HomeContent> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(b.title,
-                                    style: const TextStyle(
+                                    style:  GoogleFonts.poppins(
                                         color: Colors.white,
                                         fontSize: 16,
                                         fontWeight: FontWeight.w700)),
                                 const SizedBox(height: 4),
                                 Text(b.subtitle,
-                                    style: TextStyle(
+                                    style: GoogleFonts.poppins(
                                         color: Colors.white.withOpacity(0.9),
                                         fontSize: 12)),
                               ],
@@ -823,11 +830,11 @@ class _StatCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
         Text(value,
-            style: const TextStyle(
+            style:  GoogleFonts.poppins(
                 fontSize: 20, fontWeight: FontWeight.bold, color: Colors.red)),
         const SizedBox(height: 6),
         Text(title,
-            style: const TextStyle(fontSize: 13), textAlign: TextAlign.center),
+            style:  GoogleFonts.poppins(fontSize: 13), textAlign: TextAlign.center),
       ]),
     );
   }
@@ -838,16 +845,14 @@ class _QuickFeature extends StatefulWidget {
   final IconData? icon;
   final String? assetPath;
   final String label;
-  final double iconSize;
+  final double iconSize = 32;
   final VoidCallback? onTap;
 
   const _QuickFeature({
     this.icon,
     this.assetPath,
     required this.label,
-    this.iconSize = 28,
     this.onTap,
-    super.key,
   }) : assert(icon != null || assetPath != null, 'Berikan icon atau assetPath');
 
   @override
@@ -910,7 +915,7 @@ class _QuickFeatureState extends State<_QuickFeature>
         ),
         const SizedBox(height: 6),
         Text(widget.label,
-            style: const TextStyle(fontSize: 11), textAlign: TextAlign.center),
+            style:  GoogleFonts.poppins(fontSize: 11), textAlign: TextAlign.center),
       ],
     );
 

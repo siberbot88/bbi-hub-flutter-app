@@ -4,6 +4,8 @@ import 'package:bengkel_online_flutter/screens/login.dart';
 import 'package:bengkel_online_flutter/screens/service_page.dart';
 import 'package:bengkel_online_flutter/widgets/bottom_nav.dart';
 import 'package:bengkel_online_flutter/screens/homepage.dart';
+import 'package:bengkel_online_flutter/screens/profilpage.dart';
+import 'package:bengkel_online_flutter/screens/dashboard.dart';
 
 void main() {
   runApp(const MyApp());
@@ -27,7 +29,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
-/// ini class baru, posisinya di luar MyApp
+/// Halaman utama dengan BottomNavigation + IndexedStack
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
 
@@ -38,19 +40,12 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   int _selectedIndex = 0;
 
-  final List<Widget> _pages = [
-    const HomePage(),
-    const ServicePage(),
-    // const DashboardPage(), // tambahkan halaman Dashboard
-    // const ProfilePage(),   // tambahkan halaman Profile
-    Container(
-      color: Colors.blue,
-      child: const Center(child: Text('Dashboard Page')),
-    ), // Placeholder for Dashboard
-    Container(
-      color: Colors.green,
-      child: const Center(child: Text('Profile Page')),
-    ), // Placeholder for Profile
+  // Pastikan urutan sesuai dengan CustomBottomNavBar
+  final List<Widget> _pages = const [
+    HomePage(),
+    ServicePage(),
+    DashboardPage(),
+    ProfilePage(),
   ];
 
   void _onItemTapped(int index) {
@@ -62,7 +57,10 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _selectedIndex, children: _pages),
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _pages,
+      ),
       bottomNavigationBar: CustomBottomNavBar(
         selectedIndex: _selectedIndex,
         onTap: _onItemTapped,
