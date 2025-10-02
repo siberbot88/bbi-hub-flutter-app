@@ -12,11 +12,27 @@ class CustomBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final items = [
-      {'label': 'Home', 'icon': Icons.home},
-      {'label': 'Service', 'icon': Icons.build},
-      {'label': 'Dashboard', 'icon': Icons.dashboard},
-      {'label': 'Profile', 'icon': Icons.person},
+    final List<Map<String, String>> items = [
+      {
+        'label': 'Home',
+        'icon_inactive': 'assets/icons/home_tipis.png',
+        'icon_active': 'assets/icons/home_highlight.png',
+      },
+      {
+        'label': 'Service',
+        'icon_inactive': 'assets/icons/service_tipis.png',
+        'icon_active': 'assets/icons/service_tebal.png',
+      },
+      {
+        'label': 'Dashboard',
+        'icon_inactive': 'assets/icons/dashboard_tipis.png',
+        'icon_active': 'assets/icons/dashboard_tebal.png',
+      },
+      {
+        'label': 'Profile',
+        'icon_inactive': 'assets/icons/user_tipis.png',
+        'icon_active': 'assets/icons/user_tebal.png',
+      },
     ];
 
     return SafeArea(
@@ -75,16 +91,17 @@ class CustomBottomNavBar extends StatelessWidget {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(
-                                  entry['icon'] as IconData,
-                                  size: 22,
-                                  color: active
-                                      ? Colors.white
-                                      : const Color(0xFFDC2626),
+                                // pakai Image.asset, bukan Icon
+                                Image.asset(
+                                  active
+                                      ? entry['icon_active']!
+                                      : entry['icon_inactive']!,
+                                  width: 22,
+                                  height: 22,
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  entry['label']! as String,
+                                  entry['label']!,
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
