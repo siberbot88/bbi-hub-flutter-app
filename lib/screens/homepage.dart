@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
       title: 'BBI HUB+',
       theme: ThemeData(
         primarySwatch: Colors.red,
-        fontFamily: 'Roboto',
+        fontFamily: 'Poppins',
       ),
       home: const HomePage(),
       debugShowCheckedModeBanner: false,
@@ -383,20 +383,12 @@ class _HomeContentState extends State<HomeContent> {
   // sample banner list (admin can manipulate these)
   final List<BannerData> banners = [
     BannerData(
-        title: 'Promo Sparepart',
-        subtitle: 'Diskon hingga 30% untuk oli motor',
         imagePath: 'assets/image/banner1.png'),
     BannerData(
-        title: 'Service Express',
-        subtitle: 'Servis cepat dalam 30 menit',
         imagePath: 'assets/image/banner2.png'),
     BannerData(
-        title: 'Paket Hemat',
-        subtitle: 'Servis + ganti oli mulai 150k',
         imagePath: 'assets/image/banner3.png'),
     BannerData(
-        title: 'Member Special',
-        subtitle: 'Cashback 10% untuk member',
         imagePath: 'assets/image/banner4.png'),
   ];
 
@@ -421,37 +413,6 @@ class _HomeContentState extends State<HomeContent> {
     });
   }
 
-  void _stopAutoScroll() {
-    _autoScrollTimer?.cancel();
-    _autoScrollTimer = null;
-  }
-
-  @override
-  void dispose() {
-    _autoScrollTimer?.cancel();
-    _bannerController.dispose();
-    super.dispose();
-  }
-
-  // Admin helper: add a demo banner
-  void _addBanner() {
-    setState(() {
-      banners.add(BannerData(
-        title: 'New Banner ${banners.length + 1}',
-        subtitle: 'Tambahan banner demo',
-        imagePath: 'assets/images/banner_placeholder.png',
-      ));
-    });
-  }
-
-  // Admin helper: remove last banner
-  void _removeBanner() {
-    if (banners.isEmpty) return;
-    setState(() {
-      banners.removeLast();
-      _currentBannerIndex = math.min(_currentBannerIndex, banners.length - 1);
-    });
-  }
 
   LinearGradient _getBannerGradient(int index) {
     switch (index % 5) {
@@ -510,7 +471,7 @@ class _HomeContentState extends State<HomeContent> {
             _StatCard(title: "Servis Hari ini", value: "24"),
             _StatCard(title: "Servis Selesai", value: "12"),
             _StatCard(title: "Teknisi Aktiff", value: "58"),
-            _StatCard(title: "Pendapatan", value: "Rp. Rp. 145.000"),
+            _StatCard(title: "Pendapatan", value: "Rp. 145.000"),
           ],
         ),
 
@@ -617,6 +578,8 @@ class _HomeContentState extends State<HomeContent> {
             ),
           ),
         ),
+        const SizedBox(height: 24),
+        
 
         // Banner carousel + controls (auto scroll + add/remove)
         Row(
@@ -624,39 +587,39 @@ class _HomeContentState extends State<HomeContent> {
           children: [
             const Text('Promo & Banner',
                 style: TextStyle(fontWeight: FontWeight.w600)),
-            Row(
-              children: [
-                IconButton(
-                  tooltip:
-                      autoScroll ? 'Stop auto-scroll' : 'Start auto-scroll',
-                  icon:
-                      Icon(autoScroll ? Icons.pause_circle : Icons.play_circle),
-                  color: brandColor,
-                  onPressed: () {
-                    setState(() {
-                      autoScroll = !autoScroll;
-                      if (autoScroll) {
-                        _startAutoScroll();
-                      } else {
-                        _stopAutoScroll();
-                      }
-                    });
-                  },
-                ),
-                IconButton(
-                  tooltip: 'Tambah banner (demo)',
-                  icon: const Icon(Icons.add),
-                  color: brandColor,
-                  onPressed: _addBanner,
-                ),
-                IconButton(
-                  tooltip: 'Hapus banner terakhir',
-                  icon: const Icon(Icons.delete_outline),
-                  color: brandColor,
-                  onPressed: _removeBanner,
-                ),
-              ],
-            )
+            // Row(
+            //   children: [
+            //     // IconButton(
+            //     //   tooltip:
+            //     //       autoScroll ? 'Stop auto-scroll' : 'Start auto-scroll',
+            //     //   icon:
+            //     //       Icon(autoScroll ? Icons.pause_circle : Icons.play_circle),
+            //     //   color: brandColor,
+            //     //   onPressed: () {
+            //     //     setState(() {
+            //     //       autoScroll = !autoScroll;
+            //     //       if (autoScroll) {
+            //     //         _startAutoScroll();
+            //     //       } else {
+            //     //         _stopAutoScroll();
+            //     //       }
+            //     //     });
+            //     //   },
+            //     // ),
+            //     // IconButton(
+            //     //   tooltip: 'Tambah banner (demo)',
+            //     //   icon: const Icon(Icons.add),
+            //     //   color: brandColor,
+            //     //   onPressed: _addBanner,
+            //     // ),
+            //     // IconButton(
+            //     //   tooltip: 'Hapus banner terakhir',
+            //     //   icon: const Icon(Icons.delete_outline),
+            //     //   color: brandColor,
+            //     //   onPressed: _removeBanner,
+            //     // ),
+            //   ],
+            // )
           ],
         ),
 
@@ -664,7 +627,7 @@ class _HomeContentState extends State<HomeContent> {
 
         // PageView banner
         SizedBox(
-          height: 160,
+          height: 400,
           child: Stack(
             children: [
               PageView.builder(
@@ -701,20 +664,6 @@ class _HomeContentState extends State<HomeContent> {
                                     child: Column(
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
-                                      children: [
-                                        Text(b.title,
-                                            style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.w600),
-                                            textAlign: TextAlign.center),
-                                        const SizedBox(height: 8),
-                                        Text(b.subtitle,
-                                            style: const TextStyle(
-                                                color: Colors.white70,
-                                                fontSize: 12),
-                                            textAlign: TextAlign.center),
-                                      ],
                                     ),
                                   ),
                                 ),
@@ -741,18 +690,6 @@ class _HomeContentState extends State<HomeContent> {
                             right: 16,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(b.title,
-                                    style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w700)),
-                                const SizedBox(height: 4),
-                                Text(b.subtitle,
-                                    style: TextStyle(
-                                        color: Colors.white.withOpacity(0.9),
-                                        fontSize: 12)),
-                              ],
                             ),
                           ),
                         ],
@@ -946,11 +883,9 @@ class _QuickFeatureState extends State<_QuickFeature>
 
 // ---------------- BannerData ----------------
 class BannerData {
-  final String title;
-  final String subtitle;
   final String imagePath;
   BannerData(
-      {required this.title, required this.subtitle, required this.imagePath});
+      {required this.imagePath});
 }
 
 // ---------------- Helpers ----------------
