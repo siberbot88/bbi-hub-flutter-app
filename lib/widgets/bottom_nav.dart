@@ -91,20 +91,29 @@ class CustomBottomNavBar extends StatelessWidget {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                // pakai Image.asset, bukan Icon
-                                Image.asset(
-                                  active
-                                      ? entry['icon_active']!
-                                      : entry['icon_inactive']!,
-                                  width: 22,
-                                  height: 22,
+                                // PERBAIKAN 1: Bungkus Image dengan SizedBox
+                                // agar ukurannya konsisten dan tidak "melompat".
+                                SizedBox(
+                                  width: 24, // Beri area yang sedikit lebih besar
+                                  height: 24,
+                                  child: Image.asset(
+                                    active
+                                        ? entry['icon_active']!
+                                        : entry['icon_inactive']!,
+                                    width: 22,
+                                    height: 22,
+                                  ),
                                 ),
-                                const SizedBox(height: 4),
+                                const SizedBox(height: 2), // Sedikit kurangi jarak
                                 Text(
                                   entry['label']!,
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
+                                    // PERBAIKAN 2 (KUNCI UTAMA):
+                                    // Properti 'height' ini akan memaksa teks
+                                    // untuk selalu punya tinggi yang sama, baik tebal maupun tidak.
+                                    height: 1.2,
                                     color: active
                                         ? Colors.white
                                         : const Color(0xFF9A9A9A),
