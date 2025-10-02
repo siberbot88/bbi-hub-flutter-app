@@ -845,9 +845,8 @@ class _QuickFeature extends StatefulWidget {
     this.icon,
     this.assetPath,
     required this.label,
-    this.iconSize = 28,
+    this.iconSize = 32.0,
     this.onTap,
-    super.key,
   }) : assert(icon != null || assetPath != null, 'Berikan icon atau assetPath');
 
   @override
