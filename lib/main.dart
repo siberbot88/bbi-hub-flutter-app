@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:bengkel_online_flutter/screens/registeruser.dart';
-import 'package:bengkel_online_flutter/screens/service_page.dart';
-import 'package:bengkel_online_flutter/widgets/bottom_nav.dart';
 import 'package:bengkel_online_flutter/screens/homepage.dart';
 import 'package:bengkel_online_flutter/screens/login.dart';
 import 'package:bengkel_online_flutter/screens/register.dart';
@@ -22,6 +19,15 @@ class MyApp extends StatelessWidget {
       title: 'BBI HUB PLUS',
       theme: ThemeData(
         primarySwatch: Colors.red,
+        fontFamily: 'Poppins',
+        textTheme: TextTheme(
+          bodyLarge: TextStyle(),
+          bodyMedium: TextStyle(),
+          displayLarge: TextStyle(),
+          displayMedium: TextStyle(),
+          displaySmall: TextStyle(),
+      ).apply(
+          bodyColor: Colors.black, displayColor: Colors.black),
       ),
       // 🔹 halaman pertama aplikasi
       initialRoute: "/login",
