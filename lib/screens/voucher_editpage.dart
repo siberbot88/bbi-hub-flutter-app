@@ -179,6 +179,20 @@ class _VoucherEditPageState extends State<VoucherEditPage> {
                 ),
                 const SizedBox(height: 24),
 
+                //Minimal Diskon 
+                 _buildTextField(
+                  label: "Jumlah Minimal Diskon",
+                  hint: "Masukkan jumlah minimal diskon per transaksi",
+                  icon: Icons.confirmation_number,
+                  controller: _jumlahController,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  validator: (val) => val == null || val.isEmpty
+                      ? "Jumlah minimal diskon wajib diisi"
+                      : null,
+                ),
+                const SizedBox(height: 16),
+
                 // Upload Gambar Voucher
                 Align(
                   alignment: Alignment.centerLeft,
