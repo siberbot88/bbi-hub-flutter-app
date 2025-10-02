@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
       title: 'BBI HUB+',
       theme: ThemeData(
         primarySwatch: Colors.red,
-        fontFamily: 'Roboto',
+        fontFamily: 'Poppins',
       ),
       home: const HomePage(),
       debugShowCheckedModeBanner: false,
