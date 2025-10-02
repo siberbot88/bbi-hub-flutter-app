@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:bengkel_online_flutter/screens/landingpage.dart';
 import 'package:bengkel_online_flutter/screens/registeruser.dart';
-import 'package:bengkel_online_flutter/screens/service_page.dart';
-import 'package:bengkel_online_flutter/widgets/bottom_nav.dart';
-import 'package:bengkel_online_flutter/screens/homepage.dart';
+import 'package:bengkel_online_flutter/screens/homepage.dart' as home;
 import 'package:bengkel_online_flutter/screens/login.dart';
 import 'package:bengkel_online_flutter/screens/register.dart';
 import 'package:bengkel_online_flutter/screens/registerBengkel.dart';
@@ -19,20 +18,17 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'BBI HUB PLUS',
-      theme: ThemeData(
-        primarySwatch: Colors.red,
-      ),
-      // 🔹 halaman pertama aplikasi
-      initialRoute: "/login",
+
+      initialRoute: "/landingPage",
 
       // 🔹 daftar route
       routes: {
+        "/landingPage": (context) => LandingPage(),
         "/login": (context) => const LoginPage(),
-        "/home": (context) =>
-            const HomePage(), // Ganti dengan HomeScreen jika ada
+        "/home": (context) => const home.HomePage(),
         "/register": (context) => const RegisterRoleScreen(),
         "/registerBengkel": (context) => const RegisterBengkelScreen(),
+        "/registerUser": (context) => const RegisterScreen(),
         "/changePassword": (context) => const ChangePasswordPage(),
       },
     );

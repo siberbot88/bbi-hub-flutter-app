@@ -85,7 +85,7 @@ class RegisterRoleScreen extends StatelessWidget {
                     ),
                   ),
                   onPressed: () {
-                    Navigator.pushNamed(context, '/');
+                    Navigator.pushNamed(context, '/registeruser  ');
                   },
                   child: Text(
                     "DAFTAR SEBAGAI USER",
