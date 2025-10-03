@@ -20,7 +20,7 @@ void showTechnicianSelectDialog(BuildContext context) {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Center(
-                    child: Text("Assign Teknisi",
+                    child: Text("Assign Technisi",
                         style: GoogleFonts.poppins(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -41,7 +41,8 @@ void showTechnicianSelectDialog(BuildContext context) {
                                   style: GoogleFonts.poppins(fontSize: 14)),
                             ))
                         .toList(),
-                    onChanged: (val) => setState(() => selectedTechnician = val),
+                    onChanged: (val) =>
+                        setState(() => selectedTechnician = val),
                     decoration: InputDecoration(
                       hintText: "Choose a technician",
                       hintStyle: GoogleFonts.poppins(),
@@ -76,8 +77,8 @@ void showTechnicianSelectDialog(BuildContext context) {
                               ? null
                               : () {
                                   Navigator.pop(context); // tutup popup pertama
-                                  showAssignConfirmDialog(
-                                      context, selectedTechnician!); // buka popup kedua
+                                  showAssignConfirmDialog(context,
+                                      selectedTechnician!); // buka popup kedua
                                 },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFB70F0F),
@@ -142,7 +143,8 @@ void showAssignConfirmDialog(BuildContext context, String technician) {
                       onPressed: () {
                         Navigator.pop(context); // tutup popup confirm
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text("Service berhasil diassign ke $technician"),
+                          content:
+                              Text("Service berhasil diassign ke $technician"),
                           backgroundColor: Colors.green,
                         ));
                         // TODO: update status service di sini
