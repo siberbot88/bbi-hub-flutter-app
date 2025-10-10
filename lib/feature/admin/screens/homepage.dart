@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
       title: 'BBI HUB+',
       theme: ThemeData(
         primarySwatch: Colors.red,
-        fontFamily: 'Roboto',
+        fontFamily: 'Poppins',
       ),
       home: const HomePage(),
       debugShowCheckedModeBanner: false,
@@ -59,7 +59,7 @@ class RoundelAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.todayTasks = 12,
     this.date,
     this.userName = 'AHASS',
-    this.roleLabel = 'workshop manager',
+    this.roleLabel = 'admin',
     this.avatar,
     this.onAvatarTap,
     this.greetingSize = 26,
@@ -214,7 +214,7 @@ class RoundelAppBar extends StatelessWidget implements PreferredSizeWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'workshop Anda untuk hari ini',
+                    'Yuk Kelola Operasional Hari ini 🔥',
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.92),
                       fontSize: subtitleSize,
@@ -469,7 +469,7 @@ class _HomeContentState extends State<HomeContent> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Text(
-              "Kinerja Harian Bengkel",
+              "Operasional hari Ini",
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             TextButton(
@@ -493,9 +493,9 @@ class _HomeContentState extends State<HomeContent> {
           childAspectRatio: 1.2,
           children: const [
             _StatCard(title: "Servis Hari ini", value: "24"),
-            _StatCard(title: "Servis Selesai", value: "12"),
-            _StatCard(title: "Teknisi Aktif", value: "5"),
-            _StatCard(title: "Pendapatan", value: "145.000"),
+            _StatCard(title: "Perlu di Assign", value: "12"),
+            _StatCard(title: "Feedback", value: "5"),
+            _StatCard(title: "Selesai", value: "2"),
           ],
         ),
 
@@ -525,22 +525,17 @@ class _HomeContentState extends State<HomeContent> {
           children: [
             _QuickFeature(
               assetPath: 'assets/icons/teknisi.png',
-              label: "Tambah\nteknisi",
+              label: "Riwayat \nService",
               onTap: () {},
             ),
             _QuickFeature(
               assetPath: 'assets/icons/search.png',
-              label: "List\nservice",
+              label: "Terima \nJadwal",
               onTap: () {},
             ),
             _QuickFeature(
               assetPath: 'assets/icons/dashboard_tipis.png',
-              label: "Dashboard",
-              onTap: () {},
-            ),
-            _QuickFeature(
-              assetPath: 'assets/icons/voucher.png',
-              label: "Tambah\nVoucher",
+              label: "Feedback",
               onTap: () {},
             ),
           ],
