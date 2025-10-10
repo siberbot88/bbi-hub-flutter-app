@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:bengkel_online_flutter/screens/voucher_page.dart';
+import 'package:bengkel_online_flutter/feature/admin/screens/voucher_page.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -70,7 +70,7 @@ class ProfilePage extends StatelessWidget {
                               radius: avatarRadius,
                               backgroundColor: Colors.white,
                               backgroundImage: const AssetImage(
-                                "assets/image/profile_page.png",
+                                "assets/image/profil_image.png",
                               ),
                             ),
                             SizedBox(height: width * 0.03),
