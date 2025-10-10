@@ -1,14 +1,14 @@
-import 'package:bengkel_online_flutter/screens/registeruser.dart';
+import 'core/screens/registeruser.dart';
 import 'package:flutter/material.dart';
-import 'package:bengkel_online_flutter/screens/service_page.dart';
-import 'package:bengkel_online_flutter/widgets/bottom_nav.dart';
-import 'package:bengkel_online_flutter/screens/homepage.dart';
-import 'package:bengkel_online_flutter/screens/profilpage.dart';
-import 'package:bengkel_online_flutter/screens/dashboard.dart';
-import 'package:bengkel_online_flutter/screens/login.dart'as login_screen;
-import 'package:bengkel_online_flutter/screens/register.dart';
-import 'package:bengkel_online_flutter/screens/registerBengkel.dart';
-import 'package:bengkel_online_flutter/screens/change_password.dart' as change_screen;
+import 'feature/admin/screens/profilpage.dart';
+import 'feature/admin/widgets/bottom_nav.dart';
+import 'feature/admin/screens/homepage.dart';
+import 'feature/admin/screens/dashboard.dart';
+import 'core/screens/login.dart'as login_screen;
+import 'core/screens/register.dart';
+import 'core/screens/registerBengkel.dart';
+import 'feature/admin/screens/change_password.dart' as change_screen;
+import 'feature/admin/screens/service_page.dart';
 
 
 void main() {
