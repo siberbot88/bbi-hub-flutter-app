@@ -148,7 +148,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     const SizedBox(height: 15),
 
                     DropdownButtonFormField<String>(
-                      value: _selectedRole,
+                      initialValue: _selectedRole,
                       decoration: getInputDecoration(
                           "Role", "assets/icons/role.png", "Pilih role anda"),
                       style: GoogleFonts.poppins(color: Colors.black),
@@ -163,7 +163,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     const SizedBox(height: 15),
 
                     DropdownButtonFormField<String>(
-                      value: _selectedWorkshop,
+                      initialValue: _selectedWorkshop,
                       decoration: getInputDecoration("Bengkel",
                           "assets/icons/alamat.png", "Pilih bengkel anda"),
                       style: GoogleFonts.poppins(color: Colors.black),

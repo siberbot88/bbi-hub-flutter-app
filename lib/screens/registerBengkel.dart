@@ -369,7 +369,7 @@ class _RegisterBengkelScreenState extends State<RegisterBengkelScreen> {
     required Function(String?) onChanged,
   }) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       items: items.map((item) {
         return DropdownMenuItem(
           value: item,
