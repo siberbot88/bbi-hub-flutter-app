@@ -189,3 +189,5 @@ app.*.symbols
 
 # End of https://www.toptal.com/developers/gitignore/api/flutter,dart
 >>>>>>> ada46d4 (Initial commit (Flutter app))
+
+.config/

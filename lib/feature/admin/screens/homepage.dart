@@ -92,7 +92,7 @@ class RoundelAppBar extends StatelessWidget implements PreferredSizeWidget {
       flexibleSpace: Stack(
         fit: StackFit.expand,
         children: [
-          // gradient utama AppBar: DC2626 -> 000000
+          // gradient utama
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -104,6 +104,7 @@ class RoundelAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
 
           // roundels (tidak const karena gradient non-const di dalamnya)
+          // roundels
           Positioned(
             right: -40,
             top: -10,
@@ -132,6 +133,20 @@ class RoundelAppBar extends StatelessWidget implements PreferredSizeWidget {
               innerColor: const Color(0xFF000000),
               outerColor: const Color(0xFF000000),
               opacity: 0.35,
+            ),
+          ),
+
+          // 🔥 Marquez di depan background, tapi belakang teks
+          Positioned(
+            right: 0,
+            bottom: 0,
+            child: Transform.translate(
+              offset: const Offset(0, 20), // bisa disesuaikan
+              child: Image.asset(
+                "assets/image/marquez.png",
+                height: 300,
+                fit: BoxFit.contain,
+              ),
             ),
           ),
 
@@ -382,22 +397,10 @@ class _HomeContentState extends State<HomeContent> {
 
   // sample banner list (admin can manipulate these)
   final List<BannerData> banners = [
-    BannerData(
-        title: 'Promo Sparepart',
-        subtitle: 'Diskon hingga 30% untuk oli motor',
-        imagePath: 'assets/image/banner1.png'),
-    BannerData(
-        title: 'Service Express',
-        subtitle: 'Servis cepat dalam 30 menit',
-        imagePath: 'assets/image/banner2.png'),
-    BannerData(
-        title: 'Paket Hemat',
-        subtitle: 'Servis + ganti oli mulai 150k',
-        imagePath: 'assets/image/banner3.png'),
-    BannerData(
-        title: 'Member Special',
-        subtitle: 'Cashback 10% untuk member',
-        imagePath: 'assets/image/banner4.png'),
+    BannerData(imagePath: 'assets/image/banner1.png'),
+    BannerData(imagePath: 'assets/image/banner2.png'),
+    BannerData(imagePath: 'assets/image/banner3.png'),
+    BannerData(imagePath: 'assets/image/banner4.png'),
   ];
 
   bool autoScroll = true;
@@ -431,26 +434,6 @@ class _HomeContentState extends State<HomeContent> {
     _autoScrollTimer?.cancel();
     _bannerController.dispose();
     super.dispose();
-  }
-
-  // Admin helper: add a demo banner
-  void _addBanner() {
-    setState(() {
-      banners.add(BannerData(
-        title: 'New Banner ${banners.length + 1}',
-        subtitle: 'Tambahan banner demo',
-        imagePath: 'assets/images/banner_placeholder.png',
-      ));
-    });
-  }
-
-  // Admin helper: remove last banner
-  void _removeBanner() {
-    if (banners.isEmpty) return;
-    setState(() {
-      banners.removeLast();
-      _currentBannerIndex = math.min(_currentBannerIndex, banners.length - 1);
-    });
   }
 
   LinearGradient _getBannerGradient(int index) {
@@ -490,7 +473,9 @@ class _HomeContentState extends State<HomeContent> {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             TextButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.pushNamed(context, '/dashboard');
+              },
               child: const Text("Lihat detail",
                   style: TextStyle(color: Color(0xFFDC2626))),
             ),
@@ -509,8 +494,8 @@ class _HomeContentState extends State<HomeContent> {
           children: const [
             _StatCard(title: "Servis Hari ini", value: "24"),
             _StatCard(title: "Servis Selesai", value: "12"),
-            _StatCard(title: "Teknisi Aktiff", value: "58"),
-            _StatCard(title: "Pendapatan", value: "Rp. Rp. 145.000"),
+            _StatCard(title: "Teknisi Aktif", value: "5"),
+            _StatCard(title: "Pendapatan", value: "145.000"),
           ],
         ),
 
@@ -527,7 +512,7 @@ class _HomeContentState extends State<HomeContent> {
           ),
         ),
 
-        const SizedBox(height: 8),
+        const SizedBox(height: 14),
 
         // Grid fitur cepat: 4 kolom, lebih besar
         GridView.count(
@@ -560,6 +545,7 @@ class _HomeContentState extends State<HomeContent> {
             ),
           ],
         ),
+        const SizedBox(height: 24),
 
         // removed extra gap - langsung Warning card
 
@@ -618,45 +604,14 @@ class _HomeContentState extends State<HomeContent> {
           ),
         ),
 
+        const SizedBox(height: 24),
+
         // Banner carousel + controls (auto scroll + add/remove)
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Text('Promo & Banner',
-                style: TextStyle(fontWeight: FontWeight.w600)),
-            Row(
-              children: [
-                IconButton(
-                  tooltip:
-                      autoScroll ? 'Stop auto-scroll' : 'Start auto-scroll',
-                  icon:
-                      Icon(autoScroll ? Icons.pause_circle : Icons.play_circle),
-                  color: brandColor,
-                  onPressed: () {
-                    setState(() {
-                      autoScroll = !autoScroll;
-                      if (autoScroll) {
-                        _startAutoScroll();
-                      } else {
-                        _stopAutoScroll();
-                      }
-                    });
-                  },
-                ),
-                IconButton(
-                  tooltip: 'Tambah banner (demo)',
-                  icon: const Icon(Icons.add),
-                  color: brandColor,
-                  onPressed: _addBanner,
-                ),
-                IconButton(
-                  tooltip: 'Hapus banner terakhir',
-                  icon: const Icon(Icons.delete_outline),
-                  color: brandColor,
-                  onPressed: _removeBanner,
-                ),
-              ],
-            )
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
           ],
         ),
 
@@ -664,7 +619,7 @@ class _HomeContentState extends State<HomeContent> {
 
         // PageView banner
         SizedBox(
-          height: 160,
+          height: 300,
           child: Stack(
             children: [
               PageView.builder(
@@ -701,20 +656,6 @@ class _HomeContentState extends State<HomeContent> {
                                     child: Column(
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
-                                      children: [
-                                        Text(b.title,
-                                            style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.w600),
-                                            textAlign: TextAlign.center),
-                                        const SizedBox(height: 8),
-                                        Text(b.subtitle,
-                                            style: const TextStyle(
-                                                color: Colors.white70,
-                                                fontSize: 12),
-                                            textAlign: TextAlign.center),
-                                      ],
                                     ),
                                   ),
                                 ),
@@ -741,18 +682,7 @@ class _HomeContentState extends State<HomeContent> {
                             right: 16,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(b.title,
-                                    style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w700)),
-                                const SizedBox(height: 4),
-                                Text(b.subtitle,
-                                    style: TextStyle(
-                                        color: Colors.white.withOpacity(0.9),
-                                        fontSize: 12)),
-                              ],
+                              children: [],
                             ),
                           ),
                         ],
@@ -813,22 +743,97 @@ class _HomeContentState extends State<HomeContent> {
 class _StatCard extends StatelessWidget {
   final String title;
   final String value;
-  const _StatCard({required this.title, required this.value});
+  final String updateDate;
+  final String percentage;
+
+  const _StatCard({
+    required this.title,
+    required this.value,
+    this.updateDate = "20 July 2024",
+    this.percentage = "+15%",
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-          color: Colors.red.shade50, borderRadius: BorderRadius.circular(16)),
-      padding: const EdgeInsets.all(16),
-      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        Text(value,
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          )
+        ],
+      ),
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Judul
+          Text(
+            title,
             style: const TextStyle(
-                fontSize: 20, fontWeight: FontWeight.bold, color: Colors.red)),
-        const SizedBox(height: 6),
-        Text(title,
-            style: const TextStyle(fontSize: 13), textAlign: TextAlign.center),
-      ]),
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          // Nilai utama
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ),
+
+          const Spacer(),
+
+          // Footer update + persentase
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(
+                child: Text(
+                  "Update: $updateDate",
+                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    percentage.startsWith('-')
+                        ? Icons.arrow_downward
+                        : Icons.arrow_upward,
+                    size: 14,
+                    color:
+                        percentage.startsWith('-') ? Colors.red : Colors.green,
+                  ),
+                  const SizedBox(width: 2),
+                  Text(
+                    percentage,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: percentage.startsWith('-')
+                          ? Colors.red
+                          : Colors.green,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -946,11 +951,8 @@ class _QuickFeatureState extends State<_QuickFeature>
 
 // ---------------- BannerData ----------------
 class BannerData {
-  final String title;
-  final String subtitle;
   final String imagePath;
-  BannerData(
-      {required this.title, required this.subtitle, required this.imagePath});
+  BannerData({required this.imagePath});
 }
 
 // ---------------- Helpers ----------------

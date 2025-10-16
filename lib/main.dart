@@ -1,12 +1,18 @@
+import 'package:bengkel_online_flutter/feature/admin/screens/registers/registerOwner.dart';
+
+import 'core/screens/registeruser.dart';
 import 'package:flutter/material.dart';
-import 'package:bengkel_online_flutter/screens/registeruser.dart';
-import 'package:bengkel_online_flutter/screens/service_page.dart';
-import 'package:bengkel_online_flutter/widgets/bottom_nav.dart';
-import 'package:bengkel_online_flutter/screens/homepage.dart';
-import 'package:bengkel_online_flutter/screens/login.dart';
-import 'package:bengkel_online_flutter/screens/register.dart';
-import 'package:bengkel_online_flutter/screens/registerBengkel.dart';
-import 'package:bengkel_online_flutter/screens/change_password.dart';
+import 'feature/admin/screens/profilpage.dart';
+import 'feature/owner/widgets/bottom_nav_owner.dart';
+import 'feature/owner/screens/homepageOwner.dart' hide CustomBottomNavBar;
+import 'feature/admin/screens/dashboard.dart';
+import 'core/screens/login.dart'as login_screen;
+import 'core/screens/register.dart';
+import 'core/screens/registerBengkel.dart';
+import 'feature/admin/screens/change_password.dart' as change_screen;
+import 'feature/admin/screens/service_page.dart';
+import 'feature/owner/screens/onBoarding.dart';
+
 
 void main() {
   runApp(const MyApp());
@@ -22,19 +28,70 @@ class MyApp extends StatelessWidget {
       title: 'BBI HUB PLUS',
       theme: ThemeData(
         primarySwatch: Colors.red,
+        fontFamily: 'Poppins',
+        textTheme: TextTheme(
+          bodyLarge: TextStyle(),
+          bodyMedium: TextStyle(),
+          displayLarge: TextStyle(),
+          displayMedium: TextStyle(),
+          displaySmall: TextStyle(),
+      ).apply(
+          bodyColor: Colors.black, displayColor: Colors.black),
+
       ),
       // 🔹 halaman pertama aplikasi
-      initialRoute: "/login",
+      initialRoute: "/onboarding",
 
       // 🔹 daftar route
       routes: {
-        "/login": (context) => const LoginPage(),
+        "/onboarding": (context) => const OnboardingScreen(),
+        "/login": (context) => const login_screen.LoginPage(),
+        "/register": (context) => const RegisterFlowPage(),
         "/home": (context) =>
-            const HomePage(), // Ganti dengan HomeScreen jika ada
-        "/register": (context) => const RegisterRoleScreen(),
-        "/registerBengkel": (context) => const RegisterBengkelScreen(),
-        "/changePassword": (context) => const ChangePasswordPage(),
+            const MainPage(), //
+        "/dashboard": (context) => const DashboardPage(),
+        "/changePassword": (context) => const change_screen.ChangePasswordPage(),
       },
+    );
+  }
+}
+
+/// Halaman utama dengan BottomNavigation + IndexedStack
+class MainPage extends StatefulWidget {
+  const MainPage({super.key});
+
+  @override
+  State<MainPage> createState() => _MainPageState();
+}
+
+class _MainPageState extends State<MainPage> {
+  int _selectedIndex = 0;
+
+  // Pastikan urutan sesuai dengan CustomBottomNavBar
+  final List<Widget> _pages =  [
+    DashboardScreen(),
+    ServicePage(),
+    DashboardPage(),
+    ProfilePage(),
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _pages,
+      ),
+      bottomNavigationBar: CustomBottomNavBar(
+        selectedIndex: _selectedIndex,
+        onTap: _onItemTapped,
+      ),
     );
   }
 }
