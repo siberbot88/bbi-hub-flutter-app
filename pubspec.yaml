@@ -17,6 +17,7 @@ dependencies:
   http: ^1.5.0
   image_picker: ^1.2.0
   fl_chart: ^0.65.0
+  flutter_svg: ^2.2.1
 
 
 dev_dependencies:
@@ -29,9 +30,13 @@ flutter:
   assets:
     - assets/image/
     - assets/icons/
+    - assets/svg/
     - assets/logo.png
     - assets/bg.png
-  
+    - assets/image/gambar_1.png
+    - assets/image/gambar_2.png
+    - assets/image/gambar_3.png
+
   fonts:
     - family: Poppins
       fonts:
