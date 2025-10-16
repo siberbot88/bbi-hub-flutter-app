@@ -1,7 +1,9 @@
+import 'package:bengkel_online_flutter/feature/admin/screens/registers/registerOwner.dart';
 import 'core/screens/registeruser.dart';
 import 'package:flutter/material.dart';
 import 'feature/admin/screens/profilpage.dart';
-import 'feature/admin/widgets/bottom_nav.dart';
+import 'feature/owner/widgets/bottom_nav_owner.dart';
+import 'feature/owner/screens/homepageOwner.dart' hide CustomBottomNavBar;
 import 'feature/admin/screens/homepage.dart';
 import 'feature/admin/screens/dashboard.dart';
 import 'core/screens/login.dart'as login_screen;
@@ -9,6 +11,7 @@ import 'core/screens/register.dart';
 import 'core/screens/registerBengkel.dart';
 import 'feature/admin/screens/change_password.dart' as change_screen;
 import 'feature/admin/screens/service_page.dart';
+import 'feature/owner/screens/onBoarding.dart';
 import 'feature/mechanic/screens/homepageMechanic.dart';
 import 'feature/owner/screens/homepageOwner.dart';
 
@@ -43,13 +46,16 @@ class MyApp extends StatelessWidget {
 
       ),
       // 🔹 halaman pertama aplikasi
-      initialRoute: "/login",
-      
+      initialRoute: "/onboarding",
+
       // 🔹 daftar route
       routes: {
+        "/onboarding": (context) => const OnboardingScreen(),
         "/login": (context) => const login_screen.LoginPage(),
-        "/home": (context) =>
-            const MainPage(role:currentRole), //
+        "/register": (context) => const RegisterFlowPage(),
+        // "/home": (context) =>
+        //     const MainPage(), //
+        //     const MainPage(role:currentRole), //
         "/register": (context) => const RegisterRoleScreen(),
         "/registerBengkel": (context) => const RegisterBengkelScreen(),
         "/registeruser": (context) => const RegisterScreen(),
@@ -76,7 +82,7 @@ class _MainPageState extends State<MainPage> {
 
   // Pastikan urutan sesuai dengan CustomBottomNavBar
   final List<Widget> _pages =  [
-    HomePage(),
+    DashboardScreen(),
     ServicePage(),
     DashboardPage(),
     ProfilePage(),
@@ -95,7 +101,7 @@ class _MainPageState extends State<MainPage> {
     switch (widget.role) {
       case "owner":
         pages = [
-           HomePageOwner(),
+           DashboardScreen(),
            Placeholder(), // nanti ganti OrderPage()
            Placeholder(), // ProfileOwnerPage()
         ];
