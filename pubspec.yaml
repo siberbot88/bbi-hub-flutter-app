@@ -9,7 +9,6 @@ environment:
 
 dependencies:
   intl: ^0.19.0
-  syncfusion_flutter_datepicker: ^25.1.42
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
@@ -17,6 +16,10 @@ dependencies:
   http: ^1.5.0
   image_picker: ^1.2.0
   fl_chart: ^0.65.0
+  syncfusion_flutter_core: ^27.2.5
+  syncfusion_flutter_charts: ^27.2.5
+  syncfusion_flutter_datepicker: ^27.2.5
+  flutter_svg: ^2.0.9
 
 
 dev_dependencies:
@@ -29,9 +32,13 @@ flutter:
   assets:
     - assets/image/
     - assets/icons/
+    - assets/svg/
     - assets/logo.png
     - assets/bg.png
-  
+    - assets/image/gambar_1.png
+    - assets/image/gambar_2.png
+    - assets/image/gambar_3.png
+
   fonts:
     - family: Poppins
       fonts:
