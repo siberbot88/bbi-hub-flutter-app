@@ -238,12 +238,7 @@ class ProfilePage extends StatelessWidget {
                                   ),
                                   TextButton(
                                     onPressed: () {
-                                      Navigator.pop(context);
-                                      Navigator.pushReplacement(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (_) => const LoginPage()),
-                                      );
+                                      Navigator.pushReplacementNamed(context, '/login');
                                     },
                                     child: Text("Ya",
                                         style: GoogleFonts.poppins()),

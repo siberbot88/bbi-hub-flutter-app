@@ -47,6 +47,7 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
   final TextEditingController decsController = TextEditingController();
   final TextEditingController nibController = TextEditingController();
   final TextEditingController npwpController = TextEditingController();
+  final TextEditingController wemailController = TextEditingController();
 
   int _currentStep = 0;
   bool obscureText = true;
@@ -166,6 +167,7 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
     required String iconPath,
     bool isPassword = false,
     int maxline = 1,
+
   }) {
     return TextField(
       controller: controller,
@@ -181,7 +183,7 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
         hintStyle: GoogleFonts.poppins(color: Colors.grey),
         prefixIcon: Padding(
           padding: const EdgeInsets.all(12.0),
-          child: Image.asset(iconPath, width: 20, height: 20, color: Colors.red),
+          child: SvgPicture.asset(iconPath, width: 20, height: 20, color: Colors.red),
         ),
         suffixIcon: isPassword
             ? IconButton(
@@ -310,28 +312,28 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
               controller: fullnameController,
               label: "Nama Lengkap",
               hint: "Masukkan nama lengkap kamu",
-              iconPath: "assets/icons/password.png",
+              iconPath: "assets/svg/user.svg",
             ),
             const SizedBox(height: 22),
             _buildTextField(
               controller: usernameController,
               label: "Username",
               hint: "Masukkan password",
-              iconPath: "assets/icons/password.png",
+              iconPath: "assets/svg/user.svg",
             ),
             const SizedBox(height: 22),
             _buildTextField(
               controller: emailController,
               label: "Email",
               hint: "Masukkan email kamu",
-              iconPath: "assets/icons/password.png",
+              iconPath: "assets/svg/email.svg",
             ),
             const SizedBox(height: 22),
             _buildTextField(
               controller: passwordController,
               label: "Password",
               hint: "Masukkan password kamu",
-              iconPath: "assets/icons/password.png",
+              iconPath: "assets/svg/key.svg",
               isPassword: true,
             ),
             const SizedBox(height: 22),
@@ -339,7 +341,7 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
               controller: passwordController,
               label: "Verifikasi Password",
               hint: "verifikasi password kamu",
-              iconPath: "assets/icons/password.png",
+              iconPath: "assets/svg/key.svg",
               isPassword: true,
             ),
           ],
@@ -390,42 +392,42 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
               controller: workshopController,
               label: "Nama bengkel",
               hint: "Masukkan Nama bengkel",
-              iconPath: "assets/icons/password.png",
+              iconPath: "assets/svg/workshop.svg",
             ),
             const SizedBox(height: 22),
             _buildTextField(
               controller: addressController,
               label: "Alamat",
               hint: "Masukkan alamat bengkel ",
-              iconPath: "assets/icons/password.png",
+              iconPath: "assets/svg/address.svg",
             ),
             const SizedBox(height: 22),
             _buildTextField(
               controller: phoneController,
               label: "Telepon",
               hint: "Masukkan nomor telepon",
-              iconPath: "assets/icons/password.png",
+              iconPath: "assets/svg/phone.svg",
             ),
             const SizedBox(height: 22),
             _buildTextField(
-              controller: emailController,
+              controller: wemailController,
               label: "Email Kantor",
               hint: "Masukkan email kantor",
-              iconPath: "assets/icons/password.png",
+              iconPath: "assets/svg/email.svg",
             ),
             const SizedBox(height: 22),
             _buildTextField(
               controller: urlController,
               label: "Maps Url",
               hint: "Masukkan Url maps bengkel",
-              iconPath: "assets/icons/password.png",
+              iconPath: "assets/svg/url.svg",
             ),
             const SizedBox(height: 22),
             _buildTextField(
               controller: decsController,
               label: "Deskripsi",
               hint: "Masukkan deskripsi bengkel",
-              iconPath: "assets/icons/password.png",
+              iconPath: "assets/svg/laporan_tebal.svg",
               maxline: 3,
             ),
           ],
@@ -476,14 +478,14 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
               controller: nibController,
               label: "NIB",
               hint: "Nomor induk berusaha",
-              iconPath: "assets/icons/password.png",
+              iconPath: "assets/svg/nib.svg",
             ),
             const SizedBox(height: 22),
             _buildTextField(
               controller: npwpController,
               label: "NPWP",
               hint: "Masukkan NPWP bengkel",
-              iconPath: "assets/icons/password.png",
+              iconPath: "assets/svg/npwp.svg",
               maxline: 3,
             ),
             const SizedBox(height: 16),
@@ -662,7 +664,15 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
               height: 50,
               child: ElevatedButton(
                 onPressed: () {
-                  if (_currentStep < 3) _onNext();
+                  if (_currentStep < 3) {
+                    _onNext();
+                  } else {
+                    Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      '/main',
+                          (route) => false,
+                    );
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,

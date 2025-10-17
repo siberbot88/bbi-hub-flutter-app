@@ -24,6 +24,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.13.1
 
 flutter:
   uses-material-design: true
@@ -36,6 +37,12 @@ flutter:
     - assets/image/gambar_1.png
     - assets/image/gambar_2.png
     - assets/image/gambar_3.png
+    - assets/icons/app_icon.png
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/app_icon.png"
 
   fonts:
     - family: Poppins
