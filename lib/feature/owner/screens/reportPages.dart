@@ -1,8 +1,3 @@
-// report_page_fl_chart.dart
-// ReportPage dengan grafik menggunakan fl_chart + data dummy.
-// Jalankan langsung atau push dari halaman lain:
-// Navigator.push(context, MaterialPageRoute(builder: (_) => const ReportPage()));
-
 import 'dart:math';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -76,6 +71,8 @@ class _ReportPageState extends State<ReportPage> {
                         const Text('Dashboard Analitik',
                             style: TextStyle(color: Colors.white70, fontSize: 14)),
                         const SizedBox(height: 18),
+
+                        // CHIP RANGE: diganti jadi AnimatedContainer biar background tampil
                         Row(
                           children: [
                             _RangeChip(
@@ -114,7 +111,7 @@ class _ReportPageState extends State<ReportPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // KPI CARDS
+                  // KPI CARDS: layout dirombak biar badge tak nutup teks
                   Wrap(
                     spacing: 14,
                     runSpacing: 14,
@@ -151,7 +148,7 @@ class _ReportPageState extends State<ReportPage> {
                   ),
                   const SizedBox(height: 18),
 
-                  // LINE CHART: Pendapatan & Pekerjaan
+                  // LINE
                   _Panel(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -294,7 +291,6 @@ class _ReportPageState extends State<ReportPage> {
                   ),
                   const SizedBox(height: 18),
 
-                  // PRINT
                   SizedBox(
                     width: double.infinity,
                     height: 52,
@@ -314,6 +310,146 @@ class _ReportPageState extends State<ReportPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/* =========================
+   CHIP & KPI (fixed layout)
+   ========================= */
+
+class _RangeChip extends StatelessWidget {
+  const _RangeChip({
+    required this.text,
+    required this.selected,
+    required this.onTap,
+    this.highlight = false,
+  });
+
+  final String text;
+  final bool selected;
+  final bool highlight;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final bg = selected
+        ? (highlight ? const Color(0xFFF59E0B) : Colors.white)
+        : const Color(0xFF7F0F0F);
+    final fg = selected
+        ? (highlight ? Colors.white : kDanger)
+        : Colors.white70;
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          height: 44,
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            text,
+            style: TextStyle(
+              color: fg,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _KpiCard extends StatelessWidget {
+  const _KpiCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.growthText,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final String growthText;
+
+  @override
+  Widget build(BuildContext context) {
+    final w = (MediaQuery.of(context).size.width - 16 * 2 - 14) / 2;
+    return SizedBox(
+      width: w,
+      child: Container(
+        height: 120,
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF7A0F0F), Color(0xFFB01212)],
+            begin: Alignment.topLeft, end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: const [BoxShadow(color: Color(0x14000000), blurRadius: 12, offset: Offset(0, 6))],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // baris super tipis buat badge di kanan atas
+            Row(
+              children: [
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(.15),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.trending_up_rounded, color: Colors.white, size: 14),
+                      const SizedBox(width: 4),
+                      Text(growthText, style: const TextStyle(color: Colors.white, fontSize: 12)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            // konten utama: ikon + teks, lebih turun supaya badge tidak menutupi
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  width: 40, height: 40,
+                  decoration: BoxDecoration(color: Colors.white.withOpacity(.15), borderRadius: BorderRadius.circular(12)),
+                  child: Icon(icon, color: Colors.white),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800)),
+                      const SizedBox(height: 2),
+                      Text(subtitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -347,6 +483,13 @@ LineChartData _lineChartData({
     },
   );
 
+  FlDotData _dot(Color c) => FlDotData(
+    show: true,
+    getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
+      radius: 3, color: c, strokeWidth: 0,
+    ),
+  );
+
   return LineChartData(
     minY: 0,
     maxY: maxY,
@@ -363,14 +506,14 @@ LineChartData _lineChartData({
         isCurved: true,
         color: colorA,
         barWidth: 3,
-        dotData: FlDotData(show: true, dotSize: 3),
+        dotData: _dot(colorA),
       ),
       LineChartBarData(
         spots: List.generate(seriesB.length, (i) => FlSpot(i.toDouble(), seriesB[i])),
         isCurved: true,
         color: colorB,
         barWidth: 3,
-        dotData: FlDotData(show: true, dotSize: 3),
+        dotData: _dot(colorB),
       ),
     ],
     borderData: FlBorderData(show: false),
@@ -447,52 +590,8 @@ BarChartData _barsData({
 }
 
 /* =========================
-   UI PARTS
+   SUPPORT UI
    ========================= */
-
-class _RangeChip extends StatelessWidget {
-  const _RangeChip({
-    required this.text,
-    required this.selected,
-    required this.onTap,
-    this.highlight = false,
-  });
-
-  final String text;
-  final bool selected;
-  final bool highlight;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Ink(
-          height: 44,
-          decoration: BoxDecoration(
-            color: selected
-                ? (highlight ? const Color(0xFFF59E0B) : Colors.white)
-                : const Color(0xFF9B0D0D),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Center(
-            child: Text(
-              text,
-              style: TextStyle(
-                color: selected
-                    ? (highlight ? Colors.white : kDanger)
-                    : Colors.white70,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _Panel extends StatelessWidget {
   const _Panel({required this.child, this.background = Colors.white});
@@ -533,80 +632,6 @@ class _PanelHeader extends StatelessWidget {
         const Spacer(),
         if (trailingIcon != null) Icon(trailingIcon, color: const Color(0xFF9CA3AF)),
       ],
-    );
-  }
-}
-
-class _KpiCard extends StatelessWidget {
-  const _KpiCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.growthText,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final String growthText;
-
-  @override
-  Widget build(BuildContext context) {
-    final w = (MediaQuery.of(context).size.width - 16 * 2 - 14) / 2;
-    return SizedBox(
-      width: w,
-      child: Container(
-        height: 120,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF7A0F0F), Color(0xFFB01212)],
-            begin: Alignment.topLeft, end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: const [BoxShadow(color: Color(0x14000000), blurRadius: 12, offset: Offset(0, 6))],
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              right: 0, top: 0,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(.15),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.trending_up_rounded, color: Colors.white, size: 14),
-                    const SizedBox(width: 4),
-                    Text(growthText, style: const TextStyle(color: Colors.white, fontSize: 12)),
-                  ],
-                ),
-              ),
-            ),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 40, height: 40,
-                  decoration: BoxDecoration(color: Colors.white.withOpacity(.15), borderRadius: BorderRadius.circular(12)),
-                  child: Icon(icon, color: Colors.white),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(title, maxLines: 1, overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 2),
-                    Text(subtitle, style: const TextStyle(color: Colors.white70, fontSize: 12)),
-                  ]),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -759,7 +784,7 @@ class ReportData {
         revenueTrend: const [8, 10, 9, 12, 11, 13],
         jobsTrend: const [5, 7, 6, 8, 9, 10],
         labels: const ['Sen','Sel','Rab','Kam','Jum','Sab'],
-        jobsDone: 27,
+        jobsDone: 12,
         occupancy: 86,
         avgRating: 4.7,
         revenueThisPeriod: 13200000,
@@ -775,7 +800,6 @@ class ReportData {
         efficiency: 90,
       );
     } else {
-      // daily
       return ReportData(
         serviceBreakdown: serviceBreakdown,
         revenueTrend: const [2.1, 3.4, 2.8, 3.0, 3.6, 3.1],

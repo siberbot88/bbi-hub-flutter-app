@@ -1,4 +1,5 @@
 import 'package:bengkel_online_flutter/core/screens/registers/registerOwner.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/reportPages.dart';
 import 'package:bengkel_online_flutter/feature/owner/screens/staffManagement.dart';
 import 'package:flutter/material.dart';
 import 'feature/admin/screens/profilpage.dart';
@@ -67,7 +68,7 @@ class _MainPageState extends State<MainPage> {
   final List<Widget> _pages =  [
     DashboardScreen(),
     ManajemenKaryawanPage(),
-    DashboardPage(),
+    ReportPage(),
     ProfilePage(),
   ];
 
