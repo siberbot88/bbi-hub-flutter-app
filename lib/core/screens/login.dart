@@ -124,8 +124,10 @@ class _LoginPageState extends State<LoginPage> {
                         borderRadius: BorderRadius.circular(28)),
                     elevation: 8,
                     shadowColor:
-                        const Color.fromARGB(255, 215, 43, 28).withOpacity(0.6),
+                    const Color.fromARGB(255, 215, 43, 28).withOpacity(0.6),
                   ),
+                  onPressed: () {
+                    Navigator.pushReplacementNamed(context, "/main");
                   onPressed: () async {
                     // TODO: validasi login ke backend di sini
                     final bool sukses = true;
@@ -236,20 +238,20 @@ class _LoginPageState extends State<LoginPage> {
         prefixIcon: Padding(
           padding: const EdgeInsets.all(12.0),
           child:
-              Image.asset(iconPath, width: 20, height: 20, color: Colors.red),
+          Image.asset(iconPath, width: 20, height: 20, color: Colors.red),
         ),
         suffixIcon: isPassword
             ? IconButton(
-                icon: Icon(
-                  obscureText ? Icons.visibility_off : Icons.visibility,
-                  color: const Color.fromARGB(255, 215, 43, 28),
-                ),
-                onPressed: () {
-                  setState(() {
-                    obscureText = !obscureText;
-                  });
-                },
-              )
+          icon: Icon(
+            obscureText ? Icons.visibility_off : Icons.visibility,
+            color: const Color.fromARGB(255, 215, 43, 28),
+          ),
+          onPressed: () {
+            setState(() {
+              obscureText = !obscureText;
+            });
+          },
+        )
             : null,
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
