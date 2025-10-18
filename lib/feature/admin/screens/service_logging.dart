@@ -3,7 +3,10 @@ import 'package:google_fonts/google_fonts.dart';
 import '../widgets/bottom_nav.dart';
 import '../widgets/custom_header.dart';
 import 'service_page.dart'; // untuk navigasi ke Scheduled
-import 'service_view_report.dart'; // halaman target untuk "View Report"
+import 'service_pending.dart' as pending;
+import 'service_progress.dart' as progress;
+import 'service_complete.dart' as complete;
+import 'package:flutter_svg/flutter_svg.dart';
 
 class ServiceLoggingPage extends StatefulWidget {
   const ServiceLoggingPage({super.key});
@@ -20,14 +23,40 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
   String searchText = "";
   String selectedLoggingFilter = "All"; // default All
 
+
+  String? selectedTimeSlot; // slot waktu yang dipilih, null jika tidak ada
+  
+// dummy time slots
+  final List<Map<String, dynamic>> availableTimeSlots = [
+    {
+      "time": "08:00 - 10:00",
+      "tasks": 4,
+      "status": "Aktif",
+    },
+    {
+      "time": "10:00 - 12:00",
+      "tasks": 2,
+      "status": "Akan Datang",
+    },
+    {
+      "time": "14:00 - 15:30",
+      "tasks": 5,
+      "status": "Penjadwalan",
+    },
+  ];
+
+
+  // Dummy data for tasks/logs
+
   final List<Map<String, dynamic>> allTasks = [
+
     // Pending dummy 1
     {
       "id": "1",
       "user": "Andi",
       "date": DateTime(2025, 9, 1),
       "title": "General Checkup",
-      "desc": "Initial diagnosis pending approval",
+      "desc": "Penggantian bantalan rem lengkap dan kalibrasi sistem untuk unit excavator",
       "plate": "L 1234 XX",
       "motor": "Vario 2021",
       "status": "Pending",
@@ -217,6 +246,12 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
 
             _buildFilterTabs(),
             const SizedBox(height: 12),
+            // Hanya tampilkan container "Waktu Tersedia" jika filter "All" dipilih
+            if (selectedLoggingFilter == "All") ...[
+           _buildAvailableTimes(),
+            const SizedBox(height: 12),
+          ],
+
 
             _loggingContent(),
           ],
@@ -383,167 +418,363 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
     );
   }
 
-  // 🔹 Logging Content
-  Widget _loggingContent() {
-    final loggingAll = allTasks
-        .where((t) =>
-            isSameDate(t['date'] as DateTime, selectedDate) &&
-            t['category'] == 'logging')
-        .toList();
 
-    final loggingFiltered = loggingAll.where((t) {
-      if (selectedLoggingFilter == 'All') return true;
-      return _matchesFilterKey(t, selectedLoggingFilter);
-    }).where((t) {
-      if (searchText.trim().isEmpty) return true;
-      final q = searchText.toLowerCase();
-      return (t['title'] as String).toLowerCase().contains(q) ||
-          (t['plate'] as String).toLowerCase().contains(q) ||
-          (t['user'] as String).toLowerCase().contains(q);
-    }).toList();
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("Logging Tasks",
-              style: GoogleFonts.poppins(
-                  fontSize: 16, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 12),
-          if (loggingFiltered.isEmpty)
-            Center(
-                child: Text("No tasks match the filters",
-                    style: GoogleFonts.poppins()))
-          else
-            ...loggingFiltered.map((t) => taskLoggingCard(t)).toList(),
-        ],
-      ),
-    );
-  }
+  // Letakkan method-method ini di dalam class _ServiceLoggingPageState
 
-  // 🔹 Task card
-  Widget taskLoggingCard(Map<String, dynamic> task) {
-    Color statusColor;
-    final status = (task['status'] as String).toLowerCase();
-    if (status.contains("completed")) statusColor = Colors.green;
-    else if (status.contains("progress")) statusColor = Colors.orange;
-    else if (status.contains("pending")) statusColor = Colors.blue;
-    else statusColor = Colors.grey;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
+// Method untuk membangun container utama "Waktu Tersedia"
+Widget _buildAvailableTimes() {
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 16),
+    child: Container(
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 6,
-              offset: const Offset(0, 3))
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          )
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Status and date/time
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(20)),
-                child: Text(task['status'],
-                    style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: statusColor)),
-              ),
-              Text(
-                  "${_formatDate(task['date'] as DateTime)} • ${task['time']}",
-                  style: const TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey,
-                      fontWeight: FontWeight.w500)),
-            ],
+          Text(
+            "Waktu tersedia",
+            style: GoogleFonts.poppins(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          const SizedBox(height: 8),
-
-          // Title
-          Text(task['title'],
-              style:
-                  const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 4),
-
-          // Desc
-          Text(task['desc'],
-              style: const TextStyle(fontSize: 12, color: Colors.black87)),
-          const SizedBox(height: 8),
-
-          // Motor info
-          Row(
-            children: [
-              const Icon(Icons.settings, size: 16, color: Colors.grey),
-              const SizedBox(width: 6),
-              Text("${task['motor']}  #${task['plate']}",
-                  style: const TextStyle(fontSize: 12, color: Colors.grey)),
-            ],
-          ),
-          const SizedBox(height: 10),
-
-          // User info + Button
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                      radius: 14,
-                      backgroundImage: NetworkImage(
-                          "https://i.pravatar.cc/150?img=${task['id']}")),
-                  const SizedBox(width: 8),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(task['user'],
-                          style: const TextStyle(
-                              fontSize: 13, fontWeight: FontWeight.w600)),
-                      Text("ID: ${task['id']}",
-                          style: const TextStyle(
-                              fontSize: 11, color: Colors.grey)),
-                    ],
-                  ),
-                ],
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => ServiceViewReportPage(task: task)),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20)),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                ),
-                child: const Text("View Report",
-                    style: TextStyle(fontSize: 12, color: Colors.white)),
-              ),
-            ],
-          ),
+          const SizedBox(height: 12),
+          ...availableTimeSlots.map((slot) => _buildTimeSlotCard(slot)).toList(),
         ],
       ),
+    ),
+  );
+}
+
+// Method untuk membangun setiap kartu/baris slot waktu
+// Ganti method _buildTimeSlotCard yang lama dengan yang ini
+Widget _buildTimeSlotCard(Map<String, dynamic> slot) {
+  final String status = slot['status'];
+  final String time = slot['time'];
+  final bool isSelected = selectedTimeSlot == time; // Cek apakah slot ini sedang dipilih
+
+  Color dotColor, statusColor, bgColor, borderColor;
+
+  switch (status) {
+    case 'Aktif':
+      dotColor = const Color(0xFF007BFF);
+      statusColor = const Color(0xFF007BFF);
+      bgColor = isSelected ? const Color(0xFF007BFF).withOpacity(0.2) : const Color(0xFF007BFF).withOpacity(0.1);
+      break;
+    case 'Akan Datang':
+      dotColor = Colors.orange;
+      statusColor = Colors.orange;
+      bgColor = isSelected ? Colors.orange.withOpacity(0.2) : Colors.grey.shade100;
+      break;
+    case 'Penjadwalaan':
+    default:
+      dotColor = Colors.grey.shade600;
+      statusColor = Colors.black87;
+      bgColor = isSelected ? Colors.grey.shade300 : Colors.grey.shade100;
+      break;
+  }
+  
+  // Tentukan warna border jika terpilih
+  borderColor = isSelected ? dotColor : Colors.transparent;
+
+  return GestureDetector( // Dibungkus GestureDetector agar bisa di-tap
+    onTap: () {
+      setState(() {
+        // Logika untuk memilih dan membatalkan pilihan
+        if (isSelected) {
+          selectedTimeSlot = null; // Jika sudah terpilih, batalkan pilihan
+        } else {
+          selectedTimeSlot = time; // Jika belum, pilih slot ini
+        }
+      });
+    },
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: borderColor, width: 1.5), // Border dinamis
+      ),
+      child: Row(
+        // ... (Isi Row tetap sama seperti sebelumnya)
+        children: [
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              color: dotColor,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  slot['time'],
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+                Text(
+                  "${slot['tasks']} tasks scheduled",
+                  style: GoogleFonts.poppins(
+                    color: Colors.grey.shade600,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            status,
+            style: GoogleFonts.poppins(
+              color: statusColor,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
+          )
+        ],
+      ),
+    ),
+  );
+}
+
+  // 🔹 Logging Content
+Widget _loggingContent() {
+  // Rantai filter menjadi lebih efisien dan mudah dibaca
+  final List<Map<String, dynamic>> loggingFiltered = allTasks.where((task) {
+    // 1. Filter berdasarkan tanggal dan kategori
+    bool dateMatch = isSameDate(task['date'] as DateTime, selectedDate);
+    bool categoryMatch = task['category'] == 'logging';
+    if (!dateMatch || !categoryMatch) return false;
+
+    // 2. Filter berdasarkan tab status (All, Pending, dll.)
+    bool statusMatch = _matchesFilterKey(task, selectedLoggingFilter);
+    if (!statusMatch) return false;
+
+    // 3. Filter berdasarkan slot waktu yang dipilih
+    if (selectedTimeSlot != null && task['time'] != selectedTimeSlot) {
+      return false;
+    }
+
+    // 4. Filter berdasarkan teks pencarian
+    if (searchText.trim().isNotEmpty) {
+      final q = searchText.toLowerCase();
+      return (task['title'] as String).toLowerCase().contains(q) ||
+             (task['plate'] as String).toLowerCase().contains(q) ||
+             (task['user'] as String).toLowerCase().contains(q);
+    }
+
+    return true; // Lolos semua filter
+  }).toList();
+
+  // Judul dinamis
+  final String title = selectedTimeSlot == null
+      ? "Semua Tugas"
+      : "Tugas untuk jam $selectedTimeSlot";
+
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title, // Menggunakan judul dinamis
+          style: GoogleFonts.poppins(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 12),
+        if (loggingFiltered.isEmpty)
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Text(
+                "Tidak ada tugas yang sesuai dengan filter.",
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(color: Colors.grey.shade600),
+              ),
+            ),
+          )
+        else
+          ...loggingFiltered.map((t) => taskLoggingCard(t)).toList(),
+      ],
+    ),
+  );
+}
+
+  // 🔹 Task card per type pending/inprogress/completed
+Widget taskLoggingCard(Map<String, dynamic> task) {
+  Color statusColor;
+  final status = (task['status'] as String); // Tidak perlu toLowerCase() di sini
+
+  if (status == "Completed") statusColor = Colors.green;
+  else if (status == "In Progress") statusColor = Colors.orange;
+  else if (status == "Pending") statusColor = Colors.grey.shade800;
+  else statusColor = Colors.grey.shade800;
+
+  // --- BAGIAN BARU DIMULAI DARI SINI ---
+
+  // 1. Deklarasikan sebuah variabel Widget untuk menampung tombol aksi
+  Widget actionButton;
+
+  // 2. Gunakan if-else-if untuk mengisi variabel 'actionButton' berdasarkan status
+  if (status == 'Pending') {
+    actionButton = ElevatedButton(
+      onPressed: () {
+        Navigator.push(context, MaterialPageRoute(
+          builder: (_) => pending.ServicePendingDetail(task: task),
+        ));
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFFDC2626),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      ),
+      child: const Text("Tetapkan Mekanik", style: TextStyle(fontSize: 12, color: Colors.white)),
     );
+  } else if (status == 'In Progress') {
+    actionButton = ElevatedButton(
+      onPressed: () {
+        Navigator.push(context, MaterialPageRoute(
+          builder: (_) => progress.ServiceProgressDetail(task: task),
+        ));
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.orange,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      ),
+      child: const Text("Lihat Detail", style: TextStyle(fontSize: 12, color: Colors.white)),
+    );
+  } else if (status == 'Completed') {
+    actionButton = ElevatedButton(
+      onPressed: () {
+        Navigator.push(context, MaterialPageRoute(
+          builder: (_) => complete.ServiceCompleteDetail(task: task),
+        ));
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.green,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      ),
+      child: const Text("Buat Invoice", style: TextStyle(fontSize: 12, color: Colors.white)),
+    );
+  } else {
+    // Fallback jika status tidak dikenali
+    actionButton = const SizedBox.shrink();
   }
 
+  // --- BAGIAN BARU SELESAI DI SINI ---
+
+  return Container(
+    margin: const EdgeInsets.only(bottom: 12),
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      boxShadow: [
+        BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 6,
+            offset: const Offset(0, 3))
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // ... Bagian atas kartu (Status, Judul, Deskripsi, dll.) tetap sama ...
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                  color: statusColor.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(20)),
+              child: Text(task['status'],
+                  style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: statusColor)),
+            ),
+            Text(
+                "${_formatDate(task['date'] as DateTime)} • ${task['time']}",
+                style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey,
+                    fontWeight: FontWeight.w500)),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(task['title'],
+            style:
+                const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 4),
+        Text(task['desc'],
+            style: const TextStyle(fontSize: 12, color: Colors.black87)),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            const Icon(Icons.settings, size: 16, color: Colors.grey),
+            const SizedBox(width: 6),
+            Text("${task['motor']}  #${task['plate']}",
+                style: const TextStyle(fontSize: 12, color: Colors.grey)),
+          ],
+        ),
+        const SizedBox(height: 10),
+
+        // User info + Button
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                    radius: 14,
+                    backgroundImage: NetworkImage(
+                        "https://i.pravatar.cc/150?img=${task['id']}")),
+                const SizedBox(width: 8),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(task['user'],
+                        style: const TextStyle(
+                            fontSize: 13, fontWeight: FontWeight.w600)),
+                    Text("ID: ${task['id']}",
+                        style: const TextStyle(
+                            fontSize: 11, color: Colors.grey)),
+                  ],
+                ),
+              ],
+            ),
+            
+            // 3. Gunakan variabel 'actionButton' yang sudah diisi
+            actionButton,
+
+          ],
+        ),
+      ],
+    ),
+  );
+}
   // 🔹 Utils
   String _formatDate(DateTime d) =>
       "${d.day} ${_monthName(d.month)} ${d.year}";

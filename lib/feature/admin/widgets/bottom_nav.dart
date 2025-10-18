@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'smartasset.dart';
-
+import 'package:flutter_svg/svg.dart';
 
 class CustomBottomNavBar extends StatelessWidget {
   final int selectedIndex;
@@ -17,12 +15,12 @@ class CustomBottomNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final List<Map<String, String>> items = [
       {
-        'label': 'Home',
+        'label': 'Beranda',
         'icon_inactive': 'assets/icons/home_tipis.svg',
         'icon_active': 'assets/icons/home_highlight.svg',
       },
       {
-        'label': 'Service',
+        'label': 'Servis',
         'icon_inactive': 'assets/icons/service_tipis.svg',
         'icon_active': 'assets/icons/service_tebal.svg',
       },
@@ -36,48 +34,7 @@ class CustomBottomNavBar extends StatelessWidget {
         'icon_inactive': 'assets/icons/user_tipis.svg',
         'icon_active': 'assets/icons/user_tebal.svg',
       },
-  
     ];
-
-  //  return Scaffold(
-  //     backgroundColor: Colors.white,
-  //     body: Center(
-  //       child: Row(
-  //         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-  //         children: List.generate(items.length, (index) {
-  //           final item = items[index];
-  //           final isActive = index == selectedIndex;
-
-  //           return Column(
-  //             mainAxisSize: MainAxisSize.min,
-  //             children: [
-  //               SvgPicture.asset(
-  //                 isActive
-  //                     ? item['icon_active']!
-  //                     : item['icon_inactive']!,
-  //                 width: 28,
-  //                 height: 28,
-  //                 colorFilter: ColorFilter.mode(
-  //                   isActive ? Colors.red : Colors.grey,
-  //                   BlendMode.srcIn,
-  //                 ),
-  //               ),
-  //               const SizedBox(height: 4),
-  //               Text(
-  //                 item['label']!,
-  //                 style: TextStyle(
-  //                   fontSize: 12,
-  //                   color: isActive ? Colors.red : Colors.grey,
-  //                 ),
-  //               ),
-  //             ],
-  //           );
-  //         }),
-  //       ),
-  //     ),
-  //   );
-
-  
 
     return SafeArea(
       top: false,
@@ -90,7 +47,7 @@ class CustomBottomNavBar extends StatelessWidget {
             final itemWidth = totalWidth / itemCount;
 
             return Container(
-              height: 70,
+              height: 80,
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(18),
@@ -110,7 +67,7 @@ class CustomBottomNavBar extends StatelessWidget {
                     duration: const Duration(milliseconds: 300),
                     curve: Curves.easeOutCubic,
                     left: itemWidth * selectedIndex + 8,
-                    top: 6,
+                    top: 10,
                     width: itemWidth - 16,
                     height: 58,
                     child: Container(
@@ -149,11 +106,14 @@ class CustomBottomNavBar extends StatelessWidget {
                                   child: SizedBox(
                                     width: 24,
                                     height: 24,
-                                    child: SmartAsset(
-                                       path: active ? entry['icon_active']! : entry['icon_inactive']!,
+                                    child: SvgPicture.asset(
+                                      active
+                                          ? entry['icon_active']!
+                                          : entry['icon_inactive']!,
                                       width: iconSize,
-                                     height: iconSize,
-                                      ),
+                                      height: iconSize,
+                                      fit: BoxFit.contain,
+                                    ),
                                   ),
                                 ),
                                 // Posisi Teks diatur dari bawah
@@ -185,9 +145,5 @@ class CustomBottomNavBar extends StatelessWidget {
         ),
       ),
     );
-
-
-   
   }
 }
-

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class CustomHeader extends StatelessWidget implements PreferredSizeWidget {
@@ -46,8 +47,8 @@ class CustomHeader extends StatelessWidget implements PreferredSizeWidget {
         elevation: 0,
         leading: showBack
             ? IconButton(
-                icon: Image.asset(
-                  "assets/icons/back.png",
+                icon: SvgPicture.asset(
+                  "assets/icons/back.svg",
                   width: 24,
                   height: 24,
                 ),
