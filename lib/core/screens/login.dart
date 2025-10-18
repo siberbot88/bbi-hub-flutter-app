@@ -113,22 +113,36 @@ class _LoginPageState extends State<LoginPage> {
                 ],
               ),
               const SizedBox(height: 21),
-
+              // 🔹 Login button
               SizedBox(
                 width: double.infinity,
-                height: 40,
+                height: 44,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color.fromARGB(255, 215, 43, 28),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(28),
-                    ),
+                        borderRadius: BorderRadius.circular(28)),
                     elevation: 8,
                     shadowColor:
                         const Color.fromARGB(255, 215, 43, 28).withOpacity(0.6),
                   ),
-                  onPressed: () {
-                    Navigator.pushReplacementNamed(context, "/home");
+                  onPressed: () async {
+                    // TODO: validasi login ke backend di sini
+                    final bool sukses = true;
+
+                    if (sukses) {
+                      // arahkan ke shell /home dengan role admin
+                      Navigator.pushNamedAndRemoveUntil(
+                        context,
+                        '/home',
+                        (route) => false,
+                        arguments: 'admin',
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Login gagal')),
+                      );
+                    }
                   },
                   child: Text(
                     "LOG IN",

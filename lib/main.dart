@@ -6,7 +6,8 @@ import 'feature/owner/widgets/bottom_nav_owner.dart';
 import 'feature/owner/screens/homepageOwner.dart' hide CustomBottomNavBar;
 import 'feature/admin/screens/homepage.dart';
 import 'feature/admin/screens/dashboard.dart';
-import 'core/screens/login.dart'as login_screen;
+
+import 'core/screens/login.dart' as login_screen;
 import 'core/screens/register.dart';
 import 'core/screens/registerBengkel.dart';
 import 'feature/admin/screens/change_password.dart' as change_screen;
@@ -14,7 +15,6 @@ import 'feature/admin/screens/service_page.dart';
 import 'feature/owner/screens/onBoarding.dart';
 import 'feature/mechanic/screens/homepageMechanic.dart';
 import 'feature/owner/screens/homepageOwner.dart';
-
 
 void main() {
   runApp(const MyApp());
@@ -25,6 +25,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
 
     // sementara: simulasi role user
     const String currentRole = "admin"; // admin | owner | mechanic
@@ -41,9 +42,7 @@ class MyApp extends StatelessWidget {
           displayLarge: TextStyle(),
           displayMedium: TextStyle(),
           displaySmall: TextStyle(),
-      ).apply(
-          bodyColor: Colors.black, displayColor: Colors.black),
-
+        ).apply(bodyColor: Colors.black, displayColor: Colors.black),
       ),
       // 🔹 halaman pertama aplikasi
       initialRoute: "/onboarding",
@@ -53,15 +52,19 @@ class MyApp extends StatelessWidget {
         "/onboarding": (context) => const OnboardingScreen(),
         "/login": (context) => const login_screen.LoginPage(),
         "/register": (context) => const RegisterFlowPage(),
-        // "/home": (context) =>
-        //     const MainPage(), //
-        //     const MainPage(role:currentRole), //
-        "/register": (context) => const RegisterRoleScreen(),
         "/registerBengkel": (context) => const RegisterBengkelScreen(),
         "/registeruser": (context) => const RegisterScreen(),
         "/dashboard": (context) => const DashboardPage(),
-        "/changePassword": (context) => const change_screen.ChangePasswordPage(),
+        "/changePassword": (context) =>
+            const change_screen.ChangePasswordPage(),
+      },
 
+      onGenerateRoute: (settings) {
+        if (settings.name == '/home') {
+          final role = (settings.arguments ?? 'admin') as String;
+          return MaterialPageRoute(builder: (_) => MainPage(role: role));
+        }
+        return null;
       },
     );
   }
@@ -69,7 +72,6 @@ class MyApp extends StatelessWidget {
 
 /// Halaman utama dengan BottomNavigation + IndexedStack
 class MainPage extends StatefulWidget {
-
   final String role; // 🔹 tambahkan parameter role
   const MainPage({super.key, required this.role});
 
@@ -81,7 +83,7 @@ class _MainPageState extends State<MainPage> {
   int _selectedIndex = 0;
 
   // Pastikan urutan sesuai dengan CustomBottomNavBar
-  final List<Widget> _pages =  [
+  final List<Widget> _pages = [
     DashboardScreen(),
     ServicePage(),
     DashboardPage(),
@@ -101,17 +103,17 @@ class _MainPageState extends State<MainPage> {
     switch (widget.role) {
       case "owner":
         pages = [
-           DashboardScreen(),
-           Placeholder(), // nanti ganti OrderPage()
-           Placeholder(), // ProfileOwnerPage()
+          DashboardScreen(),
+          Placeholder(), // nanti ganti OrderPage()
+          Placeholder(), // ProfileOwnerPage()
         ];
         break;
 
       case "mechanic":
         pages = [
-           HomePageMechanic(),
-           Placeholder(), // TaskPage()
-           Placeholder(), // ProfileMechanicPage()
+          HomePageMechanic(),
+          Placeholder(), // TaskPage()
+          Placeholder(), // ProfileMechanicPage()
         ];
         break;
 

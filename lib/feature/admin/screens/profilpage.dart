@@ -1,7 +1,17 @@
+// urutan import yang rapi: dart -> flutter -> package -> local
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+import 'package:bengkel_online_flutter/feature/admin/screens/change_password.dart';
+import 'package:bengkel_online_flutter/feature/admin/screens/feedback.dart';
 import 'package:bengkel_online_flutter/feature/admin/screens/voucher_page.dart';
+import 'package:bengkel_online_flutter/feature/admin/screens/edit_profile_page.dart';
+import 'package:bengkel_online_flutter/feature/admin/screens/ubah_bahasa_page.dart';
+import 'package:bengkel_online_flutter/feature/admin/screens/help_support_page.dart';
+
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -17,7 +27,8 @@ class ProfilePage extends StatelessWidget {
           // ====== Responsif sizing ======
           final bottomRadius = width * 0.08;
           final avatarRadius = ((width * 0.16)).clamp(50.0, 88.0) as double;
-          final titleFontSize = width < 360 ? 18.0 : (width > 600 ? 24.0 : 20.0);
+          final titleFontSize =
+              width < 360 ? 18.0 : (width > 600 ? 24.0 : 20.0);
           final nameFontSize = (width * 0.05).clamp(16.0, 26.0) as double;
           final usernameFontSize = (width * 0.035).clamp(12.0, 16.0) as double;
           final roleFontSize = (width * 0.036).clamp(12.0, 16.0) as double;
@@ -25,13 +36,13 @@ class ProfilePage extends StatelessWidget {
           final itemIconSize = (width * 0.07).clamp(20.0, 36.0) as double;
           final itemFontSize = (width * 0.045).clamp(14.0, 18.0) as double;
 
-          const primaryInner = Color(0xFFDC2626);
-          const primaryOuter = Color(0xFF000000);
+          const primaryInner = Color(0xFF9B0D0D);
+          const primaryOuter = Color(0xFFDC2626);
 
           return SingleChildScrollView(
             child: Column(
               children: [
-                // ====== Header gradient fleksibel ======
+                // ====== HEADER GRADIENT ======
                 ClipRRect(
                   borderRadius: BorderRadius.vertical(
                     bottom: Radius.circular(bottomRadius),
@@ -52,7 +63,7 @@ class ProfilePage extends StatelessWidget {
                           horizontal: width * 0.05,
                         ),
                         child: Column(
-                          mainAxisSize: MainAxisSize.min, // supaya fleksibel
+                          mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Text(
@@ -96,7 +107,7 @@ class ProfilePage extends StatelessWidget {
                             ),
                             SizedBox(height: width * 0.03),
 
-                            // Badge
+                            // Role Badge
                             Container(
                               padding: EdgeInsets.symmetric(
                                 horizontal: width * 0.04,
@@ -118,7 +129,13 @@ class ProfilePage extends StatelessWidget {
 
                             // Edit button
                             ElevatedButton(
-                              onPressed: () {},
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) => const EditProfilePage()),
+                                );
+                              },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.amber,
                                 foregroundColor: Colors.black,
@@ -147,7 +164,7 @@ class ProfilePage extends StatelessWidget {
 
                 SizedBox(height: width * 0.06),
 
-                // ====== Card menu ======
+                // ====== CARD MENU ======
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: width * 0.04),
                   child: Card(
@@ -159,36 +176,36 @@ class ProfilePage extends StatelessWidget {
                     child: Column(
                       children: [
                         _ProfileItem(
-                          iconPath: "assets/icons/about.png",
-                          title: "About Us",
+                          iconPath: "assets/icons/bahasa.svg",
+                          title: "Bahasa",
                           iconSize: itemIconSize,
                           fontSize: itemFontSize,
                           onTap: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (_) => const AboutPage()),
+                                  builder: (_) => const UbahBahasaPage()),
                             );
                           },
                         ),
                         const Divider(height: 1),
                         _ProfileItem(
-                          iconPath: "assets/icons/help.png",
-                          title: "Help & Support",
+                          iconPath: "assets/icons/help.svg",
+                          title: "Bantuan & Dukungan",
                           iconSize: itemIconSize,
                           fontSize: itemFontSize,
                           onTap: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (_) => const HelpPage()),
+                                  builder: (_) => const HelpSupportPage()),
                             );
                           },
                         ),
                         const Divider(height: 1),
                         _ProfileItem(
-                          iconPath: "assets/icons/password.png",
-                          title: "Change Password",
+                          iconPath: "assets/icons/password.svg",
+                          title: "Ganti Password",
                           iconSize: itemIconSize,
                           fontSize: itemFontSize,
                           onTap: () {
@@ -201,7 +218,7 @@ class ProfilePage extends StatelessWidget {
                         ),
                         const Divider(height: 1),
                         _ProfileItem(
-                          iconPath: "assets/icons/voucher.png",
+                          iconPath: "assets/icons/voucher.svg",
                           title: "Voucher",
                           iconSize: itemIconSize,
                           fontSize: itemFontSize,
@@ -215,8 +232,22 @@ class ProfilePage extends StatelessWidget {
                         ),
                         const Divider(height: 1),
                         _ProfileItem(
-                          iconPath: "assets/icons/logout.png",
-                          title: "Logout",
+                          iconPath: "assets/icons/feedback.svg",
+                          title: "Umpan Balik",
+                          iconSize: itemIconSize,
+                          fontSize: itemFontSize,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const FeedbackPage()),
+                            );
+                          },
+                        ),
+                        const Divider(height: 1),
+                        _ProfileItem(
+                          iconPath: "assets/icons/logout.svg",
+                          title: "Keluar",
                           iconSize: itemIconSize,
                           fontSize: itemFontSize,
                           isLogout: true,
@@ -224,7 +255,7 @@ class ProfilePage extends StatelessWidget {
                             showDialog(
                               context: context,
                               builder: (context) => AlertDialog(
-                                title: Text("Logout",
+                                title: Text("Keluar",
                                     style: GoogleFonts.poppins()),
                                 content: Text(
                                   "Apakah Anda yakin ingin keluar?",
@@ -257,7 +288,6 @@ class ProfilePage extends StatelessWidget {
                     ),
                   ),
                 ),
-
                 SizedBox(height: width * 0.08),
               ],
             ),
@@ -290,12 +320,11 @@ class _ProfileItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       contentPadding: EdgeInsets.symmetric(
-          horizontal: MediaQuery.of(context).size.width * 0.04),
-      leading: Image.asset(
+        horizontal: MediaQuery.of(context).size.width * 0.04,
+      ),
+      leading: _buildIcon(
         iconPath,
-        width: iconSize,
-        height: iconSize,
-        fit: BoxFit.contain,
+        size: iconSize,
         color: isLogout ? Colors.red : Colors.red,
       ),
       title: Text(
@@ -306,10 +335,21 @@ class _ProfileItem extends StatelessWidget {
           fontWeight: isLogout ? FontWeight.w600 : FontWeight.normal,
         ),
       ),
-      trailing: Icon(Icons.arrow_forward_ios,
-          size: fontSize * 0.7, color: Colors.grey[600]),
+      trailing: Icon(
+        Icons.arrow_forward_ios,
+        size: fontSize * 0.7,
+        color: Colors.grey[600],
+      ),
       onTap: onTap,
     );
+  }
+
+  /// ✅ Fungsi helper untuk menampilkan ikon baik .svg maupun .png
+  Widget _buildIcon(String path, {Color? color, double size = 24}) {
+    if (path.toLowerCase().endsWith('.svg')) {
+      return SvgPicture.asset(path, width: size, height: size, color: color);
+    }
+    return Image.asset(path, width: size, height: size, color: color);
   }
 }
 
@@ -331,16 +371,6 @@ class HelpPage extends StatelessWidget {
     return Scaffold(
         appBar: AppBar(title: const Text("Help & Support")),
         body: const Center(child: Text("Ini halaman Help & Support")));
-  }
-}
-
-class ChangePasswordPage extends StatelessWidget {
-  const ChangePasswordPage({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(title: const Text("Change Password")),
-        body: const Center(child: Text("Form ganti password di sini")));
   }
 }
 
