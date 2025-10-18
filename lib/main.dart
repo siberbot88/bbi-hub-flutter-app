@@ -1,4 +1,5 @@
 import 'package:bengkel_online_flutter/core/screens/registers/registerOwner.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/listWork.dart';
 import 'package:bengkel_online_flutter/feature/owner/screens/reportPages.dart';
 import 'package:bengkel_online_flutter/feature/owner/screens/staffManagement.dart';
 import 'package:flutter/material.dart';
@@ -38,7 +39,7 @@ class MyApp extends StatelessWidget {
 
       ),
       // 🔹 halaman pertama aplikasi
-      initialRoute: "/onboarding",
+      initialRoute: "/list",
 
       // 🔹 daftar route
       routes: {
@@ -47,6 +48,7 @@ class MyApp extends StatelessWidget {
         "/register": (context) => const RegisterFlowPage(),
         "/home": (context) => const DashboardScreen(),
         "/main": (context) => const MainPage(),
+        "/list": (context) => const ListWorkPage(),
         "/changePassword": (context) => const change_screen.ChangePasswordPage(),
       },
     );
