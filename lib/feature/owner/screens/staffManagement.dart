@@ -1,3 +1,4 @@
+import 'package:bengkel_online_flutter/feature/owner/screens/listStaff.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:bengkel_online_flutter/feature/owner/screens/addStaff.dart';
@@ -104,7 +105,9 @@ class _ManajemenKaryawanPageState extends State<ManajemenKaryawanPage> {
                         Row(
                           children: [
                             InkWell(
-                              onTap: () => Navigator.pop(context),
+                              onTap: () {
+                                Navigator.pushReplacementNamed(context, "/main");
+                              },
                               borderRadius: BorderRadius.circular(30),
                               child: Container(
                                 padding: const EdgeInsets.all(8),
@@ -169,7 +172,12 @@ class _ManajemenKaryawanPageState extends State<ManajemenKaryawanPage> {
                                 _FeatureButton(
                                   icon: Icons.list,
                                   label: 'List Staff',
-                                  onTap: () {},
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (_) => const ManajemenKaryawanTablePage()),
+                                    );
+                                  },
                                 ),
                                 _FeatureButton(
                                   icon: Icons.access_time,
