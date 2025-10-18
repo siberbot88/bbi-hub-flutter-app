@@ -9,7 +9,6 @@ environment:
 
 dependencies:
   intl: ^0.19.0
-  syncfusion_flutter_datepicker: ^25.1.42
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8

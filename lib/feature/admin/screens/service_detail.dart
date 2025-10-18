@@ -118,14 +118,18 @@ class ServiceDetailPage extends StatelessWidget {
                             ),
                             const SizedBox(height: 16),
 
-                            // 🔹 Gambar Kendaraan
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Image.asset(
-                                "assets/images/motorbeat.jpg",
-                                height: 180,
-                                width: double.infinity,
-                                fit: BoxFit.cover,
+                            // 🔹 Foto Kendaraan (square 1:1)
+                            Center(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: AspectRatio(
+                                  aspectRatio: 1, // square
+                                  child: Image.asset(
+                                    "assets/image/motorbeat.png",
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
                               ),
                             ),
                             const SizedBox(height: 16),
@@ -331,8 +335,7 @@ class ServiceDetailPage extends StatelessWidget {
                                       padding: const EdgeInsets.symmetric(
                                           vertical: 14),
                                       shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(30),
+                                        borderRadius: BorderRadius.circular(30),
                                       ),
                                     ),
                                     child: Text("Accept",
