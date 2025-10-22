@@ -133,6 +133,18 @@ class _MainPageState extends State<MainPage> {
           onTap: _onItemTapped,
         );
         break;
+        case "admin":
+        bottomNavBar = CustomBottomNavBarAdmin(
+          selectedIndex: _selectedIndex,
+          onTap: _onItemTapped,
+        );
+        break;
+      // case "mechanic":
+      //   bottomNavBar = CustomBottomNavBar(
+      //     selectedIndex: _selectedIndex,
+      //     onTap: _onItemTapped,
+      //   );
+      //   break;
       default:
         bottomNavBar = CustomBottomNavBar(
           selectedIndex: _selectedIndex,
