@@ -126,8 +126,6 @@ class _LoginPageState extends State<LoginPage> {
                     shadowColor:
                     const Color.fromARGB(255, 215, 43, 28).withOpacity(0.6),
                   ),
-                  onPressed: () {
-                    Navigator.pushReplacementNamed(context, "/main");
                   onPressed: () async {
                     // TODO: validasi login ke backend di sini
                     final bool sukses = true;
