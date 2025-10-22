@@ -488,12 +488,12 @@ class _HomeContentState extends State<HomeContent> {
         const SizedBox(height: 8),
 
         // Stat cards
- LayoutBuilder(
-  builder: (context, constraints) {
-    final screenWidth = constraints.maxWidth;
-    final aspectRatio = screenWidth < 360 ? 1.0 : 1.4; // responsif
+      LayoutBuilder(
+      builder: (context, constraints) {
+      final screenWidth = constraints.maxWidth;
+      final aspectRatio = screenWidth < 360 ? 1.0 : 1.4; // responsif
 
-    return GridView.count(
+      return GridView.count(
       crossAxisCount: 2,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -571,7 +571,6 @@ LayoutBuilder(
 ),
 
 const SizedBox(height: 24),
-
 
 
         // removed extra gap - langsung Warning card

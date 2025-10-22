@@ -258,7 +258,7 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
         ),
       ),
 
-      bottomNavigationBar: CustomBottomNavBar(
+      bottomNavigationBar: CustomBottomNavBarAdmin(
         selectedIndex: 1,
         onTap: (i) {
           if (i == 0) Navigator.pushReplacementNamed(context, '/home');

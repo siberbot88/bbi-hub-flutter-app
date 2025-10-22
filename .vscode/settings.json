@@ -1,6 +1,6 @@
 {
 
-    "dart.flutterSdkPath": "D:\\Flutter\\flutter",
+    "dart.flutterSdkPath": "C:\\flutter",
     "dart.flutterCreateOrganization": "com.example",
     "dart.lineLength": 80,
     "editor.formatOnSave": true,
@@ -8,7 +8,8 @@
     "files.autoSaveDelay": 1000,
     "terminal.integrated.defaultProfile.windows": "PowerShell",
     "workbench.colorTheme": "Visual Studio Dark",
-    "workbench.iconTheme": "vscode-icons"
+    "workbench.iconTheme": "vscode-icons",
+    "java.configuration.updateBuildConfiguration": "interactive"
 }
 
 

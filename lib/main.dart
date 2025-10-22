@@ -1,16 +1,22 @@
-import 'core/screens/registeruser.dart';
+import 'package:bengkel_online_flutter/core/screens/registers/registerOwner.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/reportPages.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/staffManagement.dart';
 import 'package:flutter/material.dart';
+import 'core/screens/login.dart'as login_screen;
+import 'feature/admin/screens/change_password.dart' as change_screen;
 import 'feature/admin/screens/profilpage.dart';
 import 'feature/admin/widgets/bottom_nav.dart';
-import 'feature/admin/screens/homepage.dart';
 import 'feature/admin/screens/dashboard.dart';
-import 'core/screens/login.dart'as login_screen;
-import 'core/screens/register.dart';
-import 'core/screens/registerBengkel.dart';
-import 'feature/admin/screens/change_password.dart' as change_screen;
+import 'feature/admin/screens/homepage.dart';
 import 'feature/admin/screens/service_page.dart';
 import 'feature/mechanic/screens/homepageMechanic.dart';
 import 'feature/owner/screens/homepageOwner.dart';
+import 'feature/owner/screens/onBoarding.dart';
+import 'feature/owner/widgets/bottom_nav_owner.dart';
+import 'feature/owner/screens/homepageOwner.dart';
+import 'package:bengkel_online_flutter/core/screens/registeruser.dart';
+import 'package:bengkel_online_flutter/core/screens/register.dart';
+import 'package:bengkel_online_flutter/core/screens/registerBengkel.dart';
 
 
 void main() {
@@ -38,22 +44,22 @@ class MyApp extends StatelessWidget {
           displayLarge: TextStyle(),
           displayMedium: TextStyle(),
           displaySmall: TextStyle(),
-      ).apply(
-          bodyColor: Colors.black, displayColor: Colors.black),
-
+        ).apply(bodyColor: Colors.black, displayColor: Colors.black),
       ),
       // 🔹 halaman pertama aplikasi
-      initialRoute: "/login",
-      
+      initialRoute: "/onboarding",
+
       // 🔹 daftar route
       routes: {
+        "/onboarding": (context) => const OnboardingScreen(),
         "/login": (context) => const login_screen.LoginPage(),
         "/home": (context) =>
             const MainPage(role:currentRole), //
-        "/register": (context) => const RegisterRoleScreen(),
-        "/registerBengkel": (context) => const RegisterBengkelScreen(),
-        "/registeruser": (context) => const RegisterScreen(),
+        "/register": (context) =>  RegisterRoleScreen(),
+        "/registerBengkel": (context) =>  RegisterBengkelScreen(),
+        "/registeruser": (context) =>  RegisterScreen(),
         "/dashboard": (context) => const DashboardPage(),
+        "/register": (context) => const RegisterFlowPage(),
         "/changePassword": (context) => const change_screen.ChangePasswordPage(),
 
       },
@@ -74,13 +80,6 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   int _selectedIndex = 0;
 
-  // Pastikan urutan sesuai dengan CustomBottomNavBar
-  final List<Widget> _pages =  [
-    HomePage(),
-    ServicePage(),
-    DashboardPage(),
-    ProfilePage(),
-  ];
 
   void _onItemTapped(int index) {
     setState(() {
@@ -95,9 +94,10 @@ class _MainPageState extends State<MainPage> {
     switch (widget.role) {
       case "owner":
         pages = [
-           HomePageOwner(),
-           Placeholder(), // nanti ganti OrderPage()
-           Placeholder(), // ProfileOwnerPage()
+            DashboardScreen(),
+            ManajemenKaryawanPage(),
+            ReportPage(),
+            ProfilePage(),
         ];
         break;
 
@@ -111,10 +111,10 @@ class _MainPageState extends State<MainPage> {
 
       default: // admin
         pages = [
-          const HomePage(),
-          const ServicePage(),
-          const DashboardPage(),
-          const ProfilePage(),
+           HomePage(),
+           ServicePage(),
+           DashboardPage(),
+           ProfilePage(),
         ];
     }
 
@@ -122,19 +122,19 @@ class _MainPageState extends State<MainPage> {
     Widget bottomNavBar;
     switch (widget.role) {
       case "owner":
-        bottomNavBar = CustomBottomNavBar(
+        bottomNavBar = CustomBottomNavBarOwner(
           selectedIndex: _selectedIndex,
           onTap: _onItemTapped,
         );
         break;
-      case "mechanic":
-        bottomNavBar = CustomBottomNavBar(
-          selectedIndex: _selectedIndex,
-          onTap: _onItemTapped,
-        );
-        break;
+      // case "mechanic":
+      //   bottomNavBar = CustomBottomNavBar(
+      //     selectedIndex: _selectedIndex,
+      //     onTap: _onItemTapped,
+      //   );
+      //   break;
       default:
-        bottomNavBar = CustomBottomNavBar(
+        bottomNavBar = CustomBottomNavBarAdmin(
           selectedIndex: _selectedIndex,
           onTap: _onItemTapped,
         );

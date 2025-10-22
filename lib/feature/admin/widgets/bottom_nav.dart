@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
-class CustomBottomNavBar extends StatelessWidget {
+class CustomBottomNavBarAdmin extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onTap;
 
-  const CustomBottomNavBar({
+  const CustomBottomNavBarAdmin({
     super.key,
     required this.selectedIndex,
     required this.onTap,
@@ -16,10 +16,11 @@ class CustomBottomNavBar extends StatelessWidget {
     final List<Map<String, String>> items = [
       {
         'label': 'Beranda',
-        'icon_inactive': 'assets/icons/home_tipis.svg',
-        'icon_active': 'assets/icons/home_highlight.svg',
+        'icon_inactive': 'assets/svg/home_tipis.svg',
+        'icon_active': 'assets/svg/home_tebal.svg',
       },
       {
+
         'label': 'Servis',
         'icon_inactive': 'assets/icons/service_tipis.svg',
         'icon_active': 'assets/icons/service_tebal.svg',
@@ -31,10 +32,51 @@ class CustomBottomNavBar extends StatelessWidget {
       },
       {
         'label': 'Profil',
-        'icon_inactive': 'assets/icons/user_tipis.svg',
-        'icon_active': 'assets/icons/user_tebal.svg',
+        'icon_inactive': 'assets/svg/profil_tipis.svg',
+        'icon_active': 'assets/svg/profil_tebal.svg',
       },
+  
     ];
+
+  //  return Scaffold(
+  //     backgroundColor: Colors.white,
+  //     body: Center(
+  //       child: Row(
+  //         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+  //         children: List.generate(items.length, (index) {
+  //           final item = items[index];
+  //           final isActive = index == selectedIndex;
+
+  //           return Column(
+  //             mainAxisSize: MainAxisSize.min,
+  //             children: [
+  //               SvgPicture.asset(
+  //                 isActive
+  //                     ? item['icon_active']!
+  //                     : item['icon_inactive']!,
+  //                 width: 28,
+  //                 height: 28,
+  //                 colorFilter: ColorFilter.mode(
+  //                   isActive ? Colors.red : Colors.grey,
+  //                   BlendMode.srcIn,
+  //                 ),
+  //               ),
+  //               const SizedBox(height: 4),
+  //               Text(
+  //                 item['label']!,
+  //                 style: TextStyle(
+  //                   fontSize: 12,
+  //                   color: isActive ? Colors.red : Colors.grey,
+  //                 ),
+  //               ),
+  //             ],
+  //           );
+  //         }),
+  //       ),
+  //     ),
+  //   );
+
+  
 
     return SafeArea(
       top: false,
@@ -111,9 +153,8 @@ class CustomBottomNavBar extends StatelessWidget {
                                           ? entry['icon_active']!
                                           : entry['icon_inactive']!,
                                       width: iconSize,
-                                      height: iconSize,
-                                      fit: BoxFit.contain,
-                                    ),
+                                     height: iconSize,
+                                      ),
                                   ),
                                 ),
                                 // Posisi Teks diatur dari bawah
@@ -145,5 +186,8 @@ class CustomBottomNavBar extends StatelessWidget {
         ),
       ),
     );
+
+
+   
   }
 }

@@ -7,13 +7,14 @@ class CustomHeader extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final VoidCallback? onBack;
   final bool showBack; // flag untuk tampilkan tombol back
+  final double roundedBottomRadius;
 
-  const CustomHeader({
-    super.key,
-    required this.title,
-    this.onBack,
-    this.showBack = true,
-  });
+  const CustomHeader(
+      {super.key,
+      required this.title,
+      this.onBack,
+      this.showBack = true,
+      this.roundedBottomRadius = 28});
 
   @override
   Widget build(BuildContext context) {

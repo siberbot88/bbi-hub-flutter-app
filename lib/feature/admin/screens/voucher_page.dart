@@ -64,11 +64,7 @@ class _VoucherPageState extends State<VoucherPage> {
       },
     ];
 
-    return Theme(
-      data: ThemeData(
-        textTheme: GoogleFonts.poppinsTextTheme(),
-      ),
-      child: Scaffold(
+    return Scaffold(
         backgroundColor: Colors.grey[100],
 
         appBar: CustomHeader(
@@ -149,8 +145,7 @@ class _VoucherPageState extends State<VoucherPage> {
             height: 28,
           ),
         ),
-      ),
-    );
+      );
   }
 
   // ================== Widget Voucher Card ==================
