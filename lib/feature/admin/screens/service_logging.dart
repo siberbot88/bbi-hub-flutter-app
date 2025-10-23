@@ -130,144 +130,67 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: const CustomHeader(
-        title: "Service",
-        showBack: false,
-      ),
+  return SingleChildScrollView(
+  padding: const EdgeInsets.only(bottom: 90),
+  child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const SizedBox(height: 8),
 
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.only(bottom: 90),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 8),
+      // Summary Boxes
+      _summaryBoxes(),
+      const SizedBox(height: 12),
 
-            // 🔹 Tab Scheduled & Logging
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  // Scheduled tab
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (_) => const ServicePage()),
-                        );
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: const Color(0xFFB70F0F), width: 2),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.calendar_today,
-                                size: 18, color: Color(0xFFB70F0F)),
-                            const SizedBox(width: 6),
-                            Text("Scheduled",
-                                style: GoogleFonts.poppins(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: const Color(0xFFB70F0F))),
-                          ],
-                        ),
-                      ),
-                    ),
+      // Kalender
+      _calendarBar(),
+      const SizedBox(height: 12),
+
+      // Search bar
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.grey[200],
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.search, color: Colors.grey),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  decoration: const InputDecoration.collapsed(
+                    hintText: "Search logging...",
                   ),
-                  const SizedBox(width: 12),
-                  // Logging tab aktif
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFB70F0F),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.show_chart, size: 18, color: Colors.white),
-                          const SizedBox(width: 6),
-                          Text("Logging",
-                              style: GoogleFonts.poppins(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white)),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+                  onChanged: (val) => setState(() => searchText = val),
+                ),
               ),
-            ),
-
-            const SizedBox(height: 12),
-
-            // Summary Boxes
-            _summaryBoxes(),
-            const SizedBox(height: 12),
-
-            // Kalender
-            _calendarBar(),
-            const SizedBox(height: 12),
-
-            // Search bar
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(12)),
-                child: Row(children: [
-                  const Icon(Icons.search, color: Colors.grey),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextField(
-                      decoration: const InputDecoration.collapsed(
-                          hintText: "Search logging..."),
-                      onChanged: (val) => setState(() => searchText = val),
-                    ),
-                  ),
-                  IconButton(
-                      icon: const Icon(Icons.filter_list, color: Colors.grey),
-                      onPressed: () {}),
-                ]),
+              IconButton(
+                icon: const Icon(Icons.filter_list, color: Colors.grey),
+                onPressed: () {},
               ),
-            ),
-
-            const SizedBox(height: 12),
-
-            _buildFilterTabs(),
-            const SizedBox(height: 12),
-            // Hanya tampilkan container "Waktu Tersedia" jika filter "All" dipilih
-            if (selectedLoggingFilter == "All") ...[
-           _buildAvailableTimes(),
-            const SizedBox(height: 12),
-          ],
-
-
-            _loggingContent(),
-          ],
+            ],
+          ),
         ),
       ),
 
-      bottomNavigationBar: CustomBottomNavBarAdmin(
-        selectedIndex: 1,
-        onTap: (i) {
-          if (i == 0) Navigator.pushReplacementNamed(context, '/home');
-          else if (i == 1) Navigator.pushReplacementNamed(context, '/service');
-          else if (i == 2) Navigator.pushReplacementNamed(context, '/dashboard');
-          else if (i == 3) Navigator.pushReplacementNamed(context, '/profile');
-        },
-      ),
-    );
+      const SizedBox(height: 12),
+
+      _buildFilterTabs(),
+      const SizedBox(height: 12),
+
+      // Hanya tampilkan container "Waktu Tersedia" jika filter "All" dipilih
+      if (selectedLoggingFilter == "All") ...[
+        _buildAvailableTimes(),
+        const SizedBox(height: 12),
+      ],
+
+      _loggingContent(),
+    ],
+  ),
+);
+
   }
 
   // 🔹 Summary Boxes
