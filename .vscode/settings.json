@@ -6,7 +6,7 @@
   "files.autoSave": "afterDelay",
   "files.autoSaveDelay": 1000,
   "terminal.integrated.defaultProfile.windows": "PowerShell",
-  "workbench.colorTheme": "Visual Studio Dark",
+  "workbench.colorTheme": "Night Owl",
   "workbench.iconTheme": "vscode-icons",
   "cmake.ignoreCMakeListsMissing": true
 }

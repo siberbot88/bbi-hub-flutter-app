@@ -1,9 +1,7 @@
-import 'package:bengkel_online_flutter/feature/admin/widgets/bottom_nav.dart';
-import 'package:bengkel_online_flutter/feature/admin/widgets/custom_header.dart';
+import 'package:bengkel_online_flutter/feature/mechanic/widgets/bottom_navbar.dart';
+import 'package:bengkel_online_flutter/feature/mechanic/widgets/custom_header.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../widgets/custom_header.dart';
-// import 'servicePage.dart'; // untuk navigasi ke Scheduled
 import 'service_detail_pending.dart' as pending;
 import 'service_detail_progress.dart' as progress;
 import 'service_detail_complete.dart' as complete;
@@ -130,7 +128,7 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage_> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const CustomHeader(
-        title: "Service",
+        title: "Service Logging",
         showBack: false,
       ),
       body: SingleChildScrollView(
@@ -256,17 +254,6 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage_> {
             _loggingContent(),
           ],
         ),
-      ),
-      bottomNavigationBar: CustomBottomNavBar(
-        selectedIndex: 1,
-        onTap: (i) {
-          if (i == 0)
-            Navigator.pushReplacementNamed(context, '/homepageMechanic');
-          else if (i == 1)
-            Navigator.pushReplacementNamed(context, '/servicePage');
-          else if (i == 2)
-            Navigator.pushReplacementNamed(context, '/profil_page');
-        },
       ),
     );
   }

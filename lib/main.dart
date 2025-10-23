@@ -1,22 +1,25 @@
-import 'package:bengkel_online_flutter/feature/admin/screens/service_logging.dart';
-import 'package:bengkel_online_flutter/feature/mechanic/screens/service_detail_progress.dart';
-import 'package:bengkel_online_flutter/feature/mechanic/screens/service_viewReport.dart';
+import 'package:bengkel_online_flutter/core/screens/registers/registerOwner.dart';
 import 'package:bengkel_online_flutter/feature/mechanic/screens/servicepage.dart';
-
-import 'core/screens/registeruser.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/reportPages.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/staffManagement.dart';
 import 'package:flutter/material.dart';
-import 'feature/admin/screens/profilpage.dart';
-import 'feature/admin/widgets/bottom_nav.dart';
-import 'feature/admin/screens/homepage.dart' as admin_home;
-import 'feature/admin/screens/dashboard.dart';
 import 'core/screens/login.dart' as login_screen;
-import 'core/screens/register.dart';
-import 'core/screens/registerBengkel.dart';
 import 'feature/admin/screens/change_password.dart' as change_screen;
+// import 'feature/admin/screens/profilpage.dart';
+// import 'feature/admin/widgets/bottom_nav.dart';
+import 'feature/admin/screens/dashboard.dart';
+import 'feature/admin/screens/homepage.dart';
 import 'feature/admin/screens/service_page.dart';
-import 'feature/mechanic/screens/homepageMechanic.dart' as mechanic_home;
+import 'feature/mechanic/screens/homepageMechanic.dart';
+import 'feature/mechanic/widgets/bottom_navbar.dart';
+import 'feature/mechanic/screens/profil_page.dart';
 import 'feature/owner/screens/homepageOwner.dart';
-import 'feature/mechanic/screens/servicePage.dart' hide ServiceLoggingPage_;
+import 'feature/owner/screens/onBoarding.dart';
+import 'feature/owner/widgets/bottom_nav_owner.dart';
+import 'feature/owner/screens/homepageOwner.dart';
+import 'package:bengkel_online_flutter/core/screens/registeruser.dart';
+import 'package:bengkel_online_flutter/core/screens/register.dart';
+import 'package:bengkel_online_flutter/core/screens/registerBengkel.dart';
 
 void main() {
   runApp(const MyApp());
@@ -49,17 +52,16 @@ class MyApp extends StatelessWidget {
 
       // 🔹 daftar route
       routes: {
+        "/onboarding": (context) => const OnboardingScreen(),
         "/login": (context) => const login_screen.LoginPage(),
-        "/home": (context) => const MainPage(role: ""), //
-        "/register": (context) => const RegisterRoleScreen(),
-        "/registerBengkel": (context) => const RegisterBengkelScreen(),
-        "/registeruser": (context) => const RegisterScreen(),
+        "/home": (context) => const MainPage(role: currentRole), //
+        "/register": (context) => RegisterRoleScreen(),
+        "/registerBengkel": (context) => RegisterBengkelScreen(),
+        "/registeruser": (context) => RegisterScreen(),
         "/dashboard": (context) => const DashboardPage(),
+        "/register": (context) => const RegisterFlowPage(),
         "/changePassword": (context) =>
             const change_screen.ChangePasswordPage(),
-        "/profile": (context) => const ProfilePage(),
-        "/service": (context) => const ServiceLoggingPage_(),
-        // "/serviceViewReport": (context) => const ServiceViewReport(),
       },
     );
   }
@@ -76,11 +78,9 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   int _selectedIndex = 0;
-
-  // Pastikan urutan sesuai dengan CustomBottomNavBar
-  final List<Widget> _pages = [
-    const mechanic_home.HomePageMechanic(),
-    ServiceLoggingPage_(),
+  final List<Widget> _pages = const [
+    HomePage(),
+    ServicePage(),
     ProfilePage(),
   ];
 
@@ -97,29 +97,28 @@ class _MainPageState extends State<MainPage> {
     switch (widget.role) {
       case "owner":
         pages = [
-          HomePageOwner(),
-          Placeholder(), // nanti ganti OrderPage()
-          Placeholder(), // ProfileOwnerPage()
+          DashboardScreen(),
+          ManajemenKaryawanPage(),
+          ReportPage(),
+          ProfilePage(),
         ];
         break;
 
       case "mechanic":
         pages = [
-          const mechanic_home
-              .HomePageMechanic(), // temporary: replace with mechanic home page widget
-          const ServiceLoggingPage_(), // ganti nanti jadi TaskPage()
-          const ProfilePage(), // ganti nanti jadi ProfileMechanicPage()
+          HomePageMechanic(),
+          ServiceLoggingPage_(), // TaskPage()
+          ProfilePage(), // ProfileMechanicPage()
         ];
         break;
 
-      default: // admin or fallback
+      default: // admin
         pages = [
-          const admin_home.HomePage(),
-          const ServicePage(),
-          const DashboardPage(),
-          const ProfilePage(),
+          HomePage(),
+          ServicePage(),
+          DashboardPage(),
+          ProfilePage(),
         ];
-        break;
     }
 
     // 🔸 Bottom Navigation Bar sesuai role
@@ -131,12 +130,21 @@ class _MainPageState extends State<MainPage> {
           onTap: _onItemTapped,
         );
         break;
+
+      case "admin":
+        bottomNavBar = CustomBottomNavBar(
+          selectedIndex: _selectedIndex,
+          onTap: _onItemTapped,
+        );
+        break;
+
       case "mechanic":
         bottomNavBar = CustomBottomNavBar(
           selectedIndex: _selectedIndex,
           onTap: _onItemTapped,
         );
         break;
+
       default:
         bottomNavBar = CustomBottomNavBar(
           selectedIndex: _selectedIndex,
@@ -168,4 +176,3 @@ class _MainPageState extends State<MainPage> {
   //     ),
   //   );
   // }
-

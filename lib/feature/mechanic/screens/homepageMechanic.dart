@@ -42,22 +42,22 @@ class _HomePageMechanicState extends State<HomePageMechanic> {
     return Scaffold(
       appBar: const RoundelAppBar(),
       body: const HomeContent(),
-      bottomNavigationBar: CustomBottomNavBar(
-          selectedIndex: 0,
-          onTap: (index) {
-            if (index == 1) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const ServiceLoggingPage_()),
-              );
-            } else if (index == 2) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ProfilePage()),
-              );
-            }
-          }),
+      // bottomNavigationBar: CustomBottomNavBar(
+      //     selectedIndex: 0,
+      //     onTap: (index) {
+      //       if (index == 1) {
+      //         Navigator.push(
+      //           context,
+      //           MaterialPageRoute(
+      //               builder: (context) => const ServiceLoggingPage_()),
+      //         );
+      //       } else if (index == 2) {
+      //         Navigator.push(
+      //           context,
+      //           MaterialPageRoute(builder: (context) => const ProfilePage()),
+      //         );
+      //       }
+      //     }),
     );
   }
 }

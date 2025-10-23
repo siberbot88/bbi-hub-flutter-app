@@ -1,4 +1,3 @@
-import 'package:bengkel_online_flutter/feature/mechanic/screens/homepageMechanic.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -114,25 +113,36 @@ class _LoginPageState extends State<LoginPage> {
                 ],
               ),
               const SizedBox(height: 21),
-
+              // 🔹 Login button
               SizedBox(
                 width: double.infinity,
-                height: 40,
+                height: 44,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color.fromARGB(255, 215, 43, 28),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(28),
-                    ),
+                        borderRadius: BorderRadius.circular(28)),
                     elevation: 8,
                     shadowColor:
-                        const Color.fromARGB(255, 215, 43, 28).withOpacity(0.6),
+                    const Color.fromARGB(255, 215, 43, 28).withOpacity(0.6),
                   ),
-                  onPressed: () {
-                    Navigator.pushReplacement(
+                  onPressed: () async {
+                    // TODO: validasi login ke backend di sini
+                    final bool sukses = true;
+
+                    if (sukses) {
+                      // arahkan ke shell /home dengan role admin
+                      Navigator.pushNamedAndRemoveUntil(
                         context,
-                        MaterialPageRoute(
-                            builder: (context) => const HomePageMechanic()));
+                        '/home',
+                        (route) => false,
+                        arguments: 'admin',
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Login gagal')),
+                      );
+                    }
                   },
                   child: Text(
                     "LOG IN",
@@ -184,7 +194,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   GestureDetector(
                     onTap: () {
-                      Navigator.pushNamed(context, "/registeruser");
+                      Navigator.pushNamed(context, "/register");
                     },
                     child: Text(
                       "Sign Up",
@@ -226,20 +236,20 @@ class _LoginPageState extends State<LoginPage> {
         prefixIcon: Padding(
           padding: const EdgeInsets.all(12.0),
           child:
-              Image.asset(iconPath, width: 20, height: 20, color: Colors.red),
+          Image.asset(iconPath, width: 20, height: 20, color: Colors.red),
         ),
         suffixIcon: isPassword
             ? IconButton(
-                icon: Icon(
-                  obscureText ? Icons.visibility_off : Icons.visibility,
-                  color: const Color.fromARGB(255, 215, 43, 28),
-                ),
-                onPressed: () {
-                  setState(() {
-                    obscureText = !obscureText;
-                  });
-                },
-              )
+          icon: Icon(
+            obscureText ? Icons.visibility_off : Icons.visibility,
+            color: const Color.fromARGB(255, 215, 43, 28),
+          ),
+          onPressed: () {
+            setState(() {
+              obscureText = !obscureText;
+            });
+          },
+        )
             : null,
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),

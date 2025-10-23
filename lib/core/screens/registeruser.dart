@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+ import 'package:flutter/material.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -53,6 +53,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Scaffold(
       body: Stack(
         children: [
+          /// ===== Background Image =====
           Positioned.fill(
             child: Image.asset(
               "assets/bg.png",
@@ -82,8 +83,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       const SizedBox(height: 15),
                       const Text(
                         "Daftar sekarang dan kelola bengkelmu",
-                        style:
-                            TextStyle(color: Color(0xFF232323), fontSize: 18),
+                        style: TextStyle(color: Color(0xFF232323), fontSize: 18),
                       ),
                       const SizedBox(height: 20),
                     ],
@@ -129,8 +129,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           const SizedBox(height: 20),
                           DropdownButtonFormField<String>(
                             value: _selectedRole,
-                            decoration: getInputDecoration("Select Role",
-                                const Icon(Icons.assignment_ind)),
+                            decoration: getInputDecoration(
+                                "Select Role", const Icon(Icons.assignment_ind)),
                             style: const TextStyle(
                               color: Color(0xFF232323),
                               fontSize: 16,
@@ -144,8 +144,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 value: w,
                                 child: Text(
                                   w,
-                                  style:
-                                      const TextStyle(color: Color(0xFF232323)),
+                                  style: const TextStyle(
+                                      color: Color(0xFF232323)),
                                 ),
                               );
                             }).toList(),
@@ -175,8 +175,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 value: w,
                                 child: Text(
                                   w,
-                                  style:
-                                      const TextStyle(color: Color(0xFF232323)),
+                                  style: const TextStyle(
+                                      color: Color(0xFF232323)),
                                 ),
                               );
                             }).toList(),

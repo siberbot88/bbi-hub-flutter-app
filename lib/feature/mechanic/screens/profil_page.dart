@@ -196,16 +196,6 @@ class ProfilePage extends StatelessWidget {
                         ),
                         const Divider(height: 1),
                         _ProfileItem(
-                          iconPath: "assets/icons/feandrate.svg",
-                          title: "Penilaian dan Umpan Balik",
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => const FeedbackProfile()),
-                          ),
-                        ),
-                        const Divider(height: 1),
-                        _ProfileItem(
                           iconPath: "assets/icons/logout.png",
                           title: "Keluar",
                           isLogout: true,
