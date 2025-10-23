@@ -1,8 +1,12 @@
+import 'package:bengkel_online_flutter/feature/mechanic/screens/bahasa.dart';
+import 'package:bengkel_online_flutter/feature/mechanic/screens/bantudukung.dart';
+import 'package:bengkel_online_flutter/feature/mechanic/screens/change_password.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:bengkel_online_flutter/feature/mechanic/widgets/smartasset.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:math' as math;
+import 'package:bengkel_online_flutter/feature/mechanic/screens/ubahprofil.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -126,7 +130,13 @@ class ProfilePage extends StatelessWidget {
                             // Edit button
                             ElevatedButton(
                               onPressed: () {
-                                // nanti bisa dihubungkan ke halaman edit profil
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const EditProfilePage(),
+                                  ),
+                                );
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.amber,
@@ -167,12 +177,12 @@ class ProfilePage extends StatelessWidget {
                     child: Column(
                       children: [
                         _ProfileItem(
-                          iconPath: "assets/icons/bahasa.svg",
+                          iconPath: "assets/icons/editbahasa.png",
                           title: "Bahasa",
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (_) => const AboutPage()),
+                                builder: (_) => const LanguagePage()),
                           ),
                         ),
                         const Divider(height: 1),
@@ -181,17 +191,18 @@ class ProfilePage extends StatelessWidget {
                           title: "Bantuan & Dukungan",
                           onTap: () => Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const HelpPage()),
+                            MaterialPageRoute(
+                                builder: (_) => const HelpSupportPage()),
                           ),
                         ),
                         const Divider(height: 1),
                         _ProfileItem(
-                          iconPath: "assets/icons/changepassword.svg",
+                          iconPath: "assets/icons/ubahsandi.png",
                           title: "Ubah Sandi",
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (_) => const ChangePasswordPage()),
+                                builder: (_) => const ubahPasswordPage()),
                           ),
                         ),
                         const Divider(height: 1),
@@ -311,14 +322,6 @@ class ChangePasswordPage extends StatelessWidget {
   Widget build(BuildContext context) => Scaffold(
       appBar: AppBar(title: const Text("Ubah Sandi")),
       body: const Center(child: Text("Form Ubah Sandi")));
-}
-
-class FeedbackProfile extends StatelessWidget {
-  const FeedbackProfile({super.key});
-  @override
-  Widget build(BuildContext context) => Scaffold(
-      appBar: AppBar(title: const Text("Umpan Balik")),
-      body: const Center(child: Text("Halama Umpan Balik")));
 }
 
 class LoginPage extends StatelessWidget {

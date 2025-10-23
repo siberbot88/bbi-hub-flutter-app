@@ -424,7 +424,7 @@ class _HomeContentState extends State<HomeContent> {
             ),
             TextButton(
               onPressed: () {
-                Navigator.pushNamed(context, '/servicePage');
+                Navigator.pushNamed(context, '/serviceLoggingPage');
               },
               child: const Text("Lihat detail",
                   style: TextStyle(color: Color(0xFFDC2626))),

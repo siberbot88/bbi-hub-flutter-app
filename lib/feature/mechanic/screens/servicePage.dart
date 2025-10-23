@@ -139,68 +139,24 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage_> {
             const SizedBox(height: 8),
 
             // 🔹 Tab Scheduled & Logging
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+
+            // Logging tab aktif (use Container instead of Expanded inside a scrollable)
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFB70F0F),
+                borderRadius: BorderRadius.circular(20),
+              ),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Scheduled tab
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const ServiceLoggingPage_()),
-                        );
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                              color: const Color(0xFFB70F0F), width: 2),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.calendar_today,
-                                size: 18, color: Color(0xFFB70F0F)),
-                            const SizedBox(width: 6),
-                            Text("Scheduled",
-                                style: GoogleFonts.poppins(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: const Color(0xFFB70F0F))),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // Logging tab aktif
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFB70F0F),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.show_chart,
-                              size: 18, color: Colors.white),
-                          const SizedBox(width: 6),
-                          Text("Logging",
-                              style: GoogleFonts.poppins(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white)),
-                        ],
-                      ),
-                    ),
-                  ),
+                  const Icon(Icons.show_chart, size: 18, color: Colors.white),
+                  const SizedBox(width: 6),
+                  Text("Logging",
+                      style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white)),
                 ],
               ),
             ),
@@ -240,17 +196,17 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage_> {
                 ]),
               ),
             ),
-
             const SizedBox(height: 12),
 
+            // Filter tabs
             _buildFilterTabs(),
             const SizedBox(height: 12),
-            // Hanya tampilkan container "Waktu Tersedia" jika filter "All" dipilih
+
+            // Content area (kept as a Column; removed duplicate filter tab)
             if (selectedLoggingFilter == "Semua") ...[
               _buildAvailableTimes(),
               const SizedBox(height: 12),
             ],
-
             _loggingContent(),
           ],
         ),
