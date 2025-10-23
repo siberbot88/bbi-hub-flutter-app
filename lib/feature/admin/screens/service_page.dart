@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'service_logging.dart';
 import 'service_detail.dart';
 import '../widgets/custom_header.dart';
 import '../widgets/reject_dialog.dart';
 import '../widgets/accept_dialog.dart';
+import 'service_logging.dart';
 
 class ServicePage extends StatefulWidget {
   const ServicePage({super.key});
@@ -19,6 +19,9 @@ class _ServicePageState extends State<ServicePage> {
   int selectedDay = DateTime.now().day;
   String selectedFilter = "All";
 
+  // 🔹 Tambahan: buat tab index
+  int selectedTab = 0; // 0 = Scheduled, 1 = Logging
+
   final List<Map<String, dynamic>> allTasks = [
     {
       "id": "1",
@@ -27,7 +30,7 @@ class _ServicePageState extends State<ServicePage> {
       "service": "Engine Oil Change",
       "plate": "SU 814 NTO",
       "motor": "BEAT 2012",
-      "vehicleCategory": "Sepeda Motor", // 🔹 kategori kendaraan
+      "vehicleCategory": "Sepeda Motor",
       "location": "WORKSHOP",
       "status": "Waiting",
     },
@@ -38,7 +41,7 @@ class _ServicePageState extends State<ServicePage> {
       "service": "Battery Check",
       "plate": "XY 9999",
       "motor": "Honda 2020",
-      "vehicleCategory": "Mobil", // 🔹 kategori kendaraan
+      "vehicleCategory": "Mobil",
       "location": "ON-SITE",
       "status": "Accept",
     },
@@ -73,86 +76,124 @@ class _ServicePageState extends State<ServicePage> {
         title: "Service",
         showBack: false,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.only(bottom: 80),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 8),
-            // 🔹 Tab Scheduled & Logging
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  // Scheduled aktif
-                  Expanded(
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 8),
+
+          // 🔹 Tab Scheduled & Logging
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                // 🔸 Scheduled
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => selectedTab = 0),
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFB70F0F),
+                        color: selectedTab == 0
+                            ? const Color(0xFFB70F0F)
+                            : Colors.white,
                         borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                            color: const Color(0xFFB70F0F), width: 2),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.calendar_today,
-                              size: 18, color: Colors.white),
+                          Icon(Icons.calendar_today,
+                              size: 18,
+                              color: selectedTab == 0
+                                  ? Colors.white
+                                  : const Color(0xFFB70F0F)),
                           const SizedBox(width: 6),
-                          Text("Scheduled",
-                              style: GoogleFonts.poppins(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white)),
+                          Text(
+                            "Scheduled",
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: selectedTab == 0
+                                  ? Colors.white
+                                  : const Color(0xFFB70F0F),
+                            ),
+                          ),
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  // Logging pasif
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const ServiceLoggingPage()),
-                        );
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                              color: const Color(0xFFB70F0F), width: 2),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.show_chart,
-                                size: 18, color: Color(0xFFB70F0F)),
-                            const SizedBox(width: 6),
-                            Text("Logging",
-                                style: GoogleFonts.poppins(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: const Color(0xFFB70F0F))),
-                          ],
-                        ),
+                ),
+
+                const SizedBox(width: 12),
+
+                // 🔸 Logging
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => selectedTab = 1),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        color: selectedTab == 1
+                            ? const Color(0xFFB70F0F)
+                            : Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                            color: const Color(0xFFB70F0F), width: 2),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.show_chart,
+                              size: 18,
+                              color: selectedTab == 1
+                                  ? Colors.white
+                                  : const Color(0xFFB70F0F)),
+                          const SizedBox(width: 6),
+                          Text(
+                            "Logging",
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: selectedTab == 1
+                                  ? Colors.white
+                                  : const Color(0xFFB70F0F),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
+          ),
 
-            const SizedBox(height: 16),
+          // 🔹 Konten tab
+          Expanded(
+            child: IndexedStack(
+              index: selectedTab,
+              children: [
+                // Tab Scheduled (kode asli kamu)
+                SingleChildScrollView(
+                  padding: const EdgeInsets.only(bottom: 80),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 16),
+                      _calendarSection(),
+                      const SizedBox(height: 12),
+                      _scheduledList(),
+                    ],
+                  ),
+                ),
 
-            _calendarSection(),
-            const SizedBox(height: 12),
-            _scheduledList(),
-          ],
-        ),
+                // Tab Logging (panggil page Logging)
+                const ServiceLoggingPage(),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -355,12 +396,11 @@ class _ServicePageState extends State<ServicePage> {
                   const SizedBox(height: 10),
                   Row(
                     children: [
-                      // 🔹 Tombol Tolak
                       Builder(
                         builder: (ctx) => ElevatedButton(
                           onPressed: () => showRejectDialog(ctx),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red.shade700, // merah tua
+                            backgroundColor: Colors.red.shade700,
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 20, vertical: 12),
                             shape: RoundedRectangleBorder(
@@ -370,7 +410,6 @@ class _ServicePageState extends State<ServicePage> {
                           child: Text(
                             "Tolak",
                             style: GoogleFonts.poppins(
-                              // 🔹 pakai poppins
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               color: Colors.white,
@@ -379,12 +418,10 @@ class _ServicePageState extends State<ServicePage> {
                         ),
                       ),
                       const SizedBox(width: 8),
-
-                      // 🔹 Tombol Terima
                       ElevatedButton(
                         onPressed: () => showAcceptDialog(context),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green.shade700, // hijau tua
+                          backgroundColor: Colors.green.shade700,
                           padding: const EdgeInsets.symmetric(
                               horizontal: 20, vertical: 12),
                           shape: RoundedRectangleBorder(
@@ -394,7 +431,6 @@ class _ServicePageState extends State<ServicePage> {
                         child: Text(
                           "Terima",
                           style: GoogleFonts.poppins(
-                            // 🔹 pakai poppins
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
@@ -405,8 +441,6 @@ class _ServicePageState extends State<ServicePage> {
                   )
                 ],
               ),
-
-              // 🔹 Type Motor + Detail
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -433,7 +467,6 @@ class _ServicePageState extends State<ServicePage> {
                     child: Text(
                       "Detail",
                       style: GoogleFonts.poppins(
-                        // 🔹 pakai poppins
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
@@ -449,13 +482,12 @@ class _ServicePageState extends State<ServicePage> {
     );
   }
 
-  /// 🔹 Helper untuk warna kategori kendaraan
   Color _getVehicleBgColor(String? category) {
     switch (category?.toLowerCase()) {
       case "sepeda motor":
-        return Colors.red.shade100; // background pink muda
+        return Colors.red.shade100;
       case "mobil":
-        return Colors.orange.shade200; // background orange muda
+        return Colors.orange.shade200;
       default:
         return Colors.grey.shade300;
     }
@@ -464,16 +496,15 @@ class _ServicePageState extends State<ServicePage> {
   Color _getVehicleTextColor(String? category) {
     switch (category?.toLowerCase()) {
       case "sepeda motor":
-        return Colors.red.shade700; // teks merah tua
+        return Colors.red.shade700;
       case "mobil":
-        return Colors.orange.shade800; // teks orange gelap
+        return Colors.orange.shade800;
       default:
         return Colors.black87;
     }
   }
 
   String _formatDate(DateTime d) => "${d.day} ${_monthName(d.month)} ${d.year}";
-
   String _monthName(int m) => [
         "",
         "January",
@@ -489,24 +520,23 @@ class _ServicePageState extends State<ServicePage> {
         "November",
         "December"
       ][m];
-
   String _weekdayShort(int wd) =>
       ["", "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"][wd];
 
   void _prevMonth() => setState(() {
-        displayedMonth -= 1;
+        displayedMonth--;
         if (displayedMonth < 1) {
           displayedMonth = 12;
-          displayedYear -= 1;
+          displayedYear--;
         }
         selectedDay = 1;
       });
 
   void _nextMonth() => setState(() {
-        displayedMonth += 1;
+        displayedMonth++;
         if (displayedMonth > 12) {
           displayedMonth = 1;
-          displayedYear += 1;
+          displayedYear++;
         }
         selectedDay = 1;
       });
