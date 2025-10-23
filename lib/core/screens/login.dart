@@ -1,3 +1,4 @@
+import 'package:bengkel_online_flutter/feature/mechanic/screens/homepageMechanic.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -128,7 +129,10 @@ class _LoginPageState extends State<LoginPage> {
                         const Color.fromARGB(255, 215, 43, 28).withOpacity(0.6),
                   ),
                   onPressed: () {
-                    Navigator.pushReplacementNamed(context, "/home");
+                    Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const HomePageMechanic()));
                   },
                   child: Text(
                     "LOG IN",
@@ -180,7 +184,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   GestureDetector(
                     onTap: () {
-                      Navigator.pushNamed(context, "/register");
+                      Navigator.pushNamed(context, "/registeruser");
                     },
                     child: Text(
                       "Sign Up",

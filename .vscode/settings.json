@@ -1,14 +1,12 @@
 {
-
-    "dart.flutterSdkPath": "D:\\Flutter\\flutter",
-    "dart.flutterCreateOrganization": "com.example",
-    "dart.lineLength": 80,
-    "editor.formatOnSave": true,
-    "files.autoSave": "afterDelay",
-    "files.autoSaveDelay": 1000,
-    "terminal.integrated.defaultProfile.windows": "PowerShell",
-    "workbench.colorTheme": "Visual Studio Dark",
-    "workbench.iconTheme": "vscode-icons"
+  "dart.flutterSdkPath": "D:\\Flutter\\flutter",
+  "dart.flutterCreateOrganization": "com.example",
+  "dart.lineLength": 80,
+  "editor.formatOnSave": true,
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 1000,
+  "terminal.integrated.defaultProfile.windows": "PowerShell",
+  "workbench.colorTheme": "Visual Studio Dark",
+  "workbench.iconTheme": "vscode-icons",
+  "cmake.ignoreCMakeListsMissing": true
 }
-
-
