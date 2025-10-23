@@ -298,55 +298,7 @@ class ServiceDetailPage extends StatelessWidget {
 
                             const Spacer(),
 
-                            // 🔹 Buttons
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Builder(
-                                    builder: (ctx) => ElevatedButton(
-                                      onPressed: () {
-                                        showRejectDialog(ctx);
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.red,
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 14),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(30),
-                                        ),
-                                      ),
-                                      child: Text("Decline",
-                                          style: GoogleFonts.poppins(
-                                              fontSize: s(14),
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w600)),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: ElevatedButton(
-                                    onPressed: () {
-                                      showAcceptDialog(context);
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.green,
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 14),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(30),
-                                      ),
-                                    ),
-                                    child: Text("Accept",
-                                        style: GoogleFonts.poppins(
-                                            fontSize: s(14),
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w600)),
-                                  ),
-                                ),
-                              ],
-                            )
+
                           ],
                         ),
                       ),
@@ -358,6 +310,70 @@ class ServiceDetailPage extends StatelessWidget {
           ),
         ),
       ),
-    );
+
+   // === Tombol Bawah Tetap ===
+                           bottomNavigationBar :   Container(
+                              color: Colors.white,
+                              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                              child: Row(
+                                children: [
+                                  // Tombol Tolak
+                                  Expanded(
+                                    child: SizedBox(
+                                      height: 58,
+                                      child: ElevatedButton(
+                                        onPressed: () {
+                                          showRejectDialog(context);
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.red, // warna tombol tolak
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(30),
+                                          ),
+                                          elevation: 4,
+                                        ),
+                                        child: Text(
+                                          "Tolak",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  // Tombol Terima
+                                  Expanded(
+                                    child: SizedBox(
+                                      height: 58,
+                                      child: ElevatedButton(
+                                        onPressed: () {
+                                          showAcceptDialog(context);
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.green, // warna tombol terima
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(30),
+                                          ),
+                                          elevation: 4,
+                                        ),
+                                        child: Text(
+                                          "Terima",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+    );// end Scaffold
+ 
   }
 }
