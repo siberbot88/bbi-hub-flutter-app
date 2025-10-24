@@ -54,7 +54,7 @@ class ServicePendingDetail extends StatelessWidget {
                     const ColorFilter.mode(Colors.white, BlendMode.srcIn),
               ),
               label: Text(
-                "Tetapkan Mekanik",
+                "Mulai Sekarang",
                 style: GoogleFonts.poppins(
                   fontSize: 15,
                   fontWeight: FontWeight.bold,

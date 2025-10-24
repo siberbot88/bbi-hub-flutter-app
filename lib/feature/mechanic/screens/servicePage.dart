@@ -1,5 +1,6 @@
 import 'package:bengkel_online_flutter/feature/mechanic/widgets/bottom_navbar.dart';
 import 'package:bengkel_online_flutter/feature/mechanic/widgets/custom_header.dart';
+import 'package:bengkel_online_flutter/feature/mechanic/screens/service_viewReport.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'service_detail_pending.dart' as pending;
@@ -82,7 +83,7 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage_> {
       "desc": "Complete brake pad replacement and calibration",
       "plate": "SU 814 NTO",
       "motor": "BEAT 2012",
-      "status": "In Progress",
+      "status": "Dalam Proses",
       "category": "logging",
       "time": "08:00 - 10:00",
     },
@@ -95,7 +96,7 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage_> {
       "desc": "Full tire replacement for Yamaha 2018",
       "plate": "AB 1111",
       "motor": "Yamaha 2018",
-      "status": "Completed",
+      "status": "Selesai",
       "category": "logging",
       "time": "10:00 - 12:00",
     },
@@ -114,7 +115,7 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage_> {
     final status = (t['status'] as String).toLowerCase();
     switch (filterKey) {
       case 'Dalam Proses':
-        return status.contains('Dalam Proses');
+        return status.contains('Dalam proses');
       case 'Pending':
         return status.contains('Pending');
       case 'Selesai':
@@ -137,29 +138,6 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage_> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 8),
-
-            // 🔹 Tab Scheduled & Logging
-
-            // Logging tab aktif (use Container instead of Expanded inside a scrollable)
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              decoration: BoxDecoration(
-                color: const Color(0xFFB70F0F),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.show_chart, size: 18, color: Colors.white),
-                  const SizedBox(width: 6),
-                  Text("Logging",
-                      style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white)),
-                ],
-              ),
-            ),
 
             const SizedBox(height: 12),
 
@@ -218,17 +196,17 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage_> {
   Widget _summaryBoxes() {
     final pending = allTasks
         .where((t) =>
-            (t['status'] as String).toLowerCase().contains('Dalam Proses') &&
+            (t['status'] as String).toLowerCase().contains('pending') &&
             isSameDate(t['date'] as DateTime, selectedDate))
         .length;
     final inProgress = allTasks
         .where((t) =>
-            (t['status'] as String).toLowerCase().contains('Pending') &&
+            (t['status'] as String).toLowerCase().contains('dalam proses') &&
             isSameDate(t['date'] as DateTime, selectedDate))
         .length;
     final completed = allTasks
         .where((t) =>
-            (t['status'] as String).toLowerCase().contains('Selesai') &&
+            (t['status'] as String).toLowerCase().contains('selesai') &&
             isSameDate(t['date'] as DateTime, selectedDate))
         .length;
 
@@ -511,21 +489,17 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage_> {
   Widget _loggingContent() {
     // Rantai filter menjadi lebih efisien dan mudah dibaca
     final List<Map<String, dynamic>> loggingFiltered = allTasks.where((task) {
-      // 1. Filter berdasarkan tanggal dan kategori
-      bool dateMatch = isSameDate(task['date'] as DateTime, selectedDate);
+      // Hilangkan dulu filter tanggal agar semua data dummy bisa tampil
       bool categoryMatch = task['category'] == 'logging';
-      if (!dateMatch || !categoryMatch) return false;
+      if (!categoryMatch) return false;
 
-      // 2. Filter berdasarkan tab status (All, Pending, dll.)
       bool statusMatch = _matchesFilterKey(task, selectedLoggingFilter);
       if (!statusMatch) return false;
 
-      // 3. Filter berdasarkan slot waktu yang dipilih
       if (selectedTimeSlot != null && task['time'] != selectedTimeSlot) {
         return false;
       }
 
-      // 4. Filter berdasarkan teks pencarian
       if (searchText.trim().isNotEmpty) {
         final q = searchText.toLowerCase();
         return (task['title'] as String).toLowerCase().contains(q) ||
@@ -533,7 +507,7 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage_> {
             (task['user'] as String).toLowerCase().contains(q);
       }
 
-      return true; // Lolos semua filter
+      return true;
     }).toList();
 
     // Judul dinamis
@@ -578,9 +552,9 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage_> {
     final status =
         (task['status'] as String); // Tidak perlu toLowerCase() di sini
 
-    if (status == "Completed")
+    if (status == "Selesai")
       statusColor = Colors.green;
-    else if (status == "In Progress")
+    else if (status == "Dalam Proses")
       statusColor = Colors.orange;
     else if (status == "Pending")
       statusColor = Colors.grey.shade800;
@@ -608,10 +582,10 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage_> {
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         ),
-        child: const Text("Tetapkan Mekanik",
+        child: const Text("mulai Servis",
             style: TextStyle(fontSize: 12, color: Colors.white)),
       );
-    } else if (status == 'In Progress') {
+    } else if (status == 'Dalam Proses') {
       actionButton = ElevatedButton(
         onPressed: () {
           Navigator.push(
@@ -629,7 +603,7 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage_> {
         child: const Text("Lihat Detail",
             style: TextStyle(fontSize: 12, color: Colors.white)),
       );
-    } else if (status == 'Completed') {
+    } else if (status == 'Selesai') {
       actionButton = ElevatedButton(
         onPressed: () {
           Navigator.push(
@@ -644,7 +618,7 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage_> {
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         ),
-        child: const Text("Buat Invoice",
+        child: const Text("Lihat Laporan",
             style: TextStyle(fontSize: 12, color: Colors.white)),
       );
     } else {

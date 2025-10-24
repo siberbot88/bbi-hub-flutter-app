@@ -37,53 +37,6 @@ class ServiceCompleteDetail extends StatelessWidget {
         ),
       ),
       backgroundColor: mainColor,
-
-      // ✅ Tombol sticky di bawah
-      bottomNavigationBar: SafeArea(
-        child: Container(
-          color: Colors.white, // 🔹 Background belakang tombol
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-          child: SizedBox(
-            width: double.infinity,
-            height: 58,
-            child: ElevatedButton.icon(
-              onPressed: () {
-                // Gunakan Navigator.push untuk menampilkan halaman baru
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => InvoiceFormPage(
-                          task: task), // <-- Buat halaman di dalam builder
-                    ));
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: mainColor, // 🔹 Warna tombol merah (#DC2626)
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                elevation: 4,
-                shadowColor: Colors.black.withOpacity(0.15),
-              ),
-              icon: SvgPicture.asset(
-                'assets/icons/assign.svg', // 🔹 Ikon SVG lokal
-                height: 22,
-                width: 22,
-                colorFilter:
-                    const ColorFilter.mode(Colors.white, BlendMode.srcIn),
-              ),
-              label: Text(
-                "Buat Invoice",
-                style: GoogleFonts.poppins(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Container(
@@ -166,7 +119,7 @@ class ServiceCompleteDetail extends StatelessWidget {
                   child: AspectRatio(
                     aspectRatio: 1, // square
                     child: Image.asset(
-                      "assets/image/motorbeat.png",
+                      "assets/image/beat.jpg",
                       width: double.infinity,
                       fit: BoxFit.cover,
                     ),

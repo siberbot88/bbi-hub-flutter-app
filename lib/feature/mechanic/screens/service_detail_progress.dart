@@ -37,7 +37,7 @@ class ServiceDetailProgress extends StatelessWidget {
             child: ElevatedButton.icon(
               onPressed: () {},
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF9A9999),
+                backgroundColor: const Color.fromARGB(220, 38, 38, 1),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30),
                 ),
@@ -52,7 +52,7 @@ class ServiceDetailProgress extends StatelessWidget {
                     const ColorFilter.mode(Colors.white, BlendMode.srcIn),
               ),
               label: Text(
-                "Menunggu Teknisi Selesai",
+                "Tandai  Selesai",
                 style: GoogleFonts.poppins(
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
@@ -146,7 +146,7 @@ class ServiceDetailProgress extends StatelessWidget {
                   child: AspectRatio(
                     aspectRatio: 1, // square
                     child: Image.asset(
-                      "assets/image/motorbeat.png",
+                      "assets/image/motorbeat.jpg",
                       width: double.infinity,
                       fit: BoxFit.cover,
                     ),
