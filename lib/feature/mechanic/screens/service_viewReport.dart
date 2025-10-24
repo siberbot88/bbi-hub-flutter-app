@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class ServiceViewReport extends StatelessWidget {
-  const ServiceViewReport({super.key});
+  final Map<String, dynamic>? task;
+  const ServiceViewReport({super.key, required this.task});
 
   @override
   Widget build(BuildContext context) {

@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'service_detail_pending.dart' as pending;
 import 'service_detail_progress.dart' as progress;
-import 'service_detail_complete.dart' as complete;
 import 'package:flutter_svg/flutter_svg.dart';
 
 class ServiceLoggingPage_ extends StatefulWidget {
@@ -20,6 +19,7 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage_> {
   int displayedYear = DateTime.now().year;
   int selectedDay = DateTime.now().day;
 
+  int selectedTab = 0; // 0: Logging, 1: History
   String searchText = "";
   String selectedLoggingFilter = "Semua"; // default All
 
@@ -112,14 +112,17 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage_> {
 
   bool _matchesFilterKey(Map<String, dynamic> t, String filterKey) {
     if (filterKey == 'Semua') return true;
+
     final status = (t['status'] as String).toLowerCase();
-    switch (filterKey) {
-      case 'Dalam Proses':
-        return status.contains('Dalam proses');
-      case 'Pending':
-        return status.contains('Pending');
-      case 'Selesai':
-        return status.contains('Selesai');
+    final filter = filterKey.toLowerCase();
+
+    switch (filter) {
+      case 'dalam proses':
+        return status.contains('dalam proses');
+      case 'pending':
+        return status.contains('pending');
+      case 'selesai':
+        return status.contains('selesai');
       default:
         return false;
     }
@@ -407,7 +410,7 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage_> {
         bgColor =
             isSelected ? Colors.orange.withOpacity(0.2) : Colors.grey.shade100;
         break;
-      case 'Penjadwalaan':
+      case 'Penjadwalan':
       default:
         dotColor = Colors.grey.shade600;
         statusColor = Colors.black87;
@@ -462,7 +465,7 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage_> {
                     ),
                   ),
                   Text(
-                    "${slot['Tugas']} Tugas scheduled",
+                    "${slot['tasks']} Tugas scheduled",
                     style: GoogleFonts.poppins(
                       color: Colors.grey.shade600,
                       fontSize: 12,
@@ -489,12 +492,15 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage_> {
   Widget _loggingContent() {
     // Rantai filter menjadi lebih efisien dan mudah dibaca
     final List<Map<String, dynamic>> loggingFiltered = allTasks.where((task) {
-      // Hilangkan dulu filter tanggal agar semua data dummy bisa tampil
       bool categoryMatch = task['category'] == 'logging';
       if (!categoryMatch) return false;
 
       bool statusMatch = _matchesFilterKey(task, selectedLoggingFilter);
       if (!statusMatch) return false;
+
+      if (!isSameDate(task['date'], selectedDate)) {
+        return false;
+      }
 
       if (selectedTimeSlot != null && task['time'] != selectedTimeSlot) {
         return false;
@@ -609,7 +615,7 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage_> {
           Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => complete.ServiceCompleteDetail(task: task),
+                builder: (_) => ServiceViewReport(task: task),
               ));
         },
         style: ElevatedButton.styleFrom(
