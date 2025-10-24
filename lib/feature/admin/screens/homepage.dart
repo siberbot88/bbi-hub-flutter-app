@@ -584,7 +584,7 @@ const SizedBox(height: 24),
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const ServicePage()),
+                MaterialPageRoute(builder: (_) => const ServicePageAdmin()),
               );
             },
             child: Padding(

@@ -1,23 +1,26 @@
-// urutan import yang rapi: dart -> flutter -> package -> local
-import 'dart:math' as math;
-
+import 'package:bengkel_online_flutter/feature/mechanic/screens/bahasa.dart';
+import 'package:bengkel_online_flutter/feature/mechanic/screens/bantudukung.dart';
+import 'package:bengkel_online_flutter/feature/mechanic/screens/change_password.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:bengkel_online_flutter/feature/mechanic/widgets/smartasset.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'dart:math' as math;
+import 'package:bengkel_online_flutter/feature/mechanic/screens/ubahprofil.dart';
 
-import 'package:bengkel_online_flutter/feature/admin/screens/change_password.dart';
-import 'package:bengkel_online_flutter/feature/admin/screens/feedback.dart';
-import 'package:bengkel_online_flutter/feature/admin/screens/voucher_page.dart';
-import 'package:bengkel_online_flutter/feature/admin/screens/edit_profile_page.dart';
-import 'package:bengkel_online_flutter/feature/admin/screens/ubah_bahasa_page.dart';
-import 'package:bengkel_online_flutter/feature/admin/screens/help_support_page.dart';
-
-
-class ProfilePageAdmin extends StatelessWidget {
-  const ProfilePageAdmin({super.key});
+class ProfilePageMechanic extends StatelessWidget {
+  const ProfilePageMechanic({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final dummyUser = {
+      "name": "Ahmad Rizki",
+      "username": "@ahmadrizki",
+      "role":
+          "Mekanik Bengkel", // nanti bisa berubah: Admin Bengkel, Customer, dll
+      "avatar": "assets/image/mekanik.png",
+    };
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: LayoutBuilder(
@@ -36,13 +39,13 @@ class ProfilePageAdmin extends StatelessWidget {
           final itemIconSize = (width * 0.07).clamp(20.0, 36.0) as double;
           final itemFontSize = (width * 0.045).clamp(14.0, 18.0) as double;
 
-          const primaryInner = Color(0xFF9B0D0D);
-          const primaryOuter = Color(0xFFDC2626);
+          const primaryInner = Color(0xFFDC2626);
+          const primaryOuter = Color(0xFF000000);
 
           return SingleChildScrollView(
             child: Column(
               children: [
-                // ====== HEADER GRADIENT ======
+                // ====== Header gradient ======
                 ClipRRect(
                   borderRadius: BorderRadius.vertical(
                     bottom: Radius.circular(bottomRadius),
@@ -63,7 +66,6 @@ class ProfilePageAdmin extends StatelessWidget {
                           horizontal: width * 0.05,
                         ),
                         child: Column(
-                          mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Text(
@@ -80,15 +82,13 @@ class ProfilePageAdmin extends StatelessWidget {
                             CircleAvatar(
                               radius: avatarRadius,
                               backgroundColor: Colors.white,
-                              backgroundImage: const AssetImage(
-                                "assets/image/profil_image.png",
-                              ),
+                              backgroundImage: AssetImage(dummyUser["avatar"]!),
                             ),
                             SizedBox(height: width * 0.03),
 
                             // Name
                             Text(
-                              "AHAS CENGKARENG",
+                              dummyUser["name"]!,
                               style: GoogleFonts.poppins(
                                 color: Colors.white,
                                 fontSize: nameFontSize,
@@ -99,7 +99,7 @@ class ProfilePageAdmin extends StatelessWidget {
 
                             // Username
                             Text(
-                              "@AHAS_Cengkareng01",
+                              dummyUser["username"]!,
                               style: GoogleFonts.poppins(
                                 color: Colors.white70,
                                 fontSize: usernameFontSize,
@@ -107,7 +107,7 @@ class ProfilePageAdmin extends StatelessWidget {
                             ),
                             SizedBox(height: width * 0.03),
 
-                            // Role Badge
+                            // Role badge
                             Container(
                               padding: EdgeInsets.symmetric(
                                 horizontal: width * 0.04,
@@ -118,7 +118,7 @@ class ProfilePageAdmin extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
-                                "Admin Bengkel",
+                                dummyUser["role"]!,
                                 style: GoogleFonts.poppins(
                                   color: Colors.white,
                                   fontSize: roleFontSize,
@@ -133,7 +133,9 @@ class ProfilePageAdmin extends StatelessWidget {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                      builder: (_) => const EditProfilePage()),
+                                    builder: (context) =>
+                                        const EditProfilePage(),
+                                  ),
                                 );
                               },
                               style: ElevatedButton.styleFrom(
@@ -164,11 +166,10 @@ class ProfilePageAdmin extends StatelessWidget {
 
                 SizedBox(height: width * 0.06),
 
-                // ====== CARD MENU ======
+                // ====== Menu Card ======
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: width * 0.04),
                   child: Card(
-                    color: Colors.white,
                     elevation: 5,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(width * 0.04),
@@ -178,106 +179,38 @@ class ProfilePageAdmin extends StatelessWidget {
                         _ProfileItem(
                           iconPath: "assets/icons/bahasa.svg",
                           title: "Bahasa",
-                          iconSize: itemIconSize,
-                          fontSize: itemFontSize,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => const UbahBahasaPage()),
-                            );
-                          },
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => const LanguagePage()),
+                          ),
                         ),
                         const Divider(height: 1),
                         _ProfileItem(
                           iconPath: "assets/icons/help.svg",
                           title: "Bantuan & Dukungan",
-                          iconSize: itemIconSize,
-                          fontSize: itemFontSize,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => const HelpSupportPage()),
-                            );
-                          },
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => const HelpSupportPage()),
+                          ),
                         ),
                         const Divider(height: 1),
                         _ProfileItem(
                           iconPath: "assets/icons/password.svg",
-                          title: "Ganti Password",
-                          iconSize: itemIconSize,
-                          fontSize: itemFontSize,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => const ChangePasswordPage()),
-                            );
-                          },
-                        ),
-                        const Divider(height: 1),
-                        _ProfileItem(
-                          iconPath: "assets/icons/voucher.svg",
-                          title: "Voucher",
-                          iconSize: itemIconSize,
-                          fontSize: itemFontSize,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => const VoucherPage()),
-                            );
-                          },
-                        ),
-                        const Divider(height: 1),
-                        _ProfileItem(
-                          iconPath: "assets/icons/feedback.svg",
-                          title: "Umpan Balik",
-                          iconSize: itemIconSize,
-                          fontSize: itemFontSize,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => const FeedbackPage()),
-                            );
-                          },
+                          title: "Ubah Sandi",
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => const ubahPasswordPage()),
+                          ),
                         ),
                         const Divider(height: 1),
                         _ProfileItem(
                           iconPath: "assets/icons/logout.svg",
                           title: "Keluar",
-                          iconSize: itemIconSize,
-                          fontSize: itemFontSize,
                           isLogout: true,
-                          onTap: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: Text("Keluar",
-                                    style: GoogleFonts.poppins()),
-                                content: Text(
-                                  "Apakah Anda yakin ingin keluar?",
-                                  style: GoogleFonts.poppins(),
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: Text("Batal",
-                                        style: GoogleFonts.poppins()),
-                                  ),
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.pushReplacementNamed(context, '/login');
-                                    },
-                                    child: Text("Ya",
-                                        style: GoogleFonts.poppins()),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
+                          onTap: () => _showLogoutDialog(context),
                         ),
                       ],
                     ),
@@ -291,35 +224,64 @@ class ProfilePageAdmin extends StatelessWidget {
       ),
     );
   }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Logout", style: GoogleFonts.poppins()),
+        content: Text(
+          "Apakah Anda yakin ingin keluar?",
+          style: GoogleFonts.poppins(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Batal", style: GoogleFonts.poppins()),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginPage()),
+              );
+            },
+            child: Text("Ya", style: GoogleFonts.poppins()),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-// ===== ProfileItem (responsif) =====
+// ===== Reusable Profile Item =====
 class _ProfileItem extends StatelessWidget {
   final String iconPath;
   final String title;
   final bool isLogout;
   final VoidCallback? onTap;
-  final double iconSize;
-  final double fontSize;
 
   const _ProfileItem({
     required this.iconPath,
     required this.title,
     this.isLogout = false,
     this.onTap,
-    this.iconSize = 28,
-    this.fontSize = 16,
   });
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final iconSize = (width * 0.07).clamp(20.0, 36.0);
+    final fontSize = (width * 0.045).clamp(14.0, 18.0);
+
     return ListTile(
-      contentPadding: EdgeInsets.symmetric(
-        horizontal: MediaQuery.of(context).size.width * 0.04,
-      ),
-      leading: _buildIcon(
+      contentPadding: EdgeInsets.symmetric(horizontal: width * 0.04),
+      leading: SvgPicture.asset(
         iconPath,
-        size: iconSize,
+        width: iconSize,
+        height: iconSize,
+        fit: BoxFit.contain,
         color: isLogout ? Colors.red : Colors.red,
       ),
       title: Text(
@@ -330,51 +292,42 @@ class _ProfileItem extends StatelessWidget {
           fontWeight: isLogout ? FontWeight.w600 : FontWeight.normal,
         ),
       ),
-      trailing: Icon(
-        Icons.arrow_forward_ios,
-        size: fontSize * 0.7,
-        color: Colors.grey[600],
-      ),
+      trailing: Icon(Icons.arrow_forward_ios,
+          size: fontSize * 0.7, color: Colors.grey[600]),
       onTap: onTap,
     );
   }
-
-  /// ✅ Fungsi helper untuk menampilkan ikon baik .svg maupun .png
-  Widget _buildIcon(String path, {Color? color, double size = 24}) {
-    if (path.toLowerCase().endsWith('.svg')) {
-      return SvgPicture.asset(path, width: size, height: size, color: color);
-    }
-    return Image.asset(path, width: size, height: size, color: color);
-  }
 }
 
-// ======================= Dummy pages (tetap) =======================
+// ===== Dummy pages tetap (bisa kamu ganti nanti) =====
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(title: const Text("About Us")),
-        body: const Center(child: Text("Ini halaman About Us")));
-  }
+  Widget build(BuildContext context) => Scaffold(
+      appBar: AppBar(title: const Text("Bahasa")),
+      body: const Center(child: Text("Halaman Bahasa")));
 }
 
 class HelpPage extends StatelessWidget {
   const HelpPage({super.key});
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(title: const Text("Help & Support")),
-        body: const Center(child: Text("Ini halaman Help & Support")));
-  }
+  Widget build(BuildContext context) => Scaffold(
+      appBar: AppBar(title: const Text("Bantuan")),
+      body: const Center(child: Text("Halaman Bantuan & Dukungan")));
+}
+
+class ChangePasswordPage extends StatelessWidget {
+  const ChangePasswordPage({super.key});
+  @override
+  Widget build(BuildContext context) => Scaffold(
+      appBar: AppBar(title: const Text("Ubah Sandi")),
+      body: const Center(child: Text("Form Ubah Sandi")));
 }
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(title: const Text("Login")),
-        body: const Center(child: Text("Form login di sini")));
-  }
+  Widget build(BuildContext context) => Scaffold(
+      appBar: AppBar(title: const Text("Login")),
+      body: const Center(child: Text("Form Login di sini")));
 }

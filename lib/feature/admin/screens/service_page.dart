@@ -6,14 +6,14 @@ import '../widgets/reject_dialog.dart';
 import '../widgets/accept_dialog.dart';
 import 'service_logging.dart';
 
-class ServicePage extends StatefulWidget {
-  const ServicePage({super.key});
+class ServicePageAdmin extends StatefulWidget {
+  const ServicePageAdmin({super.key});
 
   @override
-  State<ServicePage> createState() => _ServicePageState();
+  State<ServicePageAdmin> createState() => _ServicePageAdminState();
 }
 
-class _ServicePageState extends State<ServicePage> {
+class _ServicePageAdminState extends State<ServicePageAdmin> {
   int displayedMonth = DateTime.now().month;
   int displayedYear = DateTime.now().year;
   int selectedDay = DateTime.now().day;
