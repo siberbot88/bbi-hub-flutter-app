@@ -4,16 +4,20 @@ import 'package:bengkel_online_flutter/feature/owner/screens/staffManagement.dar
 import 'package:flutter/material.dart';
 import 'core/screens/login.dart'as login_screen;
 import 'feature/admin/screens/change_password.dart' as change_screen;
-import 'feature/admin/screens/profilpage.dart';
+import 'feature/admin/screens/profilpage.dart' as admin_profil;
 import 'feature/admin/widgets/bottom_nav.dart';
 import 'feature/admin/screens/dashboard.dart';
 import 'feature/admin/screens/homepage.dart';
-import 'feature/admin/screens/service_page.dart';
-import 'feature/mechanic/screens/homepageMechanic.dart';
+import 'feature/admin/screens/service_page.dart' as admin;
 import 'feature/owner/screens/homepageOwner.dart';
 import 'feature/owner/screens/onBoarding.dart';
 import 'feature/owner/widgets/bottom_nav_owner.dart';
-import 'feature/owner/screens/homepageOwner.dart';
+import 'feature/owner/screens/profilpage_owner.dart' as owner_profil;
+import 'feature/mechanic/screens/service_pagemechanic.dart' as mechanic;
+import 'feature/mechanic/screens/homepageMechanic.dart';
+import 'feature/mechanic/widgets/bottom_navbar.dart';
+import 'feature/mechanic/screens/profil_page.dart' as mechanic_profil;
+import 'feature/mechanic/widgets/bottom_navbar.dart';
 import 'package:bengkel_online_flutter/core/screens/registeruser.dart';
 import 'package:bengkel_online_flutter/core/screens/register.dart';
 import 'package:bengkel_online_flutter/core/screens/registerBengkel.dart';
@@ -30,7 +34,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
 
     // sementara: simulasi role user
-    const String currentRole = "admin"; // admin | owner | mechanic
+    const String currentRole = "mechanic"; // admin | owner | mechanic
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -97,24 +101,24 @@ class _MainPageState extends State<MainPage> {
             DashboardScreen(),
             ManajemenKaryawanPage(),
             ReportPage(),
-            ProfilePage(),
+            owner_profil.ProfilePageOwner(),
         ];
         break;
 
       case "mechanic":
         pages = [
-           HomePageMechanic(),
-           Placeholder(), // TaskPage()
-           Placeholder(), // ProfileMechanicPage()
+          HomePageMechanic(),
+          mechanic.ServicePageMechanic(), // TaskPage()
+          mechanic_profil.ProfilePageMechanic(), // ProfileMechanicPage()
         ];
         break;
 
       default: // admin
         pages = [
            HomePage(),
-           ServicePage(),
+           admin.ServicePageAdmin(),
            DashboardPage(),
-           ProfilePage(),
+           admin_profil.ProfilePageAdmin(),
         ];
     }
 
@@ -133,12 +137,12 @@ class _MainPageState extends State<MainPage> {
           onTap: _onItemTapped,
         );
         break;
-      // case "mechanic":
-      //   bottomNavBar = CustomBottomNavBar(
-      //     selectedIndex: _selectedIndex,
-      //     onTap: _onItemTapped,
-      //   );
-      //   break;
+      case "mechanic":
+        bottomNavBar = CustomBottomNavBarMechanic(
+          selectedIndex: _selectedIndex,
+          onTap: _onItemTapped,
+        );
+        break;
       default:
         bottomNavBar = CustomBottomNavBarAdmin(
           selectedIndex: _selectedIndex,
