@@ -1,7 +1,16 @@
 import 'package:bengkel_online_flutter/core/screens/registers/registerOwner.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/listWork.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/reportPages.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/staffManagement.dart';
+import 'package:bengkel_online_flutter/core/screens/registers/registerOwner.dart';
 import 'package:bengkel_online_flutter/feature/owner/screens/reportPages.dart';
 import 'package:bengkel_online_flutter/feature/owner/screens/staffManagement.dart';
 import 'package:flutter/material.dart';
+import 'feature/admin/screens/profilpage.dart';
+import 'feature/owner/widgets/bottom_nav_owner.dart';
+import 'feature/owner/screens/homepageOwner.dart';
+import 'feature/admin/screens/dashboard.dart';
+import 'core/screens/login.dart'as login_screen;
 import 'core/screens/login.dart'as login_screen;
 import 'feature/admin/screens/change_password.dart' as change_screen;
 import 'feature/admin/screens/profilpage.dart' as admin_profil;
@@ -34,7 +43,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
 
     // sementara: simulasi role user
-    const String currentRole = "mechanic"; // admin | owner | mechanic
+    const String currentRole = "owner"; // admin | owner | mechanic
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -57,14 +66,15 @@ class MyApp extends StatelessWidget {
       routes: {
         "/onboarding": (context) => const OnboardingScreen(),
         "/login": (context) => const login_screen.LoginPage(),
-        "/home": (context) =>
-            const MainPage(role:currentRole), //
-        "/register": (context) =>  RegisterRoleScreen(),
-        "/registerBengkel": (context) =>  RegisterBengkelScreen(),
-        "/registeruser": (context) =>  RegisterScreen(),
-        "/dashboard": (context) => const DashboardPage(),
-        "/register": (context) => const RegisterFlowPage(),
+        "/home": (context) => const DashboardScreen(),
+        "/main": (context) =>
+            const MainPage(role: currentRole,),
+        "/list": (context) => const ListWorkPage(),
         "/changePassword": (context) => const change_screen.ChangePasswordPage(),
+        "/register/owner/bengkel": (context) =>  RegisterBengkelScreen(),
+        "/register/user": (context) =>  RegisterScreen(),
+        "/dashboard": (context) => const DashboardPage(),
+        "/register/owner": (context) => const RegisterFlowPage(),
 
       },
     );
