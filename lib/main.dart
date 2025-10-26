@@ -12,7 +12,6 @@ import 'feature/admin/screens/change_password.dart' as change_screen;
 import 'feature/admin/screens/service_page.dart';
 import 'feature/owner/screens/onBoarding.dart';
 
-
 void main() {
   runApp(const MyApp());
 }
@@ -34,9 +33,7 @@ class MyApp extends StatelessWidget {
           displayLarge: TextStyle(),
           displayMedium: TextStyle(),
           displaySmall: TextStyle(),
-      ).apply(
-          bodyColor: Colors.black, displayColor: Colors.black),
-
+        ).apply(bodyColor: Colors.black, displayColor: Colors.black),
       ),
       // 🔹 halaman pertama aplikasi
       initialRoute: "/list",
