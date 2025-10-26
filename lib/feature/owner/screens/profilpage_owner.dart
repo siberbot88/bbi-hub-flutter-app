@@ -5,16 +5,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'package:bengkel_online_flutter/feature/admin/screens/change_password.dart';
-import 'package:bengkel_online_flutter/feature/admin/screens/feedback.dart';
-import 'package:bengkel_online_flutter/feature/admin/screens/voucher_page.dart';
-import 'package:bengkel_online_flutter/feature/admin/screens/edit_profile_page.dart';
-import 'package:bengkel_online_flutter/feature/admin/screens/ubah_bahasa_page.dart';
-import 'package:bengkel_online_flutter/feature/admin/screens/help_support_page.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/change_password.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/feedback.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/voucher_page.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/edit_profile_page.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/ubah_bahasa_page.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/help_support_page.dart';
 
 
-class ProfilePageAdmin extends StatelessWidget {
-  const ProfilePageAdmin({super.key});
+class ProfilePageOwner extends StatelessWidget {
+  const ProfilePageOwner({super.key});
 
   @override
   Widget build(BuildContext context) {

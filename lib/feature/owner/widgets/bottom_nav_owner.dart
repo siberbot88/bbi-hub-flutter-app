@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
-class CustomBottomNavBar extends StatelessWidget {
+class CustomBottomNavBarOwner extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onTap;
 
-  const CustomBottomNavBar({
+  const CustomBottomNavBarOwner({
     super.key,
     required this.selectedIndex,
     required this.onTap,

@@ -1,4 +1,3 @@
-// lib/pages/service_detail.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../widgets/custom_header.dart';
@@ -10,22 +9,17 @@ class ServiceDetailPage extends StatelessWidget {
 
   const ServiceDetailPage({super.key, required this.task});
 
-  Color _getVehicleColor(String? category) {
-    switch (category?.toLowerCase()) {
-      case "sepeda motor":
-        return Colors.pink.shade200;
-      case "mobil":
-        return Colors.amber.shade300;
-      default:
-        return Colors.grey.shade300;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);
     final textScale = mq.textScaleFactor.clamp(0.9, 1.15);
     double s(double size) => (size * textScale);
+
+    Widget divider() => Divider(
+          color: Colors.grey.shade300,
+          thickness: 1,
+          height: 24,
+        );
 
     return Scaffold(
       appBar: const CustomHeader(
@@ -116,14 +110,15 @@ class ServiceDetailPage extends StatelessWidget {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 16),
 
-                            // 🔹 Foto Kendaraan (square 1:1)
+                            divider(),
+
+                            // 🔹 Foto Kendaraan
                             Center(
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
                                 child: AspectRatio(
-                                  aspectRatio: 1, // square
+                                  aspectRatio: 1,
                                   child: Image.asset(
                                     "assets/image/motorbeat.png",
                                     width: double.infinity,
@@ -132,21 +127,21 @@ class ServiceDetailPage extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 16),
 
-                            // 🔹 Type & Scheduled
+                            divider(),
+
+                            // 🔹 Model & Jadwal
                             Row(
                               children: [
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text("Model Vehicle",
+                                      Text("Model Kendaraan",
                                           style: TextStyle(
                                               fontSize: s(12),
                                               color: Colors.grey[600])),
-                                      Text(task['motor'] ?? '-',
+                                      Text(task['motor'] ?? 'BEAT 2012',
                                           style: GoogleFonts.poppins(
                                               fontSize: s(15),
                                               fontWeight: FontWeight.w700)),
@@ -157,11 +152,12 @@ class ServiceDetailPage extends StatelessWidget {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
-                                      Text("Scheduled",
+                                      Text("Penjadwalan",
                                           style: TextStyle(
                                               fontSize: s(12),
                                               color: Colors.grey[600])),
-                                      Text("8 AM - 12 PM • 7 Sept 2025",
+                                      Text("8 AM - 12 PM :\n7 September 2025",
+                                          textAlign: TextAlign.right,
                                           style: GoogleFonts.poppins(
                                               fontSize: s(15),
                                               fontWeight: FontWeight.w700)),
@@ -170,21 +166,21 @@ class ServiceDetailPage extends StatelessWidget {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 14),
 
-                            // 🔹 Plat Nomor + Jenis Kendaraan
+                            divider(),
+
+                            // 🔹 Plat & Jenis
                             Row(
                               children: [
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text("Plat Nomor",
                                           style: TextStyle(
                                               fontSize: s(12),
                                               color: Colors.grey[600])),
-                                      Text(task['plate'] ?? '-',
+                                      Text(task['plate'] ?? 'SU 814 NTO',
                                           style: GoogleFonts.poppins(
                                               fontSize: s(15),
                                               fontWeight: FontWeight.w700)),
@@ -204,18 +200,16 @@ class ServiceDetailPage extends StatelessWidget {
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 10, vertical: 6),
                                         decoration: BoxDecoration(
-                                          color: _getVehicleColor(
-                                              task['vehicleCategory']),
+                                          color: const Color(0xFFFBC7C7),
                                           borderRadius:
                                               BorderRadius.circular(20),
                                         ),
                                         child: Text(
-                                          task['vehicleCategory'] ??
-                                              'Tidak diketahui',
+                                          "Sepeda Motor",
                                           style: GoogleFonts.poppins(
                                             fontSize: s(13),
                                             fontWeight: FontWeight.w600,
-                                            color: Colors.white,
+                                            color: const Color(0xFF6E1313),
                                           ),
                                         ),
                                       ),
@@ -224,17 +218,17 @@ class ServiceDetailPage extends StatelessWidget {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 14),
 
-                            // 🔹 Category Service & Phone
+                            divider(),
+
+                            // 🔹 Kategori & Telepon
                             Row(
                               children: [
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text("Category Service",
+                                      Text("Kategori Servis",
                                           style: TextStyle(
                                               fontSize: s(12),
                                               color: Colors.grey[600])),
@@ -243,15 +237,18 @@ class ServiceDetailPage extends StatelessWidget {
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 10, vertical: 6),
                                         decoration: BoxDecoration(
-                                          color: Colors.grey[200],
+                                          color: Colors.grey.shade200
+                                              .withOpacity(0.6),
                                           borderRadius:
                                               BorderRadius.circular(20),
                                         ),
                                         child: Text(
-                                          task['category'] ?? 'Maintenance',
-                                          style: TextStyle(
-                                              fontSize: s(13),
-                                              fontWeight: FontWeight.w600),
+                                          "Pemeliharaan",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: s(13),
+                                            fontWeight: FontWeight.w600,
+                                            color: const Color(0xFFD42525),
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -274,11 +271,32 @@ class ServiceDetailPage extends StatelessWidget {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 16),
+
+                            divider(),
+
+                            // 🔹 Alamat
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text("Alamat",
+                                    style: TextStyle(
+                                        fontSize: s(12),
+                                        color: Colors.grey[600])),
+                                Text(
+                                  "Jl. Medokan Ayu No.13, Kecamatan Gunung Anyar",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: s(14),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            divider(),
 
                             // 🔹 Keluhan
                             Text("Keluhan",
-                                style: TextStyle(
+                                style: GoogleFonts.poppins(
                                     fontSize: s(14),
                                     fontWeight: FontWeight.w600)),
                             const SizedBox(height: 6),
@@ -286,67 +304,18 @@ class ServiceDetailPage extends StatelessWidget {
                               width: double.infinity,
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                border: Border.all(color: Colors.red.shade300),
+                                border:
+                                    Border.all(color: Colors.red.shade300),
                                 borderRadius: BorderRadius.circular(8),
                                 color: Colors.red.shade50,
                               ),
                               child: Text(
-                                task['desc'] ?? "No description provided.",
+                                task['desc'] ??
+                                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit...",
                                 style: TextStyle(fontSize: s(13)),
                               ),
                             ),
-
-                            const Spacer(),
-
-                            // 🔹 Buttons
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Builder(
-                                    builder: (ctx) => ElevatedButton(
-                                      onPressed: () {
-                                        showRejectDialog(ctx);
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.red,
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 14),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(30),
-                                        ),
-                                      ),
-                                      child: Text("Decline",
-                                          style: GoogleFonts.poppins(
-                                              fontSize: s(14),
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w600)),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: ElevatedButton(
-                                    onPressed: () {
-                                      showAcceptDialog(context);
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.green,
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 14),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(30),
-                                      ),
-                                    ),
-                                    child: Text("Accept",
-                                        style: GoogleFonts.poppins(
-                                            fontSize: s(14),
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w600)),
-                                  ),
-                                ),
-                              ],
-                            )
+                            const SizedBox(height: 18),
                           ],
                         ),
                       ),
@@ -356,6 +325,63 @@ class ServiceDetailPage extends StatelessWidget {
               );
             },
           ),
+        ),
+      ),
+
+      // 🔹 Tombol bawah tetap
+      bottomNavigationBar: Container(
+        color: Colors.white,
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        child: Row(
+          children: [
+            Expanded(
+              child: SizedBox(
+                height: 58,
+                child: ElevatedButton(
+                  onPressed: () => showRejectDialog(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    elevation: 4,
+                  ),
+                  child: Text(
+                    "Tolak",
+                    style: GoogleFonts.poppins(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: SizedBox(
+                height: 58,
+                child: ElevatedButton(
+                  onPressed: () => showAcceptDialog(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    elevation: 4,
+                  ),
+                  child: Text(
+                    "Terima",
+                    style: GoogleFonts.poppins(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
