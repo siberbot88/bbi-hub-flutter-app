@@ -3,7 +3,6 @@ class User {
   final String name;
   final String username;
   final String email;
-  final String? photo;
   final String role;
 
   User({
@@ -11,7 +10,6 @@ class User {
     required this.name,
     required this.username,
     required this.email,
-    this.photo,
     required this.role,
   });
 
@@ -27,7 +25,6 @@ class User {
       name: json['name'],
       username: json['username'],
       email: json['email'],
-      photo: json['photo'],
       role: userRole,
     );
   }
