@@ -13,7 +13,7 @@ class SplashScreen extends StatefulWidget {
     super.key,
     this.style = CurtainStyle.diamondReveal, // pilih gaya tirai di sini
     this.nextRoute = '/onboarding',
-    this.holdAfterShow = const Duration(seconds: 3), // splash 2 stay 2 detik
+    this.holdAfterShow = const Duration(seconds: 3), // splash 2 stay
   });
 
   final CurtainStyle style;
@@ -26,15 +26,16 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
-  // Curtain open (300ms) dengan EaseInOut
+  // Curtain open (easeInOut)
   late final AnimationController _curtainCtrl;
   late final CurvedAnimation _curtainAnim;
 
-  // Logo + Text
-  late final AnimationController _logoCtrl;     // bounce
-  late final AnimationController _textFadeCtrl; // dissolve
+  // Content (logo + text)
+  late final AnimationController _logoCtrl;      // bounce
+  late final AnimationController _textFadeCtrl;  // dissolve
+  late final AnimationController _loadingFadeCtrl; // <-- spinner fade-in
 
-  // Close (300ms): dissolve + mini bounce
+  // Close (dissolve + mini bounce)
   late final AnimationController _closeCtrl;
   late final Animation<double> _closeFade;
   late final Animation<double> _closeScale;
@@ -45,26 +46,15 @@ class _SplashScreenState extends State<SplashScreen>
 
     _curtainCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 600),
+      duration: const Duration(milliseconds: 600), // sesuai kodenya sekarang
     );
-    _curtainAnim = CurvedAnimation(
-      parent: _curtainCtrl,
-      curve: Curves.easeInOut,
-    );
+    _curtainAnim = CurvedAnimation(parent: _curtainCtrl, curve: Curves.easeInOut);
 
-    _logoCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
-    _textFadeCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
+    _logoCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 800));
+    _textFadeCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
+    _loadingFadeCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 300)); // <-- NEW
 
-    _closeCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
+    _closeCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
     _closeFade = Tween<double>(begin: 1, end: 0).animate(
       CurvedAnimation(parent: _closeCtrl, curve: Curves.easeInOut),
     );
@@ -78,16 +68,17 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _runSequence() async {
-    // After delay 800ms → open 300ms
+    // After delay 800ms → open curtain
     await Future.delayed(const Duration(milliseconds: 800));
     if (!mounted) return;
     await _curtainCtrl.forward();
 
-    // Show logo + text
-    _logoCtrl.forward();     // bounce
-    _textFadeCtrl.forward(); // dissolve
+    // Show content
+    _logoCtrl.forward();        // bounce logo
+    _textFadeCtrl.forward();    // dissolve teks
+    _loadingFadeCtrl.forward(); // <-- spinner muncul saat menunggu
 
-    // Stay (splash 2)
+    // Stay (Splash 2)
     await Future.delayed(widget.holdAfterShow);
 
     // Close + navigate
@@ -101,6 +92,7 @@ class _SplashScreenState extends State<SplashScreen>
     _curtainCtrl.dispose();
     _logoCtrl.dispose();
     _textFadeCtrl.dispose();
+    _loadingFadeCtrl.dispose(); // <-- NEW
     _closeCtrl.dispose();
     super.dispose();
   }
@@ -123,10 +115,11 @@ class _SplashScreenState extends State<SplashScreen>
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  // --- Stage 2: Logo + Teks ---
+                  // --- Stage 2: Logo + Teks + Loading ---
                   _CenterContent(
                     logoCtrl: _logoCtrl,
                     textFadeCtrl: _textFadeCtrl,
+                    loadingFadeCtrl: _loadingFadeCtrl, // <-- NEW
                   ),
 
                   // --- Stage 1: Tirai (overlay) ---
@@ -240,10 +233,12 @@ class _CenterContent extends StatelessWidget {
   const _CenterContent({
     required this.logoCtrl,
     required this.textFadeCtrl,
+    required this.loadingFadeCtrl, // <-- NEW
   });
 
   final AnimationController logoCtrl;
   final AnimationController textFadeCtrl;
+  final AnimationController loadingFadeCtrl; // <-- NEW
 
   @override
   Widget build(BuildContext context) {
@@ -259,12 +254,13 @@ class _CenterContent extends StatelessWidget {
             ScaleTransition(
               scale: CurvedAnimation(parent: logoCtrl, curve: Curves.elasticOut),
               child: Image.asset(
-                'assets/icons/logo_splash.png', // pakai PNG
+                'assets/icons/logo_splash.png',
                 width: 145,
                 height: 145,
               ),
             ),
             const SizedBox(height: 36),
+
             // Text 1 (gradient)
             const _GradientText(
               'Welcome to',
@@ -273,6 +269,8 @@ class _CenterContent extends StatelessWidget {
               stops: [0.24, 0.55, 1.0],
             ),
             const SizedBox(height: 6),
+
+            // Text 2 + plus
             Row(
               mainAxisSize: MainAxisSize.min,
               children: const [
@@ -294,6 +292,20 @@ class _CenterContent extends StatelessWidget {
                   stops: [0.24, 0.55, 1.0],
                 ),
               ],
+            ),
+
+            // --- Loading spinner tepat di bawah text 2 ---
+            const SizedBox(height: 164),
+            FadeTransition(
+              opacity: CurvedAnimation(parent: loadingFadeCtrl, curve: Curves.easeInOut),
+              child: const SizedBox(
+                width: 26,
+                height: 26,
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFDC2626)),
+                ),
+              ),
             ),
           ],
         ),
@@ -359,12 +371,11 @@ class _RevealPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
 
-    // Layer: kita gambar overlay merah lalu "lubangi" dengan clear
-    final paint = Paint();
+    // Layer: gambar overlay merah lalu "lubangi" dengan clear
     canvas.saveLayer(rect, Paint());
 
     // Overlay gradient
-    paint.shader = gradient.createShader(rect);
+    final paint = Paint()..shader = gradient.createShader(rect);
     canvas.drawRect(rect, paint);
 
     // Punch hole: lingkaran / diamond → BlendMode.clear
@@ -379,7 +390,7 @@ class _RevealPainter extends CustomPainter {
         break;
 
       case _RevealType.diamond:
-        final r = progress * (math.max(size.width, size.height)); // “radius” diamond
+        final r = progress * (math.max(size.width, size.height));
         final cx = size.width / 2;
         final cy = size.height / 2;
         final path = Path()
