@@ -35,12 +35,14 @@ flutter:
     - assets/image/
     - assets/icons/
     - assets/svg/
+    - assets/svg/logo.svg
     - assets/logo.png
     - assets/bg.png
     - assets/image/gambar_1.png
     - assets/image/gambar_2.png
     - assets/image/gambar_3.png
     - assets/icons/app_icon.png
+    - assets/icons/logo_splash.png
 
 flutter_icons:
   android: true

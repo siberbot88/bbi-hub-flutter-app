@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart'; // 🟢 Provider integration
+import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
+
+import '../services/auth_provider.dart'; // 🟢 Ganti path jika perlu
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -13,6 +17,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController passwordController = TextEditingController();
   bool rememberMe = false;
   bool obscureText = true;
+  bool _isLoading = false; // 🟢 Loader indicator
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +37,6 @@ class _LoginPageState extends State<LoginPage> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 26),
-
               Center(
                 child: Image.asset(
                   "assets/icons/logo.png",
@@ -40,7 +44,6 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               const SizedBox(height: 40),
-
               Text("Login",
                   style: GoogleFonts.poppins(
                       fontSize: 28,
@@ -113,6 +116,7 @@ class _LoginPageState extends State<LoginPage> {
                 ],
               ),
               const SizedBox(height: 21),
+
               // 🔹 Login button
               SizedBox(
                 width: double.infinity,
@@ -126,25 +130,42 @@ class _LoginPageState extends State<LoginPage> {
                     shadowColor:
                     const Color.fromARGB(255, 215, 43, 28).withOpacity(0.6),
                   ),
-                  onPressed: () async {
-                    // TODO: validasi login ke backend di sini
-                    final bool sukses = true;
+                  onPressed: _isLoading ? null : () async {
+                    FocusScope.of(context).unfocus();
+                    final email = emailController.text.trim();
+                    final password = passwordController.text.trim();
 
-                    if (sukses) {
-                      // arahkan ke shell /home dengan role admin
-                      Navigator.pushNamedAndRemoveUntil(
-                        context,
-                        '/home',
-                        (route) => false,
-                        arguments: 'admin',
-                      );
-                    } else {
+                    if (email.isEmpty || password.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Login gagal')),
+                        const SnackBar(content: Text('Email dan password tidak boleh kosong')),
                       );
+                      return;
+                    }
+
+                    setState(() => _isLoading = true);
+                    try {
+                      final auth = Provider.of<AuthProvider>(context, listen: false);
+                      final success = await auth.login(email, password);
+                      if (success) {
+                        final role = auth.user?.role ?? 'owner';
+                        Navigator.pushNamedAndRemoveUntil(
+                          context,
+                          '/home',
+                              (route) => false,
+                          arguments: role,
+                        );
+                      }
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+                      );
+                    } finally {
+                      setState(() => _isLoading = false);
                     }
                   },
-                  child: Text(
+                  child: _isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : Text(
                     "LOG IN",
                     style: GoogleFonts.poppins(
                       color: Colors.white,
@@ -154,6 +175,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ),
+
               const SizedBox(height: 20),
 
               Row(
@@ -235,8 +257,7 @@ class _LoginPageState extends State<LoginPage> {
         hintStyle: GoogleFonts.poppins(color: Colors.grey),
         prefixIcon: Padding(
           padding: const EdgeInsets.all(12.0),
-          child:
-          Image.asset(iconPath, width: 20, height: 20, color: Colors.red),
+          child: Image.asset(iconPath, width: 20, height: 20, color: Colors.red),
         ),
         suffixIcon: isPassword
             ? IconButton(

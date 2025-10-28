@@ -1,3 +1,4 @@
+import 'package:bengkel_online_flutter/core/screens/splash_screen.dart';
 import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:bengkel_online_flutter/core/screens/registers/registerOwner.dart';
@@ -56,9 +57,10 @@ class MyApp extends StatelessWidget {
         ).apply(bodyColor: Colors.black, displayColor: Colors.black),
       ),
 
-      initialRoute: "/onboarding",
+      initialRoute: "/splash",
 
       routes: {
+        "/splash": (context) => const SplashScreen(),
         "/onboarding": (context) => const OnboardingScreen(),
         "/login": (context) => const login_screen.LoginPage(),
         "/home": (context) => const DashboardScreen(),
