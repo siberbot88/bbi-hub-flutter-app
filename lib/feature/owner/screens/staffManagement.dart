@@ -1,11 +1,17 @@
-import 'package:bengkel_online_flutter/feature/owner/screens/listStaff.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:bengkel_online_flutter/feature/owner/screens/addStaff.dart';
+import 'package:provider/provider.dart';
 
+import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
+import 'package:bengkel_online_flutter/feature/owner/providers/employee_provider.dart';
+import 'package:bengkel_online_flutter/core/models/employment.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/addStaff.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/listStaff.dart';
+
+const Color _grad1 = Color(0xFF510606);
+const Color _grad2 = Color(0xFF9B0D0D);
+const Color _grad3 = Color(0xFFB70F0F);
 const Color _primaryRed = Color(0xFFB70F0F);
-const Color _gradStart  = Color(0xFF9B0D0D);
-const Color _gradEnd    = Color(0xFFB70F0F);
 
 class ManajemenKaryawanPage extends StatefulWidget {
   const ManajemenKaryawanPage({super.key});
@@ -15,217 +21,212 @@ class ManajemenKaryawanPage extends StatefulWidget {
 }
 
 class _ManajemenKaryawanPageState extends State<ManajemenKaryawanPage> {
-  final List<Staff> _staffs = [
-    Staff(
-      name: 'Andi Pratama',
-      jobdesk:
-      'Mengelola data pelanggan dan transaksi servis\nMenjadwalkan servis & memastikan antrian berjalan rapi',
-      role: 'Admin',
-    ),
-    Staff(
-      name: 'Arya Mahendra',
-      jobdesk:
-      'Overhaul mesin motor/mobil\nTune up dan servis besar\nDiagnosa kerusakan mesin menggunakan alat scanner',
-      role: 'Mekanik mesin',
-    ),
-    Staff(
-      name: 'Hariyono Efendi',
-      jobdesk:
-      'Perbaikan sistem kelistrikan (aki, kabel, lampu, dsb)\nPemasangan aksesoris elektronik (alarm, sensor, audio)\nPemeriksaan sistem ECU/ECM',
-      role: 'Mekanik Kelistrikan',
-    ),
-    Staff(
-      name: 'Hariyono Efendi',
-      jobdesk:
-      'Perbaikan sistem kelistrikan (aki, kabel, lampu, dsb)\nPemasangan aksesoris elektronik (alarm, sensor, audio)\nPemeriksaan sistem ECU/ECM',
-      role: 'Mekanik Kelistrikan',
-    ),
-    Staff(
-      name: 'Hariyono Efendi',
-      jobdesk:
-      'Perbaikan sistem kelistrikan (aki, kabel, lampu, dsb)\nPemasangan aksesoris elektronik (alarm, sensor, audio)\nPemeriksaan sistem ECU/ECM',
-      role: 'Mekanik Kelistrikan',
-    ),
-    Staff(
-      name: 'Hariyono Efendi',
-      jobdesk:
-      'Perbaikan sistem kelistrikan (aki, kabel, lampu, dsb)\nPemasangan aksesoris elektronik (alarm, sensor, audio)\nPemeriksaan sistem ECU/ECM',
-      role: 'Mekanik Kelistrikan',
-    ),
-    Staff(
-      name: 'Hariyono Efendi',
-      jobdesk:
-      'Perbaikan sistem kelistrikan (aki, kabel, lampu, dsb)\nPemasangan aksesoris elektronik (alarm, sensor, audio)\nPemeriksaan sistem ECU/ECM',
-      role: 'Mekanik Kelistrikan',
-    ),
-  ];
-
   String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // kalau butuh workshopUuid bisa ambil dari auth:
+      // final auth = context.read<AuthProvider>();
+      // final workshops = auth.user?.workshops;
+      // final workshopUuid = (workshops != null && workshops.isNotEmpty) ? workshops.first.id : null;
+
+      await context.read<EmployeeProvider>().fetchOwnerEmployees();
+    });
+  }
+
+  Future<void> _refresh() async {
+    await context.read<EmployeeProvider>().fetchOwnerEmployees();
+  }
 
   @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
 
-    final filtered = _staffs
-        .where((s) =>
-    s.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-        s.jobdesk.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-        s.role.toLowerCase().contains(_searchQuery.toLowerCase()))
-        .toList();
+    final prov = context.watch<EmployeeProvider>();
+    final List<Employment> items = prov.items;
+
+    final filtered = items.where((e) {
+      final q = _searchQuery.toLowerCase();
+      final name = (e.user?.name ?? '').toLowerCase();
+      final role = e.role.toLowerCase();
+      final specialist = (e.specialist ?? '').toLowerCase();
+      final jobdesk = (e.jobdesk ?? '').toLowerCase();
+      return name.contains(q) || role.contains(q) || specialist.contains(q) || jobdesk.contains(q);
+    }).toList();
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          // ===== HEADER collapsible (card fitur di dalam header) =====
-          SliverAppBar(
-            pinned: true,
-            backgroundColor: _gradStart,
-            elevation: 0,
-            expandedHeight: 280,
-            flexibleSpace: FlexibleSpaceBar(
-              collapseMode: CollapseMode.parallax,
-              background: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [_gradStart, _gradEnd],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
+      body: RefreshIndicator.adaptive(
+        onRefresh: _refresh,
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+          slivers: [
+            SliverAppBar(
+              pinned: true,
+              backgroundColor: _grad2,
+              elevation: 0,
+              expandedHeight: 280,
+              flexibleSpace: FlexibleSpaceBar(
+                collapseMode: CollapseMode.parallax,
+                background: Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [_grad2, _grad3],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
                   ),
-                ),
-                child: SafeArea(
-                  bottom: false,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Top bar
-                        Row(
-                          children: [
-                            InkWell(
-                              onTap: () {
-                                Navigator.pushReplacementNamed(context, "/main");
-                              },
-                              borderRadius: BorderRadius.circular(30),
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.3),
-                                  shape: BoxShape.circle,
+                  child: SafeArea(
+                    bottom: false,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              InkWell(
+                                onTap: () => Navigator.pushReplacementNamed(context, "/main"),
+                                borderRadius: BorderRadius.circular(30),
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.3),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.arrow_back, color: Colors.white),
                                 ),
-                                child: const Icon(Icons.arrow_back,
-                                    color: Colors.white),
                               ),
-                            ),
-                            const SizedBox(width: 16),
-                            const Text(
-                              'Manajemen Karyawan',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                              const SizedBox(width: 16),
+                              const Text(
+                                'Manajemen Karyawan',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        const Text(
-                          '3 Karyawan',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                            ],
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          '8 hadir hari ini · 4 izin/sakit',
-                          style: TextStyle(color: Colors.white70, fontSize: 12),
-                        ),
-                        const SizedBox(height: 24), // info -> card (24)
-
-                        // Card fitur (tetap di header)
-                        Material(
-                          elevation: 6,
-                          borderRadius: BorderRadius.circular(16),
-                          child: Container(
-                            decoration: BoxDecoration(
+                          const SizedBox(height: 20),
+                          Text(
+                            '${items.length} Karyawan',
+                            style: const TextStyle(
                               color: Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 18),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                _FeatureButton(
-                                  icon: Icons.person_add,
-                                  label: 'Add Staff',
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (_) => const AddStaffRegisterPage()),
-                                    );
-                                  },
-                                ),
-                                _FeatureButton(
-                                  icon: Icons.list,
-                                  label: 'List Staff',
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (_) => const ManajemenKaryawanTablePage()),
-                                    );
-                                  },
-                                ),
-                                _FeatureButton(
-                                  icon: Icons.access_time,
-                                  label: 'Absensi',
-                                  onTap: () {},
-                                ),
-                              ],
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                        ),
+                          const SizedBox(height: 4),
+                          const Text(' ', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                          const SizedBox(height: 24),
 
-                        const SizedBox(height: 20), // card -> body (NAIK dari 36 ke 20)
-                      ],
+                          // fitur quick actions
+                          Material(
+                            elevation: 6,
+                            borderRadius: BorderRadius.circular(16),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 18),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  _FeatureButton(
+                                    icon: Icons.person_add,
+                                    label: 'Add Staff',
+                                    onTap: () async {
+                                      await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (_) => const AddStaffRegisterPage()),
+                                      );
+                                      await _refresh();
+                                    },
+                                  ),
+                                  _FeatureButton(
+                                    icon: Icons.list,
+                                    label: 'List Staff',
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (_) => const ManajemenKaryawanTablePage()),
+                                      );
+                                    },
+                                  ),
+                                  _FeatureButton(
+                                    icon: Icons.access_time,
+                                    label: 'Absensi',
+                                    onTap: () {},
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
 
-          // ===== BODY CONTENT =====
-          SliverToBoxAdapter(
-            child: _searchSection(
-              // kasih jarak dari batas body (biar nggak dempet)
-              outerPadding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-              innerPadding: const EdgeInsets.symmetric(horizontal: 20),
-              fieldContentPadding: const EdgeInsets.symmetric(vertical: 14),
-            ),
-          ),
-          const SliverToBoxAdapter(child: SizedBox(height: 12)),
-          SliverToBoxAdapter(child: _listHeaderSection()),
-
-          SliverList(
-            delegate: SliverChildBuilderDelegate(
-                  (context, i) => Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: StaffCard(staff: filtered[i]),
+            // Search
+            SliverToBoxAdapter(
+              child: _searchSection(
+                outerPadding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                innerPadding: const EdgeInsets.symmetric(horizontal: 20),
+                fieldContentPadding: const EdgeInsets.symmetric(vertical: 14),
               ),
-              childCount: filtered.length,
             ),
-          ),
-          const SliverToBoxAdapter(child: SizedBox(height: 24)),
-        ],
+            const SliverToBoxAdapter(child: SizedBox(height: 12)),
+            SliverToBoxAdapter(child: _listHeaderSection()),
+
+            // List
+            if (prov.loading)
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.all(24.0),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+              )
+            else if (filtered.isEmpty)
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.all(24.0),
+                  child: Center(child: Text('Belum ada karyawan')),
+                ),
+              )
+            else
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                      (context, i) {
+                    final e = filtered[i];
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: _StaffCard(
+                        name: e.user?.name ?? '-',
+                        role: e.role.isEmpty ? '-' : e.role,
+                        specialist: (e.specialist ?? '').isEmpty ? '-' : e.specialist!,
+                        jobdesk: (e.jobdesk ?? '').isEmpty ? '-' : e.jobdesk!,
+                      ),
+                    );
+                  },
+                  childCount: filtered.length,
+                ),
+              ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+          ],
+        ),
       ),
     );
   }
 
-  // ===== Search Section (pakai padding parameter) =====
   Widget _searchSection({
     required EdgeInsets outerPadding,
     required EdgeInsets innerPadding,
@@ -289,28 +290,20 @@ class _ManajemenKaryawanPageState extends State<ManajemenKaryawanPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: const [
-          Text('List Jobdesk Staff',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-          Text('Lainnya',
-              style: TextStyle(
-                  fontSize: 13, color: Color(0xFFDC2626), fontWeight: FontWeight.w500)),
+          Text('List Jobdesk Staff', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+          Text('Lainnya', style: TextStyle(fontSize: 13, color: Color(0xFFDC2626), fontWeight: FontWeight.w500)),
         ],
       ),
     );
   }
 }
 
-// ===== Feature Button =====
 class _FeatureButton extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
 
-  const _FeatureButton({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
+  const _FeatureButton({required this.icon, required this.label, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -323,9 +316,7 @@ class _FeatureButton extends StatelessWidget {
           children: [
             Icon(icon, color: _primaryRed, size: 28),
             const SizedBox(height: 6),
-            Text(label,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 12, color: Colors.black87)),
+            Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, color: Colors.black87)),
           ],
         ),
       ),
@@ -333,11 +324,18 @@ class _FeatureButton extends StatelessWidget {
   }
 }
 
-// ===== Staff Card =====
-class StaffCard extends StatelessWidget {
-  final Staff staff;
+class _StaffCard extends StatelessWidget {
+  final String name;
+  final String role;
+  final String specialist;
+  final String jobdesk;
 
-  const StaffCard({required this.staff});
+  const _StaffCard({
+    required this.name,
+    required this.role,
+    required this.specialist,
+    required this.jobdesk,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -348,7 +346,8 @@ class StaffCard extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         gradient: const LinearGradient(
-          colors: [Color(0xFF510606), Color(0xFF9B0D0D), Color(0xFFB70F0F)],
+          colors: [_grad1, _grad2, _grad3],
+          stops: [0.13, 0.59, 0.79],
           begin: Alignment.bottomLeft,
           end: Alignment.topRight,
         ),
@@ -363,36 +362,40 @@ class StaffCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(staff.name,
-              style: const TextStyle(
-                  color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 8),
-          Text(staff.jobdesk,
-              style: const TextStyle(color: Colors.white70, fontSize: 10, height: 1.4)),
-          const SizedBox(height: 12),
-          Align(
-            alignment: Alignment.topRight,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.white),
-                borderRadius: BorderRadius.circular(50),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  name,
+                  style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w700),
+                ),
               ),
-              child: Text(staff.role,
-                  style: const TextStyle(color: Colors.white, fontSize: 11)),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.white),
+                  borderRadius: BorderRadius.circular(50),
+                ),
+                child: Text(role, style: const TextStyle(color: Colors.white, fontSize: 11)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          if (specialist.isNotEmpty && specialist != '-')
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6.0),
+              child: Text(
+                specialist,
+                style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+              ),
             ),
+          Text(
+            jobdesk,
+            style: const TextStyle(color: Colors.white70, fontSize: 11, height: 1.4),
           ),
         ],
       ),
     );
   }
-}
-
-// ===== Model =====
-class Staff {
-  final String name;
-  final String jobdesk;
-  final String role;
-
-  Staff({required this.name, required this.jobdesk, required this.role});
 }
