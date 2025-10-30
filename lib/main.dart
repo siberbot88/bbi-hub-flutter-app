@@ -1,5 +1,6 @@
 import 'package:bengkel_online_flutter/core/screens/splash_screen.dart';
 import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
+import 'package:bengkel_online_flutter/feature/owner/providers/employee_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:bengkel_online_flutter/core/screens/registers/registerOwner.dart';
 import 'package:bengkel_online_flutter/feature/owner/screens/listWork.dart';
@@ -28,8 +29,11 @@ import 'package:bengkel_online_flutter/core/screens/registerBengkel.dart';
 
 void main() {
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => AuthProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => EmployeeProvider()),
+      ],
       child: const MyApp(),
     ),
   );
