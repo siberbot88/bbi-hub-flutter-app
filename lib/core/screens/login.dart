@@ -150,7 +150,7 @@ class _LoginPageState extends State<LoginPage> {
                         final role = auth.user?.role ?? 'owner';
                         Navigator.pushNamedAndRemoveUntil(
                           context,
-                          '/home',
+                          '/main',
                               (route) => false,
                           arguments: role,
                         );
