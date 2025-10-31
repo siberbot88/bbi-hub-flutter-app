@@ -6,17 +6,14 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'dart:math' as math;
 
-// --- PERBAIKAN DI SINI ---
 void main() {
   runApp(
-    // Anda HARUS membungkus MyApp dengan Provider di sini
     ChangeNotifierProvider(
       create: (context) => AuthProvider(),
       child: const MyApp(),
     ),
   );
 }
-// --- AKHIR PERBAIKAN ---
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -28,16 +25,13 @@ class MyApp extends StatelessWidget {
         primaryColor: const Color(0xFFD72B1C),
         scaffoldBackgroundColor: Colors.grey.shade100,
         fontFamily: 'Poppins',
-        textSelectionTheme: const TextSelectionThemeData(
-          cursorColor: Colors.red,
-        ),
+        textSelectionTheme: const TextSelectionThemeData(cursorColor: Colors.red),
       ),
       home: const RegisterFlowPage(),
       debugShowCheckedModeBanner: false,
       routes: {
-        '/main': (context) => const Scaffold(
-          body: Center(child: Text('Halaman Dashboard Utama')),
-        ),
+        '/login': (context) => const Scaffold(body: Center(child: Text('Halaman Login'))),
+        // Pastikan /main sudah didefinisikan di app utama kamu
       },
     );
   }
@@ -51,26 +45,22 @@ class RegisterFlowPage extends StatefulWidget {
 
 class _RegisterFlowPageState extends State<RegisterFlowPage>
     with TickerProviderStateMixin {
-  // --- STATE UNTUK LOGIKA API ---
   final ApiService _apiService = ApiService();
   bool _isLoading = false;
   String? _createdWorkshopId;
-  // ------------------------------
 
   final PageController _pageController = PageController();
 
   late AnimationController _successAnimController;
   late Animation<double> _successScaleAnim;
 
-  // --- KUNCI FORM UNTUK VALIDASI ---
   final List<GlobalKey<FormState>> _formKeys = [
-    GlobalKey<FormState>(), // Kunci untuk Step 0
-    GlobalKey<FormState>(), // Kunci untuk Step 1
-    GlobalKey<FormState>(), // Kunci untuk Step 2
+    GlobalKey<FormState>(), // step 0
+    GlobalKey<FormState>(), // step 1
+    GlobalKey<FormState>(), // step 2
   ];
-  // ---------------------------------
 
-  // --- CONTROLLERS UNTUK FORM ---
+  // controllers
   final TextEditingController fullnameController = TextEditingController();
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -92,31 +82,20 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
   final TextEditingController openingTimeController = TextEditingController();
   final TextEditingController closingTimeController = TextEditingController();
   final TextEditingController operationalDaysController = TextEditingController();
-  // ------------------------------------
 
   int _currentStep = 0;
   bool _step0IsValid = false;
-  bool _step1IsValid = false;  bool _obscurePassword = true;
+  bool _step1IsValid = false;
+  bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
   @override
   void initState() {
     super.initState();
-    _successAnimController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
+    _successAnimController = AnimationController(vsync: this, duration: const Duration(milliseconds: 800));
     _successScaleAnim = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween(begin: 0.9, end: 1.1)
-            .chain(CurveTween(curve: Curves.easeOutBack)),
-        weight: 50,
-      ),
-      TweenSequenceItem(
-        tween:
-        Tween(begin: 1.1, end: 1.0).chain(CurveTween(curve: Curves.easeIn)),
-        weight: 50,
-      ),
+      TweenSequenceItem(tween: Tween(begin: 0.9, end: 1.1).chain(CurveTween(curve: Curves.easeOutBack)), weight: 50),
+      TweenSequenceItem(tween: Tween(begin: 1.1, end: 1.0).chain(CurveTween(curve: Curves.easeIn)), weight: 50),
     ]).animate(_successAnimController);
   }
 
@@ -124,11 +103,7 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
     if (_isLoading || step < 0 || step > 3) return;
     FocusScope.of(context).unfocus();
     setState(() => _currentStep = step);
-    _pageController.animateToPage(
-      step,
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.easeInOutCubicEmphasized,
-    );
+    _pageController.animateToPage(step, duration: const Duration(milliseconds: 500), curve: Curves.easeInOutCubicEmphasized);
     if (step == 3) {
       _successAnimController
         ..reset()
@@ -138,17 +113,11 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
 
   void _onNext() {
     if (_formKeys[_currentStep].currentState?.validate() ?? false) {
-
-      if (_currentStep == 0) {
-        setState(() => _step0IsValid = true);
-      } else if (_currentStep == 1) {
-        setState(() => _step1IsValid = true);
-      }
+      if (_currentStep == 0) _step0IsValid = true;
+      if (_currentStep == 1) _step1IsValid = true;
       _goStep(_currentStep + 1);
     }
   }
-
-  void _onBack() => _goStep(_currentStep - 1);
 
   @override
   void dispose() {
@@ -183,45 +152,32 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
 
     if (!(_formKeys[2].currentState?.validate() ?? false)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Harap lengkapi data dokumen.'),
-            backgroundColor: Colors.orange),
+        const SnackBar(content: Text('Harap lengkapi data dokumen.'), backgroundColor: Colors.orange),
       );
       return;
     }
 
     if (passwordController.text != confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Password dan Konfirmasi Password tidak cocok!'),
-          backgroundColor: Colors.red,
-        ),
+        const SnackBar(content: Text('Password dan konfirmasi tidak cocok!'), backgroundColor: Colors.red),
       );
       _goStep(0);
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
-
+    setState(() => _isLoading = true);
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     try {
-      print("--- DEBUG: Memulai Step 0: Register User ---");
-      bool registerSuccess = await authProvider.register(
+      final ok = await authProvider.register(
         name: fullnameController.text.trim(),
         username: usernameController.text.trim(),
         email: emailController.text.trim(),
         password: passwordController.text,
         passwordConfirmation: confirmPasswordController.text,
       );
+      if (!ok) throw Exception(authProvider.authError ?? 'Registrasi user gagal');
 
-      if (!registerSuccess) {
-        throw Exception(authProvider.authError ?? 'Registrasi user gagal');
-      }
-
-      print("--- DEBUG: Selesai Step 0. Memulai Step 1: Create Workshop ---");
       final workshop = await _apiService.createWorkshop(
         name: workshopController.text.trim(),
         description: decsController.text.trim(),
@@ -233,45 +189,30 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
         province: provinceController.text.trim(),
         country: "Indonesia",
         postalCode: postalCodeController.text.trim(),
-        latitude:
-        double.tryParse(latitudeController.text.trim().replaceAll(',', '.')) ??
-            0.0,
-        longitude:
-        double.tryParse(longitudeController.text.trim().replaceAll(',', '.')) ??
-            0.0,
+        latitude: double.tryParse(latitudeController.text.trim().replaceAll(',', '.')) ?? 0.0,
+        longitude: double.tryParse(longitudeController.text.trim().replaceAll(',', '.')) ?? 0.0,
         openingTime: openingTimeController.text.trim(),
         closingTime: closingTimeController.text.trim(),
         operationalDays: operationalDaysController.text.trim(),
       );
 
       _createdWorkshopId = workshop.id;
-      print("--- DEBUG: Selesai Step 1. Workshop ID: $_createdWorkshopId ---");
 
-      print("--- DEBUG: Memulai Step 2: Create Document ---");
       await _apiService.createDocument(
         workshopUuid: _createdWorkshopId!,
         nib: nibController.text.trim(),
         npwp: npwpController.text.trim(),
       );
 
-      print("--- DEBUG: Selesai Step 2. SEMUA SUKSES ---");
+      // refresh profil agar workshop tampil di AuthProvider.user
+      await authProvider.checkLoginStatus();
 
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
       _goStep(3);
     } catch (e) {
-      print("--- DEBUG: TERJADI ERROR ---");
-      print(e.toString());
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content:
-          Text('Error: ${e.toString().replaceFirst("Exception: ", "")}'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text('Error: ${e.toString().replaceFirst("Exception: ", "")}'), backgroundColor: Colors.red),
       );
       if (!authProvider.isLoggedIn) {
         _goStep(0);
@@ -281,115 +222,55 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
     }
   }
 
-  String? _validateNotEmpty(String? value, String fieldName) {
-    if (value == null || value.trim().isEmpty) {
-      return '$fieldName tidak boleh kosong.';
-    }
+  String? _validateNotEmpty(String? v, String name) => (v == null || v.trim().isEmpty) ? '$name tidak boleh kosong.' : null;
+  String? _validateEmail(String? v) {
+    if (v == null || v.trim().isEmpty) return 'Email tidak boleh kosong.';
+    final r = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+    return r.hasMatch(v.trim()) ? null : 'Format email tidak valid.';
+  }
+  String? _validateEmailOptional(String? v) {
+    if (v == null || v.trim().isEmpty) return null;
+    final r = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+    return r.hasMatch(v.trim()) ? null : 'Format email tidak valid.';
+  }
+  String? _validatePassword(String? v) {
+    if (v == null || v.isEmpty) return 'Password tidak boleh kosong.';
+    if (v.length < 8) return 'Password minimal 8 karakter.';
     return null;
   }
-
-  String? _validateEmail(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Email tidak boleh kosong.';
-    }
-    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-    if (!emailRegex.hasMatch(value.trim())) {
-      return 'Format email tidak valid.';
-    }
+  String? _validateConfirmPassword(String? v) {
+    if (v == null || v.isEmpty) return 'Verifikasi password tidak boleh kosong.';
+    if (v != passwordController.text) return 'Password tidak cocok.';
     return null;
   }
-
-  // Validator email opsional
-  String? _validateEmailOptional(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return null; // Boleh kosong
-    }
-    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-    if (!emailRegex.hasMatch(value.trim())) {
-      return 'Format email tidak valid.';
-    }
-    return null;
+  String? _validateTimeFormat(String? v, String name) {
+    if (v == null || v.trim().isEmpty) return '$name tidak boleh kosong.';
+    final r = RegExp(r'^\d{2}:\d{2}$');
+    return r.hasMatch(v.trim()) ? null : 'Format $name harus HH:MM (08:00).';
   }
-
-  String? _validatePassword(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Password tidak boleh kosong.';
-    }
-    if (value.length < 8) {
-      return 'Password minimal 8 karakter.';
-    }
-    return null;
+  String? _validateNumber(String? v, String name) {
+    if (v == null || v.trim().isEmpty) return '$name tidak boleh kosong.';
+    return double.tryParse(v.trim().replaceAll(',', '.')) == null ? '$name harus berupa angka.' : null;
   }
-
-  String? _validateConfirmPassword(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Verifikasi password tidak boleh kosong.';
-    }
-    if (value != passwordController.text) {
-      return 'Password tidak cocok.';
-    }
-    return null;
+  String? _validateUrl(String? v, String name) {
+    if (v == null || v.trim().isEmpty) return '$name tidak boleh kosong.';
+    final s = v.trim().toLowerCase();
+    return (s.startsWith('http://') || s.startsWith('https://')) ? null : 'Format $name tidak valid (http/https).';
   }
-
-  String? _validateTimeFormat(String? value, String fieldName) {
-    if (value == null || value.trim().isEmpty) {
-      return '$fieldName tidak boleh kosong.';
-    }
-    final timeRegex = RegExp(r'^\d{2}:\d{2}$'); // HH:MM
-    if (!timeRegex.hasMatch(value.trim())) {
-      return 'Format $fieldName harus HH:MM (Contoh: 08:00)';
-    }
-    return null;
-  }
-
-  String? _validateNumber(String? value, String fieldName) {
-    if (value == null || value.trim().isEmpty) {
-      return '$fieldName tidak boleh kosong.';
-    }
-    if (double.tryParse(value.trim().replaceAll(',', '.')) == null) {
-      return '$fieldName harus berupa angka.';
-    }
-    return null;
-  }
-
-  String? _validateUrl(String? value, String fieldName) {
-    if (value == null || value.trim().isEmpty) {
-      return '$fieldName tidak boleh kosong.';
-    }
-    if (!value.trim().toLowerCase().startsWith('http://') &&
-        !value.trim().toLowerCase().startsWith('https://')) {
-      return 'Format $fieldName tidak valid (harus diawali http:// atau https://)';
-    }
-    return null;
-  }
-
-  // Validator opsional (boleh kosong)
-  String? _validateOptional(String? value, String fieldName) {
-    return null; // Selalu valid, boleh kosong
-  }
+  String? _validateOptional(String? v, String name) => null;
 
   Widget _buildProgressBar(double width) {
-    double segment = width / 3;
+    final segment = width / 3;
     return SizedBox(
       height: 50,
       child: Stack(
         children: [
-          Positioned(
-            top: 20,
-            left: segment / 2,
-            right: segment / 2,
-            child: Container(height: 2, color: Colors.red.withOpacity(0.3)),
-          ),
+          Positioned(top: 20, left: segment / 2, right: segment / 2, child: Container(height: 2, color: Colors.red.withOpacity(0.3))),
           Positioned(
             top: 20,
             left: segment / 2,
             width: segment * math.min(_currentStep, 2.0),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 500),
-              curve: Curves.easeInOut,
-              height: 2,
-              color: Colors.red,
-            ),
+            child: AnimatedContainer(duration: const Duration(milliseconds: 500), curve: Curves.easeInOut, height: 2, color: Colors.red),
           ),
           for (int i = 0; i < 3; i++)
             Positioned(
@@ -401,18 +282,14 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                 height: 24,
                 decoration: BoxDecoration(
                   color: (i <= _currentStep) ? Colors.red : Colors.white,
-                  border: Border.all(
-                      color: (i <= _currentStep)
-                          ? Colors.red
-                          : Colors.red.withOpacity(0.5)),
+                  border: Border.all(color: (i <= _currentStep) ? Colors.red : Colors.red.withOpacity(0.5)),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 200),
                     child: (i < _currentStep)
-                        ? const Icon(Icons.check,
-                        size: 16, color: Colors.white, key: ValueKey('check'))
+                        ? const Icon(Icons.check, size: 16, color: Colors.white, key: ValueKey('check'))
                         : const SizedBox.shrink(key: ValueKey('empty')),
                   ),
                 ),
@@ -430,9 +307,7 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                     fontSize: 12,
                     fontFamily: 'Poppins',
                     color: (i == _currentStep) ? Colors.red : Colors.grey,
-                    fontWeight: (i == _currentStep)
-                        ? FontWeight.bold
-                        : FontWeight.normal,
+                    fontWeight: (i == _currentStep) ? FontWeight.bold : FontWeight.normal,
                   ),
                   child: Text(['Data diri', 'Data bengkel', 'Dokumen'][i]),
                 ),
@@ -466,56 +341,38 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
       autovalidateMode: AutovalidateMode.onUserInteraction,
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: GoogleFonts.poppins(
-          color: Colors.red,
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-        ),
+        labelStyle: GoogleFonts.poppins(color: Colors.red, fontSize: 14, fontWeight: FontWeight.w500),
         hintText: hint,
         hintStyle: GoogleFonts.poppins(color: Colors.grey),
         prefixIcon: Padding(
           padding: const EdgeInsets.all(12.0),
-          child: SvgPicture.asset(
-            iconPath,
-            width: 20,
-            height: 20,
-            color: Colors.red,
-          ),
+          child: SvgPicture.asset(iconPath, width: 20, height: 20, color: Colors.red),
         ),
         suffixIcon: isPassword
             ? IconButton(
-          icon: Icon(
-            (obscureState ?? true)
-                ? Icons.visibility_off
-                : Icons.visibility,
-            color: const Color.fromARGB(255, 215, 43, 28),
-          ),
+          icon: Icon((obscureState ?? true) ? Icons.visibility_off : Icons.visibility, color: const Color(0xFFD72B1C)),
           onPressed: onToggleObscure,
         )
             : null,
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(
-              color: Color.fromARGB(255, 215, 43, 28), width: 1.5),
+          borderSide: const BorderSide(color: Color(0xFFD72B1C), width: 1.5),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(
-              color: Color.fromARGB(255, 215, 43, 28), width: 2),
+          borderSide: const BorderSide(color: Color(0xFFD72B1C), width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide:
-          const BorderSide(color: Colors.orange, width: 1.5),
+          borderSide: const BorderSide(color: Colors.orange, width: 1.5),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide:
-          const BorderSide(color: Colors.orange, width: 2),
+          borderSide: const BorderSide(color: Colors.orange, width: 2),
         ),
         errorStyle: const TextStyle(fontSize: 10, color: Colors.orange),
         filled: true,
-        fillColor: const Color.fromARGB(222, 255, 255, 255).withOpacity(0.4),
+        fillColor: const Color(0x66FFFFFF),
       ),
       style: GoogleFonts.poppins(color: Colors.black, fontSize: 12),
     );
@@ -528,13 +385,7 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            offset: const Offset(0, 0),
-            blurRadius: 22,
-          ),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), offset: const Offset(0, 0), blurRadius: 22)],
       ),
       child: child,
     );
@@ -546,12 +397,9 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
         final kb = MediaQuery.of(context).viewInsets.bottom;
         return SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: EdgeInsets.only(
-            bottom: 16 + kb,
-          ),
+          padding: EdgeInsets.only(bottom: 16 + kb),
           child: ConstrainedBox(
-            constraints:
-            BoxConstraints(minHeight: constraints.maxHeight - 16 - kb),
+            constraints: BoxConstraints(minHeight: constraints.maxHeight - 16 - kb),
             child: Align(alignment: Alignment.topCenter, child: child),
           ),
         );
@@ -567,7 +415,6 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
         child: Form(
           key: _formKeys[0],
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(
@@ -575,10 +422,7 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                   Container(
                     width: 41,
                     height: 41,
-                    decoration: BoxDecoration(
-                      color: const Color.fromRGBO(220, 38, 38, 0.21),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+                    decoration: BoxDecoration(color: const Color.fromRGBO(220, 38, 38, 0.21), borderRadius: BorderRadius.circular(10)),
                     child: const Icon(Icons.person, color: Colors.red, size: 28),
                   ),
                   const SizedBox(width: 14),
@@ -586,12 +430,9 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("Isi Data Diri",
-                            style: TextStyle(fontSize: 14, color: Colors.black)),
+                        Text("Isi Data Diri", style: TextStyle(fontSize: 14, color: Colors.black)),
                         SizedBox(height: 4),
-                        Text("Buatlah akun pertamamu...",
-                            style:
-                            TextStyle(fontSize: 12, color: Colors.black54)),
+                        Text("Buatlah akun pertamamu...", style: TextStyle(fontSize: 12, color: Colors.black54)),
                       ],
                     ),
                   ),
@@ -604,7 +445,7 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                 hint: "Masukkan nama lengkap kamu",
                 iconPath: "assets/svg/user.svg",
                 textCapitalization: TextCapitalization.words,
-                validator: (value) => _validateNotEmpty(value, 'Nama Lengkap'),
+                validator: (v) => _validateNotEmpty(v, 'Nama Lengkap'),
               ),
               const SizedBox(height: 22),
               _buildTextField(
@@ -613,7 +454,7 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                 hint: "Masukkan username",
                 iconPath: "assets/svg/user.svg",
                 keyboardType: TextInputType.visiblePassword,
-                validator: (value) => _validateNotEmpty(value, 'Username'),
+                validator: (v) => _validateNotEmpty(v, 'Username'),
               ),
               const SizedBox(height: 22),
               _buildTextField(
@@ -632,8 +473,7 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                 iconPath: "assets/svg/key.svg",
                 isPassword: true,
                 obscureState: _obscurePassword,
-                onToggleObscure: () =>
-                    setState(() => _obscurePassword = !_obscurePassword),
+                onToggleObscure: () => setState(() => _obscurePassword = !_obscurePassword),
                 validator: _validatePassword,
               ),
               const SizedBox(height: 22),
@@ -644,8 +484,7 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                 iconPath: "assets/svg/key.svg",
                 isPassword: true,
                 obscureState: _obscureConfirmPassword,
-                onToggleObscure: () => setState(
-                        () => _obscureConfirmPassword = !_obscureConfirmPassword),
+                onToggleObscure: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
                 validator: _validateConfirmPassword,
               ),
               const SizedBox(height: 16),
@@ -665,7 +504,6 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
         child: Form(
           key: _formKeys[1],
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(
@@ -673,10 +511,7 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                   Container(
                     width: 41,
                     height: 41,
-                    decoration: BoxDecoration(
-                      color: const Color.fromRGBO(220, 38, 38, 0.21),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+                    decoration: BoxDecoration(color: const Color.fromRGBO(220, 38, 38, 0.21), borderRadius: BorderRadius.circular(10)),
                     child: const Icon(Icons.store, color: Colors.red, size: 28),
                   ),
                   const SizedBox(width: 14),
@@ -684,12 +519,9 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("Isi Data Bengkel",
-                            style: TextStyle(fontSize: 14, color: Colors.black)),
+                        Text("Isi Data Bengkel", style: TextStyle(fontSize: 14, color: Colors.black)),
                         SizedBox(height: 4),
-                        Text("Daftarkan bengkelmu sekarang...",
-                            style:
-                            TextStyle(fontSize: 12, color: Colors.black54)),
+                        Text("Daftarkan bengkelmu sekarang...", style: TextStyle(fontSize: 12, color: Colors.black54)),
                       ],
                     ),
                   ),
@@ -702,7 +534,7 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                 hint: "Masukkan Nama bengkel",
                 iconPath: "assets/svg/workshop.svg",
                 textCapitalization: TextCapitalization.words,
-                validator: (value) => _validateNotEmpty(value, 'Nama bengkel'),
+                validator: (v) => _validateNotEmpty(v, 'Nama bengkel'),
               ),
               const SizedBox(height: 22),
               _buildTextField(
@@ -712,7 +544,7 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                 iconPath: "assets/svg/address.svg",
                 textCapitalization: TextCapitalization.sentences,
                 maxline: 2,
-                validator: (value) => _validateNotEmpty(value, 'Alamat'),
+                validator: (v) => _validateNotEmpty(v, 'Alamat'),
               ),
               const SizedBox(height: 22),
               Row(
@@ -724,7 +556,7 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                       hint: "Masukkan kota",
                       iconPath: "assets/svg/address.svg",
                       textCapitalization: TextCapitalization.words,
-                      validator: (value) => _validateNotEmpty(value, 'Kota'),
+                      validator: (v) => _validateNotEmpty(v, 'Kota'),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -735,7 +567,7 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                       hint: "Contoh: Jawa Barat",
                       iconPath: "assets/svg/address.svg",
                       textCapitalization: TextCapitalization.words,
-                      validator: (value) => _validateNotEmpty(value, 'Provinsi'),
+                      validator: (v) => _validateNotEmpty(v, 'Provinsi'),
                     ),
                   ),
                 ],
@@ -747,7 +579,7 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                 hint: "Contoh: 40123",
                 iconPath: "assets/svg/address.svg",
                 keyboardType: TextInputType.number,
-                validator: (value) => _validateNotEmpty(value, 'Kode Pos'),
+                validator: (v) => _validateNotEmpty(v, 'Kode Pos'),
               ),
               const SizedBox(height: 22),
               _buildTextField(
@@ -756,7 +588,7 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                 hint: "Contoh: 081234567890",
                 iconPath: "assets/svg/phone.svg",
                 keyboardType: TextInputType.phone,
-                validator: (value) => _validateNotEmpty(value, 'Telepon'),
+                validator: (v) => _validateNotEmpty(v, 'Telepon'),
               ),
               const SizedBox(height: 22),
               _buildTextField(
@@ -765,7 +597,7 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                 hint: "Contoh: info@bengkeljaya.com",
                 iconPath: "assets/svg/email.svg",
                 keyboardType: TextInputType.emailAddress,
-                validator: _validateEmailOptional, // Validator opsional
+                validator: _validateEmailOptional,
               ),
               const SizedBox(height: 22),
               _buildTextField(
@@ -774,7 +606,7 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                 hint: "Salin dari Google Maps",
                 iconPath: "assets/svg/url.svg",
                 keyboardType: TextInputType.url,
-                validator: (value) => _validateUrl(value, 'URL Google Maps'),
+                validator: (v) => _validateUrl(v, 'URL Google Maps'),
               ),
               const SizedBox(height: 22),
               Row(
@@ -785,9 +617,8 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                       label: "Latitude",
                       hint: "Contoh: -6.9175",
                       iconPath: "assets/svg/url.svg",
-                      keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true, signed: true),
-                      validator: (value) => _validateNumber(value, 'Latitude'),
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+                      validator: (v) => _validateNumber(v, 'Latitude'),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -797,9 +628,8 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                       label: "Longitude",
                       hint: "Contoh: 107.6191",
                       iconPath: "assets/svg/url.svg",
-                      keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true, signed: true),
-                      validator: (value) => _validateNumber(value, 'Longitude'),
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+                      validator: (v) => _validateNumber(v, 'Longitude'),
                     ),
                   ),
                 ],
@@ -814,7 +644,7 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                       hint: "HH:MM (Contoh: 08:00)",
                       iconPath: "assets/svg/user.svg",
                       keyboardType: TextInputType.datetime,
-                      validator: (value) => _validateTimeFormat(value, 'Jam Buka'),
+                      validator: (v) => _validateTimeFormat(v, 'Jam Buka'),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -825,7 +655,7 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                       hint: "HH:MM (Contoh: 17:00)",
                       iconPath: "assets/svg/user.svg",
                       keyboardType: TextInputType.datetime,
-                      validator: (value) => _validateTimeFormat(value, 'Jam Tutup'),
+                      validator: (v) => _validateTimeFormat(v, 'Jam Tutup'),
                     ),
                   ),
                 ],
@@ -837,7 +667,7 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                 hint: "Contoh: Senin - Sabtu",
                 iconPath: "assets/svg/user.svg",
                 textCapitalization: TextCapitalization.words,
-                validator: (value) => _validateNotEmpty(value, 'Hari Operasional'),
+                validator: (v) => _validateNotEmpty(v, 'Hari Operasional'),
               ),
               const SizedBox(height: 22),
               _buildTextField(
@@ -847,7 +677,7 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                 iconPath: "assets/svg/laporan_tebal.svg",
                 textCapitalization: TextCapitalization.sentences,
                 maxline: 3,
-                validator: (value) => _validateNotEmpty(value, 'Deskripsi Bengkel'),
+                validator: (v) => _validateNotEmpty(v, 'Deskripsi Bengkel'),
               ),
               const SizedBox(height: 16),
             ],
@@ -866,7 +696,6 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
         child: Form(
           key: _formKeys[2],
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(
@@ -874,10 +703,7 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                   Container(
                     width: 41,
                     height: 41,
-                    decoration: BoxDecoration(
-                      color: const Color.fromRGBO(220, 38, 38, 0.21),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+                    decoration: BoxDecoration(color: const Color.fromRGBO(220, 38, 38, 0.21), borderRadius: BorderRadius.circular(10)),
                     child: const Icon(Icons.badge_outlined, color: Colors.red, size: 28),
                   ),
                   const SizedBox(width: 14),
@@ -885,12 +711,9 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("Dokumen Pendukung",
-                            style: TextStyle(fontSize: 14, color: Colors.black)),
+                        Text("Dokumen Pendukung", style: TextStyle(fontSize: 14, color: Colors.black)),
                         SizedBox(height: 4),
-                        Text("Lengkapi dokumen legalitas",
-                            style:
-                            TextStyle(fontSize: 12, color: Colors.black54)),
+                        Text("Lengkapi dokumen legalitas", style: TextStyle(fontSize: 12, color: Colors.black54)),
                       ],
                     ),
                   ),
@@ -903,7 +726,7 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                 hint: "Masukkan NIB (Wajib)",
                 iconPath: "assets/svg/nib.svg",
                 keyboardType: TextInputType.number,
-                validator: (value) => _validateNotEmpty(value, 'NIB'),
+                validator: (v) => _validateNotEmpty(v, 'NIB'),
               ),
               const SizedBox(height: 22),
               _buildTextField(
@@ -913,7 +736,7 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                 iconPath: "assets/svg/npwp.svg",
                 keyboardType: TextInputType.text,
                 maxline: 1,
-                validator: (value) => _validateOptional(value, 'NPWP'), // Opsional
+                validator: (v) => _validateOptional(v, 'NPWP'),
               ),
               const SizedBox(height: 16),
               GestureDetector(
@@ -963,8 +786,8 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
   }
 
   Widget _buildStep3(double cardWidth) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    final double imageHeight = (screenHeight * 0.35).clamp(250.0, 320.0);
+    final h = MediaQuery.of(context).size.height;
+    final double imageHeight = (h * 0.35).clamp(250.0, 320.0);
 
     final content = SizedBox(
       width: double.infinity,
@@ -986,21 +809,12 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                 Text(
                   "Selamat, bengkel Anda telah resmi terdaftar di aplikasi.",
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF232323),
-                  ),
+                  style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w700, color: const Color(0xFF232323)),
                 ),
                 const SizedBox(height: 20),
                 AnimatedBuilder(
                   animation: _successScaleAnim,
-                  builder: (context, child) {
-                    return Transform.scale(
-                      scale: _successScaleAnim.value,
-                      child: child,
-                    );
-                  },
+                  builder: (context, child) => Transform.scale(scale: _successScaleAnim.value, child: child),
                   child: SizedBox(
                     height: imageHeight + 10,
                     width: double.infinity,
@@ -1008,11 +822,7 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                       alignment: Alignment.center,
                       children: [
                         Positioned.fill(
-                          child: SvgPicture.asset(
-                            'assets/svg/bg-successreg.svg',
-                            fit: BoxFit.cover,
-                            placeholderBuilder: (context) => Container(color: Colors.transparent),
-                          ),
+                          child: SvgPicture.asset('assets/svg/bg-successreg.svg', fit: BoxFit.cover, placeholderBuilder: (_) => const SizedBox()),
                         ),
                         Positioned(
                           bottom: 0,
@@ -1020,9 +830,7 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                             'assets/image/succes-car.png',
                             height: imageHeight,
                             fit: BoxFit.contain,
-                            errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.check_circle_outline,
-                                size: 100, color: Colors.green),
+                            errorBuilder: (_, __, ___) => const Icon(Icons.check_circle_outline, size: 100, color: Colors.green),
                           ),
                         ),
                       ],
@@ -1031,16 +839,11 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                 ),
                 const SizedBox(height: 28),
                 FadeTransition(
-                  opacity: CurvedAnimation(
-                      parent: _successAnimController, curve: Curves.easeIn),
+                  opacity: CurvedAnimation(parent: _successAnimController, curve: Curves.easeIn),
                   child: Text(
                     "Mulailah menambahkan layanan, harga, dan\njadwal operasional untuk menarik lebih banyak pelanggan.",
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black54,
-                    ),
+                    style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.black54),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -1053,30 +856,22 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
     return _scrollableStep(content);
   }
 
-  // ---------- BUILD ----------
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    // Kembali ke cardWidth & padding asli
     final cardWidth = screenWidth * 0.85;
-    const double horizontalPadding = 24.0;
-    const double verticalPadding = 36.0;
+    const horizontalPadding = 24.0;
+    const verticalPadding = 36.0;
 
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         leading: _currentStep > 0 && _currentStep < 3
-            ? IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: _onBack,
-        )
+            ? IconButton(icon: const Icon(Icons.arrow_back, color: Colors.black), onPressed: () => _goStep(_currentStep - 1))
             : null,
-        title: Text(
-          _currentStep == 3 ? "Berhasil" : "Daftar",
-          style: const TextStyle(
-              fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
-        ),
+        title: Text(_currentStep == 3 ? "Berhasil" : "Daftar",
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
         centerTitle: true,
       ),
       body: Column(
@@ -1101,8 +896,7 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(
-                horizontal: horizontalPadding, vertical: verticalPadding),
+            padding: const EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
             child: SizedBox(
               width: double.infinity,
               height: 50,
@@ -1111,66 +905,46 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                     ? null
                     : () {
                   if (_currentStep == 2) {
+                    final step2Valid = _formKeys[2].currentState?.validate() ?? false;
 
-                    bool step2Valid = _formKeys[2].currentState?.validate() ?? false;
-
-                    if (!_step0IsValid) { // Cek flag, bukan validasi ulang
+                    if (!_step0IsValid) {
                       _goStep(0);
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Data diri Anda belum lengkap.'), backgroundColor: Colors.orange),
                       );
-                    } else if (!_step1IsValid) { // Cek flag, bukan validasi ulang
+                    } else if (!_step1IsValid) {
                       _goStep(1);
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Data bengkel Anda belum lengkap.'), backgroundColor: Colors.orange),
                       );
-                    } else if (!step2Valid) { // Cek validasi Step 2
-                      // Tetap di step 2
+                    } else if (!step2Valid) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Data dokumen Anda belum lengkap.'), backgroundColor: Colors.orange),
                       );
                     } else {
-                      // Semua valid, jalankan register
                       _handleRegister();
                     }
-                  }
-                  else if (_currentStep == 3) {
-                    Navigator.pushNamedAndRemoveUntil(
-                      context,
-                      '/main',
-                          (route) => false,
-                    );
-                  }
-                  else {
-                    // Panggil _onNext yang sudah ada validasi
+                  } else if (_currentStep == 3) {
+                    Navigator.pushNamedAndRemoveUntil(context, '/main', (route) => false);
+                  } else {
                     _onNext();
                   }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   disabledBackgroundColor: Colors.red.withOpacity(0.5),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(32),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
                   elevation: _isLoading ? 0 : 2,
                 ),
                 child: _isLoading
                     ? const SizedBox(
                   height: 24,
                   width: 24,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 3,
-                  ),
+                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3),
                 )
                     : Text(
-                  _currentStep == 2
-                      ? 'Daftar'
-                      : (_currentStep == 3 ? 'Selesai' : 'Next'),
-                  style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white),
+                  _currentStep == 2 ? 'Daftar' : (_currentStep == 3 ? 'Selesai' : 'Next'),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
               ),
             ),
@@ -1180,4 +954,3 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
     );
   }
 }
-

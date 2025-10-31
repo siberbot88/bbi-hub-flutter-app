@@ -47,9 +47,9 @@ class User {
             return Workshop.fromJson(item as Map<String, dynamic>);
           }).toList();
 
-          print('✅ Berhasil mem-parsing ${parsedWorkshops.length} workshops.');
+          print('Berhasil mem-parsing ${parsedWorkshops.length} workshops.');
         } catch (e, stack) {
-          print('❌ ERROR parsing workshops in User.fromJson: $e');
+          print('ERROR parsing workshops in User.fromJson: $e');
           print('Stack trace: $stack');
           parsedWorkshops = null;
         }
@@ -57,7 +57,7 @@ class User {
         parsedWorkshops = [];
       }
     } else {
-      print('⚠️ json["workshops"] tidak ditemukan atau bukan List');
+      print('json["workshops"] tidak ditemukan atau bukan List');
     }
 
     // Parsing employment
@@ -67,7 +67,7 @@ class User {
         parsedEmployment =
             Employment.fromJson(json['employment'] as Map<String, dynamic>);
       } catch (e) {
-        print('❌ Error parsing employment in User.fromJson: $e');
+        print('Error parsing employment in User.fromJson: $e');
         parsedEmployment = null;
       }
     }

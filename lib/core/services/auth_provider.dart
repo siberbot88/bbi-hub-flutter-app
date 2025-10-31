@@ -8,6 +8,8 @@ class AuthProvider with ChangeNotifier {
   // --- STATE INTERNAL ---
   final ApiService _apiService = ApiService();
   final _storage = const FlutterSecureStorage();
+  String get role => _user?.role ?? 'guest';
+  bool hasRole(String r) => _user?.role == r;
 
   User? _user;
   String? _token;
