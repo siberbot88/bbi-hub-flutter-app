@@ -188,30 +188,6 @@ class _AddStaffRegisterPageState extends State<AddStaffRegisterPage>
 
       if (mounted) context.read<EmployeeProvider>().upsert(emp);
 
-    if (workshopUuid == null) {
-      setState(() {
-        _errorMessage =
-        "Gagal mendapatkan data workshop Anda. Silakan coba lagi.";
-        _saving = false;
-      });
-      return;
-    }
-
-    try {
-      // Panggil API service
-      await _apiService.createEmployee(
-        name: fullnameController.text,
-        username: usernameController.text,
-        email: emailController.text,
-        password: passwordController.text,
-        passwordConfirmation: confirmPasswordController.text,
-        role: _selectedRole, // Data dari dropdown
-        workshopUuid: workshopUuid, // Data dari AuthProvider
-        specialist: specialistController.text,
-        jobdesk: jobdeskController.text,
-      );
-
-      // Jika sukses
       if (!mounted) return;
       setState(() {
         _saving = false;

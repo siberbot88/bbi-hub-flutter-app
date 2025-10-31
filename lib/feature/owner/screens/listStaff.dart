@@ -17,29 +17,22 @@ class ManajemenKaryawanTablePage extends StatefulWidget {
 class _ManajemenKaryawanTablePageState extends State<ManajemenKaryawanTablePage> {
   final TextEditingController _searchC = TextEditingController();
 
-  // sinkron header <-> body (scroll horizontal)
   final ScrollController _hHeader = ScrollController();
   final ScrollController _hBody = ScrollController();
   bool _syncFromHeader = false;
   bool _syncFromBody = false;
 
-  // scroll vertical body
   final ScrollController _vBody = ScrollController();
-
-  // checkbox selected (pakai id employment)
-  final Set<String> _selectedIds = <String>{};
 
   @override
   void initState() {
     super.initState();
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
 
-    // fetch pertama
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<EmployeeProvider>().fetchOwnerEmployees();
     });
 
-    // sync H scroll
     _hHeader.addListener(() {
       if (_syncFromBody) return;
       _syncFromHeader = true;
@@ -77,29 +70,6 @@ class _ManajemenKaryawanTablePageState extends State<ManajemenKaryawanTablePage>
     }).toList();
   }
 
-  bool _allSelected(List<Employment> filtered) =>
-      filtered.isNotEmpty && filtered.every((e) => _selectedIds.contains(e.id));
-
-  void _toggleSelectAll(List<Employment> filtered, bool? value) {
-    setState(() {
-      if (value ?? false) {
-        _selectedIds.addAll(filtered.map((e) => e.id));
-      } else {
-        _selectedIds.removeAll(filtered.map((e) => e.id));
-      }
-    });
-  }
-
-  void _toggleSelectOne(Employment e, bool? value) {
-    setState(() {
-      if (value ?? false) {
-        _selectedIds.add(e.id);
-      } else {
-        _selectedIds.remove(e.id);
-      }
-    });
-  }
-
   Future<void> _toggleActive(Employment e, bool value) async {
     final prov = context.read<EmployeeProvider>();
     try {
@@ -130,7 +100,7 @@ class _ManajemenKaryawanTablePageState extends State<ManajemenKaryawanTablePage>
       isScrollControlled: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
       ),
       builder: (ctx) => _EditSheet(employment: e),
     );
@@ -314,15 +284,12 @@ class _ManajemenKaryawanTablePageState extends State<ManajemenKaryawanTablePage>
             // BODY TABEL
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 32), // margin bawah 32px
                 child: _TableCardEmployment(
                   rows: filtered,
-                  allSelected: _allSelected(filtered),
                   headerController: _hHeader,
                   bodyHController: _hBody,
                   bodyVController: _vBody,
-                  onToggleAll: (v) => _toggleSelectAll(filtered, v),
-                  onToggleRow: _toggleSelectOne,
                   onToggleActive: _toggleActive,
                   onEdit: _editEmployee,
                   onDelete: _deleteEmployee,
@@ -353,31 +320,25 @@ class _ManajemenKaryawanTablePageState extends State<ManajemenKaryawanTablePage>
 class _TableCardEmployment extends StatelessWidget {
   const _TableCardEmployment({
     required this.rows,
-    required this.allSelected,
     required this.headerController,
     required this.bodyHController,
     required this.bodyVController,
-    required this.onToggleAll,
-    required this.onToggleRow,
     required this.onToggleActive,
     required this.onEdit,
     required this.onDelete,
   });
 
   final List<Employment> rows;
-  final bool allSelected;
 
   final ScrollController headerController;
   final ScrollController bodyHController;
   final ScrollController bodyVController;
 
-  final ValueChanged<bool?> onToggleAll;
-  final void Function(Employment, bool?) onToggleRow;
   final Future<void> Function(Employment, bool) onToggleActive;
   final Future<void> Function(Employment) onEdit;
   final Future<void> Function(Employment) onDelete;
 
-  static const double wCheck = 56;
+  static const double wAvatar = 64; // kolom foto
   static const double wName = 220;
   static const double wPos = 180;
   static const double wEmail = 240;
@@ -386,25 +347,25 @@ class _TableCardEmployment extends StatelessWidget {
 
   static const double rowHeight = 64;
 
-  static double get totalWidth => wCheck + wName + wPos + wEmail + wStatus + wActions;
+  static double get totalWidth => wAvatar + wName + wPos + wEmail + wStatus + wActions;
 
   @override
   Widget build(BuildContext context) {
     return Material(
       elevation: 6,
       shadowColor: Colors.black12,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(10), // radius kecil
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(10), // radius kecil
           border: Border.all(color: const Color(0xFFE6EAF0)),
         ),
         child: Column(
           children: [
             // Header
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
               child: Container(
                 color: const Color(0xFFF9FAFB),
                 padding: const EdgeInsets.symmetric(vertical: 10),
@@ -416,13 +377,10 @@ class _TableCardEmployment extends StatelessWidget {
                     width: max(totalWidth, MediaQuery.of(context).size.width - 32),
                     child: Row(
                       children: [
+                        // Icon saja agar tidak overflow (hilangin tulisan Photo)
                         _headerCell(
-                          width: wCheck,
-                          child: Checkbox(
-                            value: allSelected,
-                            onChanged: onToggleAll,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                          ),
+                          width: wAvatar,
+                          child: const Icon(Icons.person, size: 18, color: Color(0xFF475467)),
                         ),
                         _headerCell(width: wName, label: 'NAME'),
                         _headerCell(width: wPos, label: 'Position'),
@@ -437,9 +395,9 @@ class _TableCardEmployment extends StatelessWidget {
             ),
             const Divider(height: 1),
 
-            // Body
+            // Body (dibikin lebih tinggi)
             SizedBox(
-              height: min(520.0, MediaQuery.of(context).size.height * 0.55),
+              height: min(680.0, MediaQuery.of(context).size.height * 0.72),
               child: Scrollbar(
                 controller: bodyVController,
                 radius: const Radius.circular(10),
@@ -457,7 +415,6 @@ class _TableCardEmployment extends StatelessWidget {
                         final e = rows[i];
                         return _RowEmployment(
                           data: e,
-                          onToggle: (v) => onToggleRow(e, v),
                           onToggleActive: (v) => onToggleActive(e, v),
                           onEdit: () => onEdit(e),
                           onDelete: () => onDelete(e),
@@ -499,19 +456,17 @@ class _TableCardEmployment extends StatelessWidget {
 class _RowEmployment extends StatelessWidget {
   const _RowEmployment({
     required this.data,
-    required this.onToggle,
     required this.onToggleActive,
     required this.onEdit,
     required this.onDelete,
   });
 
   final Employment data;
-  final ValueChanged<bool?> onToggle;
   final ValueChanged<bool> onToggleActive;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
-  static const double wCheck = _TableCardEmployment.wCheck;
+  static const double wAvatar = _TableCardEmployment.wAvatar;
   static const double wName = _TableCardEmployment.wName;
   static const double wPos = _TableCardEmployment.wPos;
   static const double wEmail = _TableCardEmployment.wEmail;
@@ -526,50 +481,42 @@ class _RowEmployment extends StatelessWidget {
       height: _TableCardEmployment.rowHeight,
       child: Row(
         children: [
+          // AVATAR
           SizedBox(
-            width: wCheck,
+            width: wAvatar,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Checkbox(
-                value: false,
-                onChanged: onToggle,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+              child: CircleAvatar(
+                radius: 18,
+                backgroundColor: _avatarBg(data.name),
+                child: Text(
+                  _initials(data.name),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
             ),
           ),
-          // NAME
+          // NAME (tanpa kotak ungu)
           SizedBox(
             width: wName,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  Container(
-                    width: 22,
-                    height: 22,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEBDDFF),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border.all(color: const Color(0xFFE6EAF0)),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        data.name.isEmpty ? '-' : data.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: ts.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  ),
-                ],
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(color: const Color(0xFFE6EAF0)),
+                  borderRadius: BorderRadius.circular(8), // lebih kotak
+                ),
+                child: Text(
+                  data.name.isEmpty ? '-' : data.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: ts.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                ),
               ),
             ),
           ),
@@ -674,7 +621,7 @@ class _StatusPill extends StatelessWidget {
   }
 }
 
-/* ==================== EDIT SHEET (integrasi API) ==================== */
+/* ==================== EDIT SHEET (tetap) ==================== */
 
 class _EditResult {
   final String? name;
@@ -789,4 +736,19 @@ class _EditSheetState extends State<_EditSheet> {
       ),
     );
   }
+}
+
+/* ==================== Helpers ==================== */
+
+String _initials(String name) {
+  final parts = name.trim().split(RegExp(r'\s+'));
+  if (parts.isEmpty) return '?';
+  if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
+  return (parts.first.substring(0, 1) + parts.last.substring(0, 1)).toUpperCase();
+}
+
+Color _avatarBg(String seed) {
+  final hash = seed.codeUnits.fold<int>(0, (p, c) => p + c);
+  final hue = (hash % 360).toDouble();
+  return HSLColor.fromAHSL(1, hue, 0.45, 0.62).toColor();
 }
