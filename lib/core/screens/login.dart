@@ -148,12 +148,7 @@ class _LoginPageState extends State<LoginPage> {
                       final success = await auth.login(email, password);
                       if (success) {
                         final role = auth.user?.role ?? 'owner';
-                        Navigator.pushNamedAndRemoveUntil(
-                          context,
-                          '/main',
-                              (route) => false,
-                          arguments: role,
-                        );
+                        Navigator.pushNamedAndRemoveUntil(context, '/main', (_) => false);
                       }
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(

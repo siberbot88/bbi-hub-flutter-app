@@ -1,31 +1,41 @@
-import 'package:bengkel_online_flutter/core/screens/splash_screen.dart';
 import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
+import 'package:bengkel_online_flutter/feature/mechanic/widgets/bottom_navbar.dart';
 import 'package:bengkel_online_flutter/feature/owner/providers/employee_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:bengkel_online_flutter/core/screens/registers/registerOwner.dart';
-import 'package:bengkel_online_flutter/feature/owner/screens/listWork.dart';
-import 'package:bengkel_online_flutter/feature/owner/screens/reportPages.dart';
-import 'package:bengkel_online_flutter/feature/owner/screens/staffManagement.dart';
 import 'package:flutter/material.dart';
-import 'feature/admin/screens/profilpage.dart';
+
+// OWNER
 import 'feature/owner/widgets/bottom_nav_owner.dart';
 import 'feature/owner/screens/homepageOwner.dart';
-import 'feature/admin/screens/dashboard.dart';
-import 'core/screens/login.dart' as login_screen;
-import 'feature/admin/screens/change_password.dart' as change_screen;
-import 'feature/admin/screens/profilpage.dart' as admin_profil;
+import 'feature/owner/screens/staffManagement.dart';
+import 'feature/owner/screens/reportPages.dart';
+import 'feature/owner/screens/profilpage_owner.dart' as owner_profil;
+import 'feature/owner/screens/listWork.dart';
+
+// ADMIN
 import 'feature/admin/widgets/bottom_nav.dart';
 import 'feature/admin/screens/homepage.dart';
 import 'feature/admin/screens/service_page.dart' as admin;
-import 'feature/owner/screens/onBoarding.dart';
-import 'feature/owner/screens/profilpage_owner.dart' as owner_profil;
-import 'feature/mechanic/screens/service_pagemechanic.dart' as mechanic;
+import 'feature/admin/screens/dashboard.dart';
+import 'feature/admin/screens/profilpage.dart' as admin_profil;
+import 'feature/admin/screens/change_password.dart' as change_screen;
+
+// MECHANIC
 import 'feature/mechanic/screens/homepageMechanic.dart';
-import 'feature/mechanic/widgets/bottom_navbar.dart';
+import 'feature/mechanic/screens/service_pagemechanic.dart' as mechanic;
 import 'feature/mechanic/screens/profil_page.dart' as mechanic_profil;
-import 'package:bengkel_online_flutter/core/screens/registeruser.dart';
-import 'package:bengkel_online_flutter/core/screens/register.dart';
-import 'package:bengkel_online_flutter/core/screens/registerBengkel.dart';
+
+// AUTH / REGISTER
+import 'core/screens/login.dart' as login_screen;
+import 'core/screens/registers/registerOwner.dart';
+import 'core/screens/registeruser.dart';
+import 'core/screens/register.dart';
+import 'core/screens/registerBengkel.dart';
+import 'feature/owner/screens/onBoarding.dart';
+
+// Gates
+import 'core/screens/loading_gate.dart';      // /gate
+import 'core/screens/splash_screen.dart';     // /splash -> first launch gate
 
 void main() {
   runApp(
@@ -44,32 +54,33 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const String currentRole = "owner"; // admin | owner | mechanic
-
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'BBI HUB PLUS',
       theme: ThemeData(
         primarySwatch: Colors.red,
         fontFamily: 'Poppins',
-        textTheme: const TextTheme(
-          bodyLarge: TextStyle(),
-          bodyMedium: TextStyle(),
-          displayLarge: TextStyle(),
-          displayMedium: TextStyle(),
-          displaySmall: TextStyle(),
-        ).apply(bodyColor: Colors.black, displayColor: Colors.black),
+        textTheme: const TextTheme().apply(
+          bodyColor: Colors.black,
+          displayColor: Colors.black,
+        ),
       ),
-
       initialRoute: "/splash",
-
       routes: {
         "/splash": (context) => const SplashScreen(),
+
+        // Onboarding & Auth
         "/onboarding": (context) => const OnboardingScreen(),
         "/login": (context) => const login_screen.LoginPage(),
+
+        // Setelah login/register, masuk ke gate ini
+        "/gate": (context) => const LoadingGate(),
+
+        // Role-aware entry
+        "/main": (context) => const RoleEntry(),
+
+        // Lainnya
         "/home": (context) => const DashboardScreen(),
-        "/main": (context) =>
-        const MainPage(role: currentRole),
         "/list": (context) => const ListWorkPage(),
         "/changePassword": (context) => const change_screen.ChangePasswordPage(),
         "/register/owner/bengkel": (context) => RegisterBengkelScreen(),
@@ -81,9 +92,32 @@ class MyApp extends StatelessWidget {
   }
 }
 
-/// Halaman utama dengan BottomNavigation + IndexedStack
+/// Membaca role dari AuthProvider lalu render MainPage(role)
+class RoleEntry extends StatelessWidget {
+  const RoleEntry({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final role = auth.user?.role ?? 'guest';
+
+    if (!auth.isLoggedIn || role == 'guest') {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (Navigator.canPop(context)) {
+          Navigator.popAndPushNamed(context, '/login');
+        } else {
+          Navigator.pushReplacementNamed(context, '/login');
+        }
+      });
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    return MainPage(role: role);
+  }
+}
+
+/// Halaman utama sesuai role
 class MainPage extends StatefulWidget {
-  final String role; // 🔹 tambahkan parameter role
+  final String role;
   const MainPage({super.key, required this.role});
 
   @override
@@ -92,80 +126,64 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   int _selectedIndex = 0;
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
+  void _onItemTapped(int index) => setState(() => _selectedIndex = index);
 
   @override
   Widget build(BuildContext context) {
-    // 🔸 Pilih halaman sesuai role
     late final List<Widget> pages;
+    late final Widget bottomNavBar;
+
     switch (widget.role) {
       case "owner":
         pages = [
           DashboardScreen(),
-          ManajemenKaryawanPage(),
-          ReportPage(),
+          const ManajemenKaryawanPage(),
+          const ReportPage(),
           owner_profil.ProfilePageOwner(),
         ];
-        break;
-
-      case "mechanic":
-        pages = [
-          HomePageMechanic(),
-          mechanic.ServicePageMechanic(), // TaskPage()
-          mechanic_profil.ProfilePageMechanic(), // ProfileMechanicPage()
-        ];
-        break;
-
-      default: // admin
-        pages = [
-          HomePage(),
-          admin.ServicePageAdmin(),
-          DashboardPage(),
-          admin_profil.ProfilePageAdmin(),
-        ];
-    }
-
-    // 🔸 Bottom Navigation Bar sesuai role
-    Widget bottomNavBar;
-    switch (widget.role) {
-      case "owner":
         bottomNavBar = CustomBottomNavBarOwner(
           selectedIndex: _selectedIndex,
           onTap: _onItemTapped,
         );
         break;
-      case "admin":
-        bottomNavBar = CustomBottomNavBarAdmin(
-          selectedIndex: _selectedIndex,
-          onTap: _onItemTapped,
-        );
-        break;
+
       case "mechanic":
+        pages = [
+          HomePageMechanic(),
+          mechanic.ServicePageMechanic(),
+          mechanic_profil.ProfilePageMechanic(),
+        ];
         bottomNavBar = CustomBottomNavBarMechanic(
           selectedIndex: _selectedIndex,
           onTap: _onItemTapped,
         );
         break;
-      default:
+
+      case "admin":
+        pages = [
+          HomePage(),
+          admin.ServicePageAdmin(),
+          const DashboardPage(),
+          admin_profil.ProfilePageAdmin(),
+        ];
         bottomNavBar = CustomBottomNavBarAdmin(
           selectedIndex: _selectedIndex,
           onTap: _onItemTapped,
         );
+        break;
+
+      default:
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          Navigator.pushReplacementNamed(context, '/login');
+        });
+        return const Scaffold(
+          body: Center(child: CircularProgressIndicator()),
+        );
     }
 
-    // 🔸 Scaffold utama
     return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: pages,
-      ),
+      body: IndexedStack(index: _selectedIndex, children: pages),
       bottomNavigationBar: bottomNavBar,
     );
   }
 }
-
