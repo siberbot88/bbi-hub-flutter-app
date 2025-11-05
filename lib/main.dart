@@ -1,6 +1,7 @@
 import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
 import 'package:bengkel_online_flutter/feature/mechanic/widgets/bottom_navbar.dart';
 import 'package:bengkel_online_flutter/feature/owner/providers/employee_provider.dart';
+import 'package:bengkel_online_flutter/feature/owner/providers/service_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 
@@ -43,6 +44,7 @@ void main() {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => EmployeeProvider()),
+        ChangeNotifierProvider(create: (_) => ServiceProvider()),
       ],
       child: const MyApp(),
     ),
