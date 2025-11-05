@@ -6,6 +6,7 @@ import 'package:bengkel_online_flutter/core/models/employment.dart';
 import 'package:bengkel_online_flutter/core/models/user.dart';
 import 'package:bengkel_online_flutter/core/models/workshop.dart';
 import 'package:bengkel_online_flutter/core/models/workshop_document.dart';
+import 'package:bengkel_online_flutter/core/models/service.dart';
 
 class ApiService {
   static const String _baseUrl = 'http://10.0.2.2:8000/api/v1/';
@@ -51,7 +52,6 @@ class ApiService {
       .trim();
 
   void _debugRequest(String label, Uri uri, Map<String, String> headers, String? body) {
-    // print for debugging
     // ignore: avoid_print
     print('[$label] ${uri.toString()}');
     // ignore: avoid_print
@@ -283,8 +283,7 @@ class ApiService {
         'password_confirmation': passwordConfirmation,
         'role': role,
         'workshop_uuid': workshopUuid,
-        if (specialist != null && specialist.trim().isNotEmpty)
-          'specialist': _sanitize(specialist),
+        if (specialist != null && specialist.trim().isNotEmpty) 'specialist': _sanitize(specialist),
         if (jobdesk != null && jobdesk.trim().isNotEmpty) 'jobdesk': _sanitize(jobdesk),
       };
       final body = jsonEncode(bodyMap);
@@ -343,10 +342,7 @@ class ApiService {
 
       if (listJson is! List) return <Employment>[];
 
-      return listJson
-          .whereType<Map<String, dynamic>>()
-          .map((e) => Employment.fromJson(e))
-          .toList();
+      return listJson.whereType<Map<String, dynamic>>().map((e) => Employment.fromJson(e)).toList();
     } catch (e) {
       throw Exception('Gagal mengambil data employee: ${e.toString().replaceFirst("Exception: ", "")}');
     }
@@ -437,6 +433,114 @@ class ApiService {
       }
     } catch (e) {
       throw Exception('Gagal menghapus karyawan: ${e.toString().replaceFirst("Exception: ", "")}');
+    }
+  }
+
+  // =================== SERVICES ===================
+
+  Future<List<ServiceModel>> fetchServices({
+    String? status,             // 'pending' | 'accept' | 'in progress' | 'completed' | 'cancelled'
+    bool includeExtras = true,  // minta backend kirim relasi (customer/vehicle/workshop)
+  }) async {
+    try {
+      final uri = Uri.parse('${_baseUrl}owners/services').replace(
+        queryParameters: {
+          if (includeExtras) 'include': 'extras',
+          if (status != null && status.isNotEmpty) 'status': status,
+        },
+      );
+
+      final headers = await _getAuthHeaders();
+      _debugRequest('FETCH_SERVICES', uri, headers, null);
+      final res = await http.get(uri, headers: headers);
+      _debugResponse('FETCH_SERVICES', res);
+
+      if (!(res.statusCode == 200 || res.statusCode == 201)) {
+        final j = _tryDecodeJson(res.body);
+        if (j is Map && j['message'] != null) throw Exception(j['message']);
+        throw Exception('Gagal mengambil data service (HTTP ${res.statusCode}).');
+      }
+      if (!_isJsonResponse(res)) throw Exception('Respon bukan JSON.');
+
+      final j = _tryDecodeJson(res.body);
+      final list = (j is Map && j['data'] is List)
+          ? (j['data'] as List)
+          : (j is List ? j : const []);
+      return list.whereType<Map<String, dynamic>>().map(ServiceModel.fromJson).toList();
+    } catch (e) {
+      throw Exception('Gagal mengambil data service: ${e.toString().replaceFirst("Exception: ", "")}');
+    }
+  }
+
+  Future<void> updateServiceStatus(String id, String status) async {
+    try {
+      final uri = Uri.parse('${_baseUrl}admin/services/$id'); // PATCH
+      final headers = await _getAuthHeaders();
+      final body = jsonEncode({'status': status});
+
+      _debugRequest('UPDATE_SERVICE', uri, headers, body);
+      final res = await http.patch(uri, headers: headers, body: body);
+      _debugResponse('UPDATE_SERVICE', res);
+
+      if (!(res.statusCode == 200 || res.statusCode == 204)) {
+        final j = _tryDecodeJson(res.body);
+        if (j is Map && j['message'] != null) throw Exception(j['message']);
+        throw Exception('Gagal update status (HTTP ${res.statusCode}).');
+      }
+    } catch (e) {
+      throw Exception('Gagal update status: ${e.toString().replaceFirst("Exception: ", "")}');
+    }
+  }
+
+  Future<ServiceModel> createServiceDummy({
+    required String workshopUuid,
+    required String customerUuid,
+    required String vehicleId,
+    required String name,
+    String? description,
+    num? price,
+    required DateTime scheduledDate,
+    required DateTime estimatedTime,
+    String status = 'pending',
+  }) async {
+    try {
+      final uri = Uri.parse('${_baseUrl}admin/services');
+      final headers = await _getAuthHeaders();
+      final body = jsonEncode({
+        'workshop_uuid': workshopUuid,
+        'customer_uuid': customerUuid,
+        'vehicle_id': vehicleId,
+        'name': name,
+        'description': description,
+        'price': price,
+        'scheduled_date': scheduledDate.toIso8601String(),
+        'estimated_time': estimatedTime.toIso8601String(),
+        'status': status,
+      });
+
+      _debugRequest('CREATE_SERVICE', uri, headers, body);
+      final res = await http.post(uri, headers: headers, body: body);
+      _debugResponse('CREATE_SERVICE', res);
+
+      if (!(res.statusCode == 200 || res.statusCode == 201)) {
+        final j = _tryDecodeJson(res.body);
+        if (j is Map && j['errors'] != null) {
+          final firstError = (j['errors'] as Map).values.first[0];
+          throw Exception(firstError);
+        }
+        if (j is Map && j['message'] != null) throw Exception(j['message']);
+        throw Exception('Gagal membuat service (HTTP ${res.statusCode}).');
+      }
+
+      if (!_isJsonResponse(res)) throw Exception('Respon bukan JSON.');
+      final j = _tryDecodeJson(res.body);
+      final map = (j is Map && j['data'] is Map)
+          ? j['data'] as Map<String, dynamic>
+          : j as Map<String, dynamic>;
+
+      return ServiceModel.fromJson(map);
+    } catch (e) {
+      throw Exception('Gagal membuat service: ${e.toString().replaceFirst("Exception: ", "")}');
     }
   }
 }
