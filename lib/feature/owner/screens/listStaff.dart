@@ -395,7 +395,7 @@ class _TableCardEmployment extends StatelessWidget {
             ),
             const Divider(height: 1),
 
-            // Body
+            // Body (dibikin lebih tinggi)
             SizedBox(
               height: min(680.0, MediaQuery.of(context).size.height * 0.72),
               child: Scrollbar(
