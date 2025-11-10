@@ -12,6 +12,7 @@ class ApiService {
   static const String _baseUrl = 'http://10.0.2.2:8000/api/v1/';
   final _storage = const FlutterSecureStorage();
 
+  /* ===================== Common helpers ===================== */
   Future<String?> _getToken() async => _storage.read(key: 'auth_token');
 
   Future<Map<String, String>> _getAuthHeaders() async {
@@ -71,7 +72,7 @@ class ApiService {
     print('[$label] body: ${_firstChars(response.body)}');
   }
 
-  // =================== AUTH ===================
+  /* ========================= AUTH ========================= */
   Future<Map<String, dynamic>> login(String email, String password) async {
     try {
       final uri = Uri.parse('${_baseUrl}auth/login');
@@ -170,7 +171,7 @@ class ApiService {
     }
   }
 
-  // =================== WORKSHOP ===================
+  /* ======================= WORKSHOP ======================= */
   Future<Workshop> createWorkshop({
     required String name,
     required String description,
@@ -259,7 +260,7 @@ class ApiService {
     }
   }
 
-  // =================== EMPLOYEE ===================
+  /* ======================= EMPLOYEE ======================= */
   Future<Employment> createEmployee({
     required String name,
     required String username,
@@ -436,21 +437,29 @@ class ApiService {
     }
   }
 
-  // =================== SERVICES ===================
+  /* ======================== SERVICES ======================= */
 
+  /// GET /services  (support query status, include extras)
   Future<List<ServiceModel>> fetchServices({
     String? status,             // 'pending' | 'accept' | 'in progress' | 'completed' | 'cancelled'
     bool includeExtras = true,  // minta backend kirim relasi (customer/vehicle/workshop)
+    String? workshopUuid,
+    String? code,
+    String? dateFrom,           // 'YYYY-MM-DD'
+    String? dateTo,             // 'YYYY-MM-DD'
   }) async {
     try {
-      final uri = Uri.parse('${_baseUrl}owners/services').replace(
-        queryParameters: {
-          if (includeExtras) 'include': 'extras',
-          if (status != null && status.isNotEmpty) 'status': status,
-        },
-      );
+      final params = <String, String>{};
+      if (includeExtras) params['include'] = 'extras';
+      if (status != null && status.isNotEmpty) params['status'] = status;
+      if (workshopUuid != null && workshopUuid.isNotEmpty) params['workshop_uuid'] = workshopUuid;
+      if (code != null && code.isNotEmpty) params['code'] = code;
+      if (dateFrom != null && dateFrom.isNotEmpty) params['date_from'] = dateFrom;
+      if (dateTo != null && dateTo.isNotEmpty) params['date_to'] = dateTo;
 
+      final uri = Uri.parse('${_baseUrl}owners/services').replace(queryParameters: params);
       final headers = await _getAuthHeaders();
+
       _debugRequest('FETCH_SERVICES', uri, headers, null);
       final res = await http.get(uri, headers: headers);
       _debugResponse('FETCH_SERVICES', res);
@@ -463,18 +472,50 @@ class ApiService {
       if (!_isJsonResponse(res)) throw Exception('Respon bukan JSON.');
 
       final j = _tryDecodeJson(res.body);
+
+      // backend kamu kadang return {data: [...]} atau langsung [...], cover dua-duanya
       final list = (j is Map && j['data'] is List)
           ? (j['data'] as List)
           : (j is List ? j : const []);
+
       return list.whereType<Map<String, dynamic>>().map(ServiceModel.fromJson).toList();
     } catch (e) {
       throw Exception('Gagal mengambil data service: ${e.toString().replaceFirst("Exception: ", "")}');
     }
   }
 
+  /// GET /services/{id}
+  Future<ServiceModel> fetchServiceDetail(String id) async {
+    try {
+      final uri = Uri.parse('${_baseUrl}owners/services/$id');
+      final headers = await _getAuthHeaders();
+
+      _debugRequest('SERVICE_DETAIL', uri, headers, null);
+      final res = await http.get(uri, headers: headers);
+      _debugResponse('SERVICE_DETAIL', res);
+
+      if (!(res.statusCode == 200 || res.statusCode == 201)) {
+        final j = _tryDecodeJson(res.body);
+        if (j is Map && j['message'] != null) throw Exception(j['message']);
+        throw Exception('Gagal mengambil detail service (HTTP ${res.statusCode}).');
+      }
+      if (!_isJsonResponse(res)) throw Exception('Respon bukan JSON.');
+
+      final j = _tryDecodeJson(res.body);
+      final map = (j is Map && j['data'] is Map)
+          ? Map<String, dynamic>.from(j['data'])
+          : Map<String, dynamic>.from(j as Map);
+
+      return ServiceModel.fromJson(map);
+    } catch (e) {
+      throw Exception('Gagal mengambil detail service: ${e.toString().replaceFirst("Exception: ", "")}');
+    }
+  }
+
+  /// PATCH /services/{id}  body: { status: '...' }
   Future<void> updateServiceStatus(String id, String status) async {
     try {
-      final uri = Uri.parse('${_baseUrl}admin/services/$id'); // PATCH
+      final uri = Uri.parse('${_baseUrl}owners/services/$id');
       final headers = await _getAuthHeaders();
       final body = jsonEncode({'status': status});
 
@@ -492,29 +533,30 @@ class ApiService {
     }
   }
 
+  /// POST /services  (dummy)
   Future<ServiceModel> createServiceDummy({
     required String workshopUuid,
-    required String customerUuid,
-    required String vehicleId,
+    String? customerUuid,
+    String? vehicleUuid,            // <— sesuai backend: vehicle_uuid
     required String name,
     String? description,
     num? price,
     required DateTime scheduledDate,
-    required DateTime estimatedTime,
+    DateTime? estimatedTime,
     String status = 'pending',
   }) async {
     try {
-      final uri = Uri.parse('${_baseUrl}admin/services');
+      final uri = Uri.parse('${_baseUrl}owners/services');
       final headers = await _getAuthHeaders();
       final body = jsonEncode({
         'workshop_uuid': workshopUuid,
-        'customer_uuid': customerUuid,
-        'vehicle_id': vehicleId,
+        if (customerUuid != null) 'customer_uuid': customerUuid,
+        if (vehicleUuid != null) 'vehicle_uuid': vehicleUuid,
         'name': name,
         'description': description,
         'price': price,
         'scheduled_date': scheduledDate.toIso8601String(),
-        'estimated_time': estimatedTime.toIso8601String(),
+        if (estimatedTime != null) 'estimated_time': estimatedTime.toIso8601String(),
         'status': status,
       });
 
