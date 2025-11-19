@@ -1,207 +1,191 @@
 import 'dart:io';
-import 'package:bengkel_online_flutter/feature/admin/screens/voucher_page.dart'; // ✅ Import halaman utama voucher
-import 'package:bengkel_online_flutter/feature/admin/widgets/custom_header.dart';
+import 'package:bengkel_online_flutter/core/models/user.dart';
+import 'package:bengkel_online_flutter/core/services/api_service.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/voucher_page.dart';
+import 'package:bengkel_online_flutter/feature/owner/widgets/custom_header.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class VoucherPreviewPage extends StatelessWidget {
-  final String nama;
-  final String tanggalMulai;
-  final String tanggalAkhir;
-  final String kuota;
+class VoucherPreviewPage extends StatefulWidget {
+  final String nama, diskon, kuota, minBeli, kode, mulai, akhir;
   final File? gambar;
 
   const VoucherPreviewPage({
     super.key,
     required this.nama,
-    required this.tanggalMulai,
-    required this.tanggalAkhir,
+    required this.diskon,
     required this.kuota,
+    required this.minBeli,
+    required this.kode,
+    required this.mulai,
+    required this.akhir,
     this.gambar,
   });
+
+  @override
+  State<VoucherPreviewPage> createState() => _VoucherPreviewPageState();
+}
+
+class _VoucherPreviewPageState extends State<VoucherPreviewPage> {
+  bool _isLoading = false;
+  final ApiService _apiService = ApiService();
+
+  Future<void> _submitToApi() async {
+    setState(() => _isLoading = true);
+    try {
+      // 1. Ambil Data User untuk dapat Workshop ID
+      // Asumsi: User model punya relasi workshop atau api khusus get workshop
+      // Untuk contoh ini, kita fetchUser dulu
+      User user = await _apiService.fetchUser();
+
+      // WARNING: Pastikan user.workshop tidak null.
+      // Jika User model belum punya workshop object, Anda harus update User model
+      // atau gunakan fetchWorkshops() untuk mengambil list workshop milik owner.
+      // Disini saya asumsikan owner punya 1 workshop utama atau ambil yang pertama.
+
+      // Fallback manual jika model user belum diupdate:
+      // var workshops = await _apiService.fetchWorkshops();
+      // String workshopId = workshops.first.id;
+
+      // Dummy sementara agar codingan jalan (GANTI LOGIC INI SESUAI MODEL ANDA):
+      String workshopId = "019a90e7-6886-7202-9602-e552a42adf47";
+      // Jika user punya workshop_uuid di response login/me:
+      // String workshopId = user.workshopUuid;
+
+      await _apiService.createVoucher(
+          workshopUuid: workshopId,
+          title: widget.nama,
+          codeVoucher: widget.kode,
+          discountValue: widget.diskon,
+          quota: widget.kuota,
+          minTransaction: widget.minBeli,
+          validFrom: widget.mulai,
+          validUntil: widget.akhir,
+          image: widget.gambar
+      );
+
+      if (!mounted) return;
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const VoucherPage(showSuccess: true)),
+            (route) => false,
+      );
+
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Gagal: $e"), backgroundColor: Colors.red),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final primaryColor = const Color(0xFFDC2626);
 
-    return Theme(
-      data: ThemeData(textTheme: GoogleFonts.poppinsTextTheme()),
-      child: Scaffold(
-        backgroundColor: Colors.grey[100],
-        appBar: CustomHeader(
-          title: "Preview Voucher",
-          onBack: () => Navigator.pop(context),
-        ),
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              // 🔹 Card Preview Voucher
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 6,
-                      offset: Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        nama,
-                        style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
+    return Scaffold(
+      backgroundColor: Colors.grey[50],
+      appBar: CustomHeader(title: "Preview Voucher", onBack: () => Navigator.pop(context)),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Tampilan Voucher Anda", style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 12),
 
-                      // 🔹 Gambar Voucher
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: gambar != null
-                            ? Image.file(
-                                gambar!,
-                                width: double.infinity,
-                                height: 160,
-                                fit: BoxFit.cover,
-                              )
-                            : Image.asset(
-                                "assets/image/sample_voucher.png",
-                                width: double.infinity,
-                                height: 160,
-                                fit: BoxFit.cover,
-                              ),
-                      ),
-                      const SizedBox(height: 8),
-
-                      // 🔹 Info kuota & tanggal
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "Tersisa : $kuota",
-                            style: GoogleFonts.poppins(
-                              fontSize: 12,
-                              color: Colors.black54,
-                            ),
-                          ),
-                          Text(
-                            "$tanggalMulai - $tanggalAkhir",
-                            style: GoogleFonts.poppins(
-                              fontSize: 12,
-                              color: Colors.black54,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-
-                      // 🔹 Tombol Lihat Detail
-                      SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryColor,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          onPressed: () {
-                            // TODO: arahkan ke detail voucher
-                          },
-                          child: Text(
-                            "Lihat Detail",
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+            // Card Preview
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8, offset: const Offset(0, 4))],
               ),
-              const Spacer(),
-            ],
-          ),
-        ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (widget.gambar != null)
+                    ClipRRect(
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                      child: Image.file(widget.gambar!, height: 180, width: double.infinity, fit: BoxFit.cover),
+                    )
+                  else
+                    Container(
+                      height: 100, width: double.infinity,
+                      decoration: const BoxDecoration(
+                          color: Colors.redAccent,
+                          borderRadius: BorderRadius.vertical(top: Radius.circular(16))
+                      ),
+                      child: const Icon(Icons.confirmation_number, size: 40, color: Colors.white),
+                    ),
 
-        // 🔹 Tombol Edit & Selesaikan
-        bottomNavigationBar: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: primaryColor, width: 2),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      minimumSize: const Size.fromHeight(50),
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(widget.nama, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 4),
+                        Text("Diskon ${widget.diskon}%", style: GoogleFonts.poppins(fontSize: 14, color: primaryColor, fontWeight: FontWeight.w600)),
+                        const Divider(height: 24),
+                        _infoRow("Kode", widget.kode),
+                        _infoRow("Min. Belanja", "Rp ${widget.minBeli}"),
+                        _infoRow("Kuota", "${widget.kuota} Pcs"),
+                        _infoRow("Berlaku", "${widget.mulai} s/d ${widget.akhir}"),
+                      ],
                     ),
-                    onPressed: () {
-                      Navigator.pop(context); // balik ke edit page
-                    },
-                    child: Text(
-                      "EDIT",
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: primaryColor,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      minimumSize: const Size.fromHeight(50),
-                    ),
-                    onPressed: () {
-                      // ✅ Arahkan ke VoucherPage dan tampilkan snackbar sukses
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const VoucherPage(
-                            showSuccess: true, // kirim flag
-                          ),
-                        ),
-                        (route) => false,
-                      );
-                    },
-                    child: Text(
-                      "SELESAIKAN",
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+                  )
+                ],
+              ),
+            )
+          ],
         ),
+      ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: primaryColor),
+                  minimumSize: const Size(0, 50),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: () => Navigator.pop(context),
+                child: Text("EDIT", style: GoogleFonts.poppins(color: primaryColor, fontWeight: FontWeight.bold)),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  minimumSize: const Size(0, 50),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: _isLoading ? null : _submitToApi,
+                child: _isLoading
+                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : Text("SELESAIKAN", style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _infoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey)),
+          Text(value, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w500)),
+        ],
       ),
     );
   }

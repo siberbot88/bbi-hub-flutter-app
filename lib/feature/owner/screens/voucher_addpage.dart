@@ -1,324 +1,215 @@
 import 'dart:io';
-import 'package:bengkel_online_flutter/feature/admin/screens/voucher_previewpage.dart';
-import 'package:bengkel_online_flutter/feature/admin/widgets/custom_header.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/voucher_previewpage.dart';
+import 'package:bengkel_online_flutter/feature/owner/widgets/custom_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:bengkel_online_flutter/feature/admin/widgets/datetime.dart'; // 🔹 Import widget kamu
 
 class AddVoucherPage extends StatefulWidget {
   const AddVoucherPage({super.key});
 
   @override
-  _AddVoucherPageState createState() => _AddVoucherPageState();
+  State<AddVoucherPage> createState() => _AddVoucherPageState();
 }
 
 class _AddVoucherPageState extends State<AddVoucherPage> {
   final _formKey = GlobalKey<FormState>();
+  final Color _primaryColor = const Color(0xFFDC2626);
 
-  final TextEditingController _namaController = TextEditingController();
-  final TextEditingController _diskonController = TextEditingController();
-  final TextEditingController _kuotaController = TextEditingController();
-  final TextEditingController _jumlahController = TextEditingController();
-  final TextEditingController _waktuMulaiController = TextEditingController();
-  final TextEditingController _waktuBerakhirController =
-      TextEditingController();
-  final TextEditingController _kodeController = TextEditingController();
-
+  // Controllers
+  final _namaController = TextEditingController();
+  final _diskonController = TextEditingController();
+  final _kuotaController = TextEditingController();
+  final _minTransaksiController = TextEditingController();
+  final _kodeController = TextEditingController();
+  final _waktuMulaiController = TextEditingController();
+  final _waktuBerakhirController = TextEditingController();
   File? _voucherImage;
-  final Color primaryColor = const Color(0xFFDC2626);
 
-  /// 🔹 Ambil gambar voucher
   Future<void> _pickImage() async {
     final picker = ImagePicker();
-    final pickedFile =
-        await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
-
-    if (pickedFile != null) {
-      setState(() {
-        _voucherImage = File(pickedFile.path);
-      });
-    }
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+    if (pickedFile != null) setState(() => _voucherImage = File(pickedFile.path));
   }
 
-  /// 🔹 Field umum dengan validasi
-  Widget _buildTextField({
-    required String label,
-    required String hint,
-    required IconData icon,
-    required TextEditingController controller,
-    TextInputType keyboardType = TextInputType.text,
-    List<TextInputFormatter>? inputFormatters,
-    String? Function(String?)? validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      inputFormatters: inputFormatters,
-      style: GoogleFonts.poppins(color: primaryColor),
-      validator: validator,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        labelStyle: GoogleFonts.poppins(color: primaryColor),
-        hintStyle: GoogleFonts.poppins(color: Colors.grey),
-        prefixIcon: Icon(icon, color: primaryColor),
-
-        // ✅ Border konsisten
-        focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: primaryColor, width: 2),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: primaryColor),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: Colors.red, width: 2),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: Colors.red, width: 2),
-          borderRadius: BorderRadius.circular(8),
-        ),
-
-        // ✅ Biar errorText nggak bikin field loncat
-        errorStyle: GoogleFonts.poppins(
-          color: Colors.red,
-          fontSize: 12,
-          height: 1.2,
-        ),
-      ),
+  Future<void> _selectDate(TextEditingController controller) async {
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2100),
+      builder: (context, child) {
+        return Theme(
+          data: ThemeData.light().copyWith(
+            colorScheme: ColorScheme.light(primary: _primaryColor),
+          ),
+          child: child!,
+        );
+      },
     );
+    if (picked != null) {
+      setState(() => controller.text = DateFormat('yyyy-MM-dd').format(picked));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Theme(
-      data: ThemeData(
-        textTheme: GoogleFonts.poppinsTextTheme(),
-      ),
-      child: Scaffold(
-        appBar: CustomHeader(
-          title: "Tambah Voucher",
-          onBack: () => Navigator.pop(context),
-        ),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: CustomHeader(title: "Tambah Voucher", onBack: () => Navigator.pop(context)),
+      body: SafeArea(
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            padding: const EdgeInsets.all(20),
+            children: [
+              _buildLabel("Nama Voucher"),
+              _buildInput(_namaController, "Contoh: Diskon Lebaran", Icons.local_offer_outlined),
 
-        body: SafeArea(
-          child: Form(
-            key: _formKey,
-            child: ListView(
-              padding: const EdgeInsets.all(16.0),
-              children: [
-                const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    _buildLabel("Diskon (%)"),
+                    _buildInput(_diskonController, "0-100", Icons.percent, isNumber: true),
+                  ])),
+                  const SizedBox(width: 16),
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    _buildLabel("Kuota"),
+                    _buildInput(_kuotaController, "Jumlah", Icons.people_outline, isNumber: true),
+                  ])),
+                ],
+              ),
 
-                _buildTextField(
-                  label: "Nama Voucher",
-                  hint: "Masukkan nama voucher",
-                  icon: Icons.card_giftcard,
-                  controller: _namaController,
-                  validator: (val) =>
-                      val == null || val.isEmpty ? "Nama wajib diisi" : null,
-                ),
-                const SizedBox(height: 16),
+              _buildLabel("Minimal Pembelian (Rp)"),
+              _buildInput(_minTransaksiController, "Contoh: 50000", Icons.attach_money, isNumber: true),
 
-                _buildTextField(
-                  label: "Nominal Diskon (%)",
-                  hint: "Masukkan nominal diskon",
-                  icon: Icons.percent,
-                  controller: _diskonController,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  validator: (val) =>
-                      val == null || val.isEmpty ? "Diskon wajib diisi" : null,
-                ),
-                const SizedBox(height: 16),
+              _buildLabel("Kode Voucher"),
+              _buildInput(_kodeController, "Contoh: DISKON50", Icons.vpn_key_outlined),
 
-                _buildTextField(
-                  label: "Kuota Pemakai",
-                  hint: "Masukkan kuota",
-                  icon: Icons.people,
-                  controller: _kuotaController,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  validator: (val) =>
-                      val == null || val.isEmpty ? "Kuota wajib diisi" : null,
-                ),
-                const SizedBox(height: 16),
+              _buildLabel("Periode Berlaku"),
+              Row(
+                children: [
+                  Expanded(child: _buildDateInput("Mulai", _waktuMulaiController)),
+                  const SizedBox(width: 12),
+                  Expanded(child: _buildDateInput("Berakhir", _waktuBerakhirController)),
+                ],
+              ),
 
-                _buildTextField(
-                  label: "Jumlah Maksimal Pemakaian",
-                  hint: "Masukkan jumlah maksimal per akun",
-                  icon: Icons.confirmation_number,
-                  controller: _jumlahController,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  validator: (val) => val == null || val.isEmpty
-                      ? "Jumlah maksimal wajib diisi"
-                      : null,
-                ),
-                const SizedBox(height: 16),
-
-                // 🔹 Ganti dengan DateRangeField custom
-                DateRangeField(
-                  startController: _waktuMulaiController,
-                  endController: _waktuBerakhirController,
-                  primaryColor: primaryColor,
-                  icon: Icons.calendar_today,
-                ),
-                const SizedBox(height: 16),
-
-                _buildTextField(
-                  label: "Kode Awal Voucher",
-                  hint: "Masukkan kode voucher",
-                  icon: Icons.vpn_key,
-                  controller: _kodeController,
-                  validator: (val) =>
-                      val == null || val.isEmpty ? "Kode wajib diisi" : null,
-                ),
-                const SizedBox(height: 24),
-
-                //Minimal Diskon 
-                 _buildTextField(
-                  label: "Jumlah Minimal Diskon",
-                  hint: "Masukkan jumlah minimal diskon per transaksi",
-                  icon: Icons.confirmation_number,
-                  controller: _jumlahController,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  validator: (val) => val == null || val.isEmpty
-                      ? "Jumlah minimal diskon wajib diisi"
-                      : null,
-                ),
-                const SizedBox(height: 16),
-
-
-                // Upload Gambar Voucher
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    "Upload Gambar Voucher",
-                    style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.w600,
-                      color: primaryColor,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                GestureDetector(
-                  onTap: _pickImage,
-                  child: Container(
-                    width: double.infinity,
-                    height: 160,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: primaryColor),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: _voucherImage == null
-                        ? Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.cloud_upload,
-                                  size: 40, color: primaryColor),
-                              const SizedBox(height: 8),
-                              Text(
-                                "Drag & drop files or Browse",
-                                style: GoogleFonts.poppins(
-                                  color: primaryColor,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              Text(
-                                "Supported formats: JPEG, PNG",
-                                style: GoogleFonts.poppins(
-                                  color: Colors.black54,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          )
-                        : ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Image.file(
-                              _voucherImage!,
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              height: double.infinity,
-                            ),
-                          ),
-                  ),
-                ),
-                const SizedBox(height: 30),
-              ],
-            ),
-          ),
-        ),
-
-        // 🔹 Tombol simpan voucher tetap di bawah
-        bottomNavigationBar: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryColor,
-                  shape: RoundedRectangleBorder(
+              const SizedBox(height: 20),
+              _buildLabel("Gambar Voucher"),
+              GestureDetector(
+                onTap: _pickImage,
+                child: Container(
+                  height: 150,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: _primaryColor.withOpacity(0.5)),
                     borderRadius: BorderRadius.circular(12),
+                    color: Colors.red.shade50,
                   ),
-                ),
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    // 🔹 Validasi manual tanggal
-                    if (_waktuMulaiController.text.isNotEmpty &&
-                        _waktuBerakhirController.text.isNotEmpty) {
-                      final start = DateFormat("dd-MM-yyyy")
-                          .parse(_waktuMulaiController.text);
-                      final end = DateFormat("dd-MM-yyyy")
-                          .parse(_waktuBerakhirController.text);
-
-                      if (end.isBefore(start)) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text(
-                                  "Tanggal berakhir tidak boleh sebelum tanggal mulai")),
-                        );
-                        return;
-                      }
-                    }
-
-                    // TODO: simpan voucher ke backend
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => VoucherPreviewPage(
-                          nama: _namaController.text,
-                          tanggalMulai: _waktuMulaiController.text,
-                          tanggalAkhir: _waktuBerakhirController.text,
-                          kuota: _kuotaController.text,
-                          gambar: _voucherImage,
-                        ),
-                      ),
-                    );
-                  }
-                },
-                child: Text(
-                  "SIMPAN VOUCHER",
-                  style: GoogleFonts.poppins(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                  child: _voucherImage != null
+                      ? ClipRRect(borderRadius: BorderRadius.circular(12), child: Image.file(_voucherImage!, fit: BoxFit.cover))
+                      : Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.cloud_upload_outlined, size: 40, color: _primaryColor),
+                      Text("Upload Gambar", style: GoogleFonts.poppins(fontSize: 12, color: _primaryColor)),
+                    ],
                   ),
                 ),
               ),
-            ),
+
+              const SizedBox(height: 40),
+            ],
           ),
         ),
       ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: _primaryColor,
+            minimumSize: const Size(double.infinity, 50),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+          onPressed: _validateAndSubmit,
+          child: Text("LANJUT KE PREVIEW", style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white)),
+        ),
+      ),
     );
+  }
+
+  Widget _buildLabel(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6, top: 12),
+      child: Text(text, style: GoogleFonts.poppins(fontSize: 12, color: _primaryColor, fontWeight: FontWeight.w500)),
+    );
+  }
+
+  Widget _buildInput(TextEditingController controller, String hint, IconData icon, {bool isNumber = false}) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+      inputFormatters: isNumber ? [FilteringTextInputFormatter.digitsOnly] : [],
+      style: GoogleFonts.poppins(fontSize: 14),
+      validator: (val) => (val == null || val.isEmpty) ? "Wajib diisi" : null,
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
+        prefixIcon: Icon(icon, color: _primaryColor, size: 20),
+        contentPadding: const EdgeInsets.symmetric(vertical: 14),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.grey)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: _primaryColor.withOpacity(0.5))),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: _primaryColor, width: 1.5)),
+      ),
+    );
+  }
+
+  Widget _buildDateInput(String hint, TextEditingController controller) {
+    return TextFormField(
+      controller: controller,
+      readOnly: true,
+      onTap: () => _selectDate(controller),
+      style: GoogleFonts.poppins(fontSize: 12),
+      validator: (val) => (val == null || val.isEmpty) ? "Isi tgl" : null,
+      decoration: InputDecoration(
+        hintText: hint,
+        prefixIcon: Icon(Icons.calendar_today, size: 18, color: _primaryColor),
+        contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 10),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: _primaryColor.withOpacity(0.5))),
+      ),
+    );
+  }
+
+  void _validateAndSubmit() {
+    if (_formKey.currentState!.validate()) {
+      // Logic validasi tanggal sederhana
+      final start = DateTime.parse(_waktuMulaiController.text);
+      final end = DateTime.parse(_waktuBerakhirController.text);
+
+      if (end.isBefore(start)) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Tanggal berakhir tidak valid")));
+        return;
+      }
+
+      // Navigasi ke Preview
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => VoucherPreviewPage(
+            nama: _namaController.text,
+            diskon: _diskonController.text,
+            kuota: _kuotaController.text,
+            minBeli: _minTransaksiController.text,
+            kode: _kodeController.text,
+            mulai: _waktuMulaiController.text,
+            akhir: _waktuBerakhirController.text,
+            gambar: _voucherImage,
+          ),
+        ),
+      );
+    }
   }
 }

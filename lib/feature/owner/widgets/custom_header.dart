@@ -18,10 +18,8 @@ class CustomHeader extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 📌 ambil lebar layar
     double screenWidth = MediaQuery.of(context).size.width;
 
-    // 📌 atur fontSize berdasarkan ukuran layar
     double fontSize = 18;
     if (screenWidth < 360) {
       fontSize = 16; // HP kecil

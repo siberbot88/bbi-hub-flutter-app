@@ -1,6 +1,6 @@
 import 'package:bengkel_online_flutter/feature/mechanic/screens/bahasa.dart';
 import 'package:bengkel_online_flutter/feature/mechanic/screens/bantudukung.dart';
-import 'package:bengkel_online_flutter/feature/mechanic/screens/change_password.dart';
+import 'package:bengkel_online_flutter/core/screens/registers/change_password.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:bengkel_online_flutter/feature/mechanic/widgets/smartasset.dart';

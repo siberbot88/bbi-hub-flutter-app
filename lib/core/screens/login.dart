@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart'; // 🟢 Provider integration
-import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-import '../services/auth_provider.dart'; // 🟢 Ganti path jika perlu
+import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -13,11 +13,52 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final _storage = const FlutterSecureStorage();
+
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+
   bool rememberMe = false;
   bool obscureText = true;
-  bool _isLoading = false; // 🟢 Loader indicator
+  bool _isLoading = false;
+  bool _prefillChecked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRememberedEmail();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Prefill dari route arguments (dipasang dari deep link handler di main.dart)
+    if (_prefillChecked) return;
+    _prefillChecked = true;
+    final args = ModalRoute.of(context)?.settings.arguments as Map<dynamic, dynamic>?;
+    final emailArg = (args?['email'] ?? args?['prefillEmail']) as String?;
+    if (emailArg != null && emailArg.trim().isNotEmpty) {
+      emailController.text = emailArg.trim();
+    }
+  }
+
+  Future<void> _loadRememberedEmail() async {
+    final remembered = await _storage.read(key: 'remember_email');
+    if (remembered != null && remembered.isNotEmpty) {
+      setState(() {
+        emailController.text = remembered;
+        rememberMe = true;
+      });
+    }
+  }
+
+  Future<void> _persistRemember(bool on, String email) async {
+    if (on && email.isNotEmpty) {
+      await _storage.write(key: 'remember_email', value: email);
+    } else {
+      await _storage.delete(key: 'remember_email');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -117,7 +158,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
               const SizedBox(height: 21),
 
-              // 🔹 Login button
+              // Login button
               SizedBox(
                 width: double.infinity,
                 height: 44,
@@ -146,16 +187,27 @@ class _LoginPageState extends State<LoginPage> {
                     try {
                       final auth = Provider.of<AuthProvider>(context, listen: false);
                       final success = await auth.login(email, password);
+
+                      // Simpan / hapus email remembered
+                      await _persistRemember(rememberMe, email);
+
                       if (success) {
-                        final role = auth.user?.role ?? 'owner';
-                        Navigator.pushNamedAndRemoveUntil(context, '/main', (_) => false);
+                        // Jika server wajibkan ganti password → arahkan ke halaman ubah password
+                        if (auth.mustChangePassword) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Silakan ganti password Anda terlebih dahulu')),
+                          );
+                          Navigator.pushNamedAndRemoveUntil(context, '/changePassword', (_) => false);
+                        } else {
+                          Navigator.pushNamedAndRemoveUntil(context, '/main', (_) => false);
+                        }
                       }
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
                       );
                     } finally {
-                      setState(() => _isLoading = false);
+                      if (mounted) setState(() => _isLoading = false);
                     }
                   },
                   child: _isLoading
@@ -188,7 +240,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
               const SizedBox(height: 24),
 
-              // 🔹 Sosial Media Buttons
+              // Sosial Media Buttons (placeholder)
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -201,7 +253,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
               const SizedBox(height: 28),
 
-              // 🔹 Sign Up
+              // Sign Up
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -231,7 +283,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  /// 🔹 Reusable TextField
+  /// Reusable TextField
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
@@ -284,7 +336,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  /// 🔹 Social Button
+  /// Social Button (placeholder)
   Widget _socialButton(String assetsPath) {
     return Container(
       height: 50,
