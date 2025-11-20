@@ -33,25 +33,18 @@ class _VoucherPreviewPageState extends State<VoucherPreviewPage> {
   Future<void> _submitToApi() async {
     setState(() => _isLoading = true);
     try {
-      // 1. Ambil Data User untuk dapat Workshop ID
-      // Asumsi: User model punya relasi workshop atau api khusus get workshop
-      // Untuk contoh ini, kita fetchUser dulu
+      // 1. Ambil Data User
       User user = await _apiService.fetchUser();
 
-      // WARNING: Pastikan user.workshop tidak null.
-      // Jika User model belum punya workshop object, Anda harus update User model
-      // atau gunakan fetchWorkshops() untuk mengambil list workshop milik owner.
-      // Disini saya asumsikan owner punya 1 workshop utama atau ambil yang pertama.
+      // 2. Ambil Workshop ID
+      String? workshopId = user.workshopUuid;
 
-      // Fallback manual jika model user belum diupdate:
-      // var workshops = await _apiService.fetchWorkshops();
-      // String workshopId = workshops.first.id;
+      // ✅ PERBAIKAN UTAMA: Cek apakah workshopId ada atau null
+      if (workshopId == null) {
+        throw Exception("Data Bengkel tidak ditemukan. Pastikan Anda sudah mendaftarkan bengkel.");
+      }
 
-      // Dummy sementara agar codingan jalan (GANTI LOGIC INI SESUAI MODEL ANDA):
-      String workshopId = "019a90e7-6886-7202-9602-e552a42adf47";
-      // Jika user punya workshop_uuid di response login/me:
-      // String workshopId = user.workshopUuid;
-
+      // 3. Kirim ke API (workshopId sekarang dijamin tidak null)
       await _apiService.createVoucher(
           workshopUuid: workshopId,
           title: widget.nama,
@@ -65,6 +58,8 @@ class _VoucherPreviewPageState extends State<VoucherPreviewPage> {
       );
 
       if (!mounted) return;
+
+      // 4. Navigasi Sukses
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const VoucherPage(showSuccess: true)),
@@ -72,11 +67,15 @@ class _VoucherPreviewPageState extends State<VoucherPreviewPage> {
       );
 
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Gagal: $e"), backgroundColor: Colors.red),
+        SnackBar(
+            content: Text("Gagal: ${e.toString().replaceAll('Exception: ', '')}"),
+            backgroundColor: Colors.red
+        ),
       );
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 

@@ -1,11 +1,10 @@
+// listWork.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'package:bengkel_online_flutter/core/models/service.dart';
 import 'package:bengkel_online_flutter/feature/owner/providers/service_provider.dart';
-
-// SESUAIKAN jika path berbeda
 import 'package:bengkel_online_flutter/feature/owner/screens/detailWork.dart';
 
 const Color _gradStart = Color(0xFF9B0D0D);
@@ -41,10 +40,9 @@ class WorkItem {
 }
 
 class ListWorkPage extends StatefulWidget {
-  const ListWorkPage({super.key, this.workshopUuid});
+  const ListWorkPage({Key? key, this.workshopUuid}) : super(key: key);
 
-  /// Filter server-side agar hanya menampilkan service milik bengkel ini.
-  /// Jika null, server akan mengembalikan seluruh service (tidak direkomendasikan).
+  /// Filter server‑side agar hanya menampilkan service milik bengkel ini.
   final String? workshopUuid;
 
   @override
@@ -60,9 +58,8 @@ class _ListWorkPageState extends State<ListWorkPage> {
     super.initState();
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ServiceProvider>().fetchServices(
-        workshopUuid: widget.workshopUuid,
-      );
+      final prov = context.read<ServiceProvider>();
+      prov.fetchServices(workshopUuid: widget.workshopUuid);
     });
   }
 
@@ -72,15 +69,11 @@ class _ListWorkPageState extends State<ListWorkPage> {
     super.dispose();
   }
 
-  // Map ServiceModel -> WorkItem
   WorkItem _map(ServiceModel s) {
     final status = _mapStatus(s.status);
-
     final vehicleName = s.vehicle?.name ??
         '${s.vehicle?.brand ?? ''} ${s.vehicle?.model ?? ''}'.trim();
-
     final plate = s.vehicle?.plateNumber ??
-        // fallback jika model kendaraan punya key berbeda
         (tryOrNull(() => (s as dynamic).vehicle?.plate) as String?) ??
         '-';
 
@@ -172,9 +165,7 @@ class _ListWorkPageState extends State<ListWorkPage> {
                 ),
                 actions: [
                   IconButton(
-                    onPressed: () => context.read<ServiceProvider>().fetchServices(
-                      workshopUuid: widget.workshopUuid,
-                    ),
+                    onPressed: () => prov.fetchServices(workshopUuid: widget.workshopUuid),
                     icon: const Icon(Icons.refresh, color: Colors.white),
                     tooltip: 'Refresh',
                   ),
@@ -207,8 +198,7 @@ class _ListWorkPageState extends State<ListWorkPage> {
                             const SizedBox(height: 4),
                             const Text(
                               'Daftar Pekerjaan',
-                              style:
-                              TextStyle(color: Colors.white70, fontSize: 14),
+                              style: TextStyle(color: Colors.white70, fontSize: 14),
                             ),
                             const SizedBox(height: 18),
                             // Search
@@ -222,8 +212,7 @@ class _ListWorkPageState extends State<ListWorkPage> {
                                   bottomRight: Radius.circular(30),
                                 ),
                               ),
-                              padding:
-                              const EdgeInsets.symmetric(horizontal: 18),
+                              padding: const EdgeInsets.symmetric(horizontal: 18),
                               child: Row(
                                 children: [
                                   const Icon(Icons.search, color: Colors.grey),
@@ -232,8 +221,7 @@ class _ListWorkPageState extends State<ListWorkPage> {
                                     child: TextField(
                                       controller: _search,
                                       decoration: const InputDecoration(
-                                        hintText:
-                                        'Cari kendaraan, customer, atau plat',
+                                        hintText: 'Cari kendaraan, customer, atau plat',
                                         border: InputBorder.none,
                                       ),
                                       onChanged: (_) => setState(() {}),
@@ -244,8 +232,7 @@ class _ListWorkPageState extends State<ListWorkPage> {
                                       _search.clear();
                                       setState(() {});
                                     },
-                                    icon: const Icon(Icons.tune,
-                                        color: Colors.grey),
+                                    icon: const Icon(Icons.tune, color: Colors.grey),
                                   ),
                                 ],
                               ),
@@ -259,24 +246,21 @@ class _ListWorkPageState extends State<ListWorkPage> {
                                   label: 'Pending',
                                   icon: Icons.error_outline,
                                   selected: _filter == WorkStatus.pending,
-                                  onTap: () => setState(
-                                          () => _filter = WorkStatus.pending),
+                                  onTap: () => setState(() => _filter = WorkStatus.pending),
                                 ),
                                 const SizedBox(width: 16),
                                 _StatusChip(
                                   label: 'Process',
                                   icon: Icons.schedule_rounded,
                                   selected: _filter == WorkStatus.process,
-                                  onTap: () => setState(
-                                          () => _filter = WorkStatus.process),
+                                  onTap: () => setState(() => _filter = WorkStatus.process),
                                 ),
                                 const SizedBox(width: 16),
                                 _StatusChip(
                                   label: 'Selesai',
                                   icon: Icons.verified_rounded,
                                   selected: _filter == WorkStatus.done,
-                                  onTap: () =>
-                                      setState(() => _filter = WorkStatus.done),
+                                  onTap: () => setState(() => _filter = WorkStatus.done),
                                 ),
                               ],
                             ),
@@ -288,12 +272,10 @@ class _ListWorkPageState extends State<ListWorkPage> {
                 ),
               ),
 
-              // konten
+              // konten body
               if (prov.loading)
                 const SliverFillRemaining(
-                  child: Center(
-                      child:
-                      CircularProgressIndicator(color: Colors.white)),
+                  child: Center(child: CircularProgressIndicator(color: Colors.white)),
                 )
               else if (prov.lastError != null)
                 SliverFillRemaining(
@@ -314,12 +296,39 @@ class _ListWorkPageState extends State<ListWorkPage> {
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                   sliver: SliverList.separated(
                     itemCount: list.length,
-                    separatorBuilder: (_, __) =>
-                    const SizedBox(height: 14),
-                    itemBuilder: (context, i) =>
-                        _WorkCard(item: list[i]),
+                    separatorBuilder: (_, __) => const SizedBox(height: 14),
+                    itemBuilder: (context, i) {
+                      return _AnimatedWorkCard(item: list[i]);
+                    },
                   ),
                 ),
+
+              // pagination controls
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton(
+                        onPressed: prov.currentPage > 1 && !prov.loading
+                            ? () => prov.goToPage(prov.currentPage - 1, workshopUuid: widget.workshopUuid)
+                            : null,
+                        child: const Text('Prev'),
+                      ),
+                      const SizedBox(width: 16),
+                      Text('Page ${prov.currentPage} of ${prov.totalPages}'),
+                      const SizedBox(width: 16),
+                      ElevatedButton(
+                        onPressed: prov.currentPage < prov.totalPages && !prov.loading
+                            ? () => prov.goToPage(prov.currentPage + 1, workshopUuid: widget.workshopUuid)
+                            : null,
+                        child: const Text('Next'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
 
               SliverToBoxAdapter(
                 child: SizedBox(height: media.padding.bottom + 8),
@@ -356,22 +365,17 @@ class _StatusChip extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        padding:
-        const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
         decoration: BoxDecoration(
           color: bg,
           borderRadius: BorderRadius.circular(28),
-          boxShadow: selected
-              ? [const BoxShadow(color: Color(0x33000000), blurRadius: 8)]
-              : null,
+          boxShadow: selected ? [const BoxShadow(color: Color(0x33000000), blurRadius: 8)] : null,
         ),
         child: Row(
           children: [
             Icon(icon, size: 18, color: fg),
             const SizedBox(width: 8),
-            Text(label,
-                style: TextStyle(
-                    color: fg, fontWeight: FontWeight.w700)),
+            Text(label, style: TextStyle(color: fg, fontWeight: FontWeight.w700)),
           ],
         ),
       ),
@@ -379,204 +383,177 @@ class _StatusChip extends StatelessWidget {
   }
 }
 
-class _WorkCard extends StatelessWidget {
-  const _WorkCard({required this.item});
+class _AnimatedWorkCard extends StatefulWidget {
   final WorkItem item;
+  const _AnimatedWorkCard({required this.item});
 
-  void _openDetail(BuildContext context) {
-    if (item.id.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ID service tidak tersedia')),
-      );
-      return;
-    }
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => DetailWorkPage(serviceId: item.id),
-      ),
-    );
+  @override
+  State<_AnimatedWorkCard> createState() => _AnimatedWorkCardState();
+}
+
+class _AnimatedWorkCardState extends State<_AnimatedWorkCard> with SingleTickerProviderStateMixin {
+  late AnimationController _animCtrl;
+  late Animation<double> _fade;
+
+  @override
+  void initState() {
+    super.initState();
+    _animCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
+    _fade = CurvedAnimation(parent: _animCtrl, curve: Curves.easeIn);
+    _animCtrl.forward();
+  }
+
+  @override
+  void dispose() {
+    _animCtrl.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final price =
-    item.price == null ? 'RP. -' : 'RP. ${_rupiah(item.price!)}';
+    final item = widget.item;
+    final price = item.price == null ? 'RP. -' : 'RP. ${_rupiah(item.price!)}';
 
-    return Material(
-      color: Colors.white,
-      elevation: 0,
-      borderRadius: BorderRadius.circular(22),
-      child: InkWell(
+    return FadeTransition(
+      opacity: _fade,
+      child: Material(
+        color: Colors.white,
+        elevation: 0,
         borderRadius: BorderRadius.circular(22),
-        onTap: () => _openDetail(context),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(22),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x22000000),
-                blurRadius: 18,
-                offset: Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 12, 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // header
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        item.workOrder,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: .2,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () {},
-                      icon: const Icon(Icons.more_vert,
-                          color: Colors.black54),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.person_2_outlined,
-                        size: 18, color: Colors.black45),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        item.customer,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.black54,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-
-                // vehicle
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF3F4F6),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
+        child: InkWell(
+          borderRadius: BorderRadius.circular(22),
+          onTap: () {
+            if (item.id.isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('ID service tidak tersedia')));
+              return;
+            }
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => DetailWorkPage(serviceId: item.id)),
+            );
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(22),
+              boxShadow: const [
+                BoxShadow(color: Color(0x22000000), blurRadius: 18, offset: Offset(0, 10)),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 12, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // header
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.directions_car,
-                          color: Colors.black54),
-                      const SizedBox(width: 10),
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment:
-                          CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              item.vehicle,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 16),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              item.plate,
-                              style: const TextStyle(
-                                  color: Colors.black54,
-                                  fontSize: 13),
-                            ),
-                          ],
+                        child: Text(
+                          item.workOrder,
+                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, letterSpacing: .2),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () { /* bisa tambahkan menu pilihan */ },
+                        icon: const Icon(Icons.more_vert, color: Colors.black54),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.person_2_outlined, size: 18, color: Colors.black45),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          item.customer,
+                          style: const TextStyle(fontSize: 16, color: Colors.black54, fontWeight: FontWeight.w600),
                         ),
                       ),
                     ],
                   ),
-                ),
-
-                const SizedBox(height: 16),
-                Text(item.service,
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 16),
-                const Divider(height: 1),
-                const SizedBox(height: 12),
-
-                // schedule + price
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Icon(Icons.event_outlined,
-                        size: 18, color: Colors.black45),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        _dateTime(item.schedule),
-                        style: const TextStyle(
-                            color: Colors.black54, fontSize: 14),
-                      ),
+                  const SizedBox(height: 12),
+                  // vehicle info
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF3F4F6),
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    Text(
-                      price,
-                      style: const TextStyle(
-                        color: Color(0xFF7A0F0F),
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-
-                // mechanic name
-                Row(
-                  children: [
-                    const Icon(Icons.groups_2_outlined,
-                        size: 18, color: Colors.black45),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        item.mechanic,
-                        style: const TextStyle(
-                            color: Colors.black45, fontSize: 14),
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: () => _openDetail(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _danger,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                      elevation: 0,
-                    ),
-                    child: const Text(
-                      'Lihat Detail',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 16),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.directions_car, color: Colors.black54),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(item.vehicle, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                              const SizedBox(height: 2),
+                              Text(item.plate, style: const TextStyle(color: Colors.black54, fontSize: 13)),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  Text(item.service, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 16),
+                  const Divider(height: 1),
+                  const SizedBox(height: 12),
+                  // schedule + price
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.event_outlined, size: 18, color: Colors.black45),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _dateTime(item.schedule),
+                          style: const TextStyle(color: Colors.black54, fontSize: 14),
+                        ),
+                      ),
+                      Text(
+                        price,
+                        style: const TextStyle(color: Color(0xFF7A0F0F), fontSize: 18, fontWeight: FontWeight.w800),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  // mechanic name
+                  Row(
+                    children: [
+                      const Icon(Icons.groups_2_outlined, size: 18, color: Colors.black45),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(item.mechanic, style: const TextStyle(color: Colors.black45, fontSize: 14)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => DetailWorkPage(serviceId: item.id)),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _danger,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        elevation: 0,
+                      ),
+                      child: const Text('Lihat Detail', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16)),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -589,9 +566,7 @@ class _WorkCard extends StatelessWidget {
 
 String _dateTime(DateTime? dt) {
   if (dt == null) return '-';
-  const bulan = [
-    'Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'
-  ];
+  const bulan = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
   final tgl = '${dt.day} ${bulan[dt.month - 1]} ${dt.year}';
   final hh = dt.hour.toString().padLeft(2, '0');
   final mm = dt.minute.toString().padLeft(2, '0');

@@ -16,6 +16,11 @@ class ServiceProvider extends ChangeNotifier {
   String? _statusFilter; // 'pending' | 'accept' | 'in progress' | 'completed' | 'cancelled' | null
   String _search = '';
 
+  // ---- pagination ----
+  int _currentPage = 1;
+  int _totalPages = 1;
+  int _perPage = 10;
+
   // ---- getters ----
   bool get loading => _loading;
   String? get lastError => _lastError;
@@ -26,7 +31,12 @@ class ServiceProvider extends ChangeNotifier {
   String? get statusFilter => _statusFilter;
   String get search => _search;
 
-  /// List sudah difilter status dan teks
+  int get currentPage => _currentPage;
+  int get totalPages => _totalPages;
+  bool get hasNextPage => _currentPage < _totalPages;
+  bool get hasPrevPage => _currentPage > 1;
+
+  /// List sudah difilter status dan teks (kalau mau pakai client-side)
   List<ServiceModel> get filteredItems {
     Iterable<ServiceModel> list = _items;
 
@@ -45,11 +55,18 @@ class ServiceProvider extends ChangeNotifier {
 
   /* =================== Actions =================== */
 
-  /// Ganti filter status. Jika [fetch] true, otomatis tarik data dari server.
-  Future<void> setStatusFilter(String? status, {bool fetch = true}) async {
+  /// Ganti filter status. Sekarang akan reset ke page 1 dan fetch lagi.
+  Future<void> setStatusFilter(String? status,
+      {bool fetch = true, String? workshopUuid}) async {
     _statusFilter = status;
     notifyListeners();
-    if (fetch) await fetchServices();
+    if (fetch) {
+      await fetchServices(
+        status: status,
+        workshopUuid: workshopUuid,
+        page: 1,
+      );
+    }
   }
 
   /// Set kata kunci pencarian (client-side)
@@ -58,29 +75,45 @@ class ServiceProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// GET /services
+  /// GET /services (dengan pagination)
   Future<void> fetchServices({
     String? status,
     bool includeExtras = true,
     String? workshopUuid,
     String? code,
     String? dateFrom, // 'YYYY-MM-DD'
-    String? dateTo,   // 'YYYY-MM-DD'
+    String? dateTo, // 'YYYY-MM-DD'
+    int page = 1,
+    int? perPage,
   }) async {
     _loading = true;
     _lastError = null;
     notifyListeners();
 
     try {
-      final list = await _api.fetchServices(
+      final res = await _api.fetchServicesRaw(
         status: status ?? _statusFilter,
         includeExtras: includeExtras,
         workshopUuid: workshopUuid,
         code: code,
         dateFrom: dateFrom,
         dateTo: dateTo,
+        page: page,
+        perPage: perPage ?? _perPage,
       );
-      _items = list;
+
+      final data = res['data'];
+      final listJson = data is List ? data : const <dynamic>[];
+
+      _items = listJson
+          .whereType<Map<String, dynamic>>()
+          .map(ServiceModel.fromJson)
+          .toList();
+
+      // meta pagination
+      _currentPage = _parseInt(res['current_page'], fallback: page);
+      _totalPages = _parseInt(res['last_page'], fallback: 1);
+      _perPage = _parseInt(res['per_page'], fallback: perPage ?? _perPage);
     } catch (e) {
       _lastError = e.toString();
       if (kDebugMode) print('fetchServices error: $e');
@@ -93,6 +126,16 @@ class ServiceProvider extends ChangeNotifier {
   /// Alias agar kompatibel dengan pemanggilan lama
   Future<void> fetch({String? status, bool? includeExtras}) =>
       fetchServices(status: status, includeExtras: includeExtras ?? true);
+
+  /// Pindah halaman (dipakai ListWorkPage)
+  Future<void> goToPage(int page, {String? workshopUuid}) async {
+    if (page < 1 || page > _totalPages) return;
+    await fetchServices(
+      status: _statusFilter,
+      workshopUuid: workshopUuid,
+      page: page,
+    );
+  }
 
   /// GET /services/{id}
   Future<ServiceModel?> fetchDetail(String id) async {
@@ -153,6 +196,10 @@ class ServiceProvider extends ChangeNotifier {
           customer: s.customer,
           vehicle: s.vehicle,
           workshopName: s.workshopName,
+          mechanic: s.mechanic,
+          items: s.items,
+          note: s.note,
+          categoryName: s.categoryName,
         );
       }
       if (_selected?.id == id) {
@@ -172,6 +219,10 @@ class ServiceProvider extends ChangeNotifier {
           customer: s.customer,
           vehicle: s.vehicle,
           workshopName: s.workshopName,
+          mechanic: s.mechanic,
+          items: s.items,
+          note: s.note,
+          categoryName: s.categoryName,
         );
       }
 
@@ -227,22 +278,30 @@ class ServiceProvider extends ChangeNotifier {
     _lastError = null;
     _statusFilter = null;
     _search = '';
+    _currentPage = 1;
+    _totalPages = 1;
     notifyListeners();
   }
 
   /// Hitung jumlah item per status (dari list lokal)
   int countByStatus(String s) =>
       _items.where((e) => e.status.toLowerCase() == s.toLowerCase()).length;
+
+  // helper parse int dari json dynamic
+  int _parseInt(dynamic v, {required int fallback}) {
+    if (v is int) return v;
+    if (v is double) return v.toInt();
+    if (v is String) {
+      final n = int.tryParse(v);
+      if (n != null) return n;
+    }
+    return fallback;
+  }
 }
 
 /* ===========================================================
    ============== SAFE ACCESS HELPERS (NO CRASH) =============
-   ===========================================================
-   Membuat pencarian fleksibel:
-   - Kalau `ServiceModel` punya nested object (customer/workshop/vehicle), ambil dari sana.
-   - Kalau datanya "flat" (misal customerName, vehiclePlateNumber, workshopName), juga dicoba.
-   - Jika field tidak ada, aman (try-catch) dan return null.
-*/
+   =========================================================== */
 
 extension _ServiceModelSearch on ServiceModel {
   // Gabungan string untuk pencarian cepat (lowercase)
@@ -306,7 +365,10 @@ extension _ServiceModelSearch on ServiceModel {
         } catch (_) {}
       }
       try {
-        final p = d.vehiclePlateNumber ?? d.vehiclePlate ?? d.plateNumber ?? d.plate;
+        final p = d.vehiclePlateNumber ??
+            d.vehiclePlate ??
+            d.plateNumber ??
+            d.plate;
         if (p is String && p.isNotEmpty) return p;
       } catch (_) {}
       try {

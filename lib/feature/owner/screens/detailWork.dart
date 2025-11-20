@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:bengkel_online_flutter/feature/owner/providers/service_provider.dart';
 import 'package:bengkel_online_flutter/core/models/service.dart';
 import 'package:bengkel_online_flutter/core/models/transaction_item.dart';
+import 'package:bengkel_online_flutter/core/models/vehicle.dart';
 
 const _gradStart = Color(0xFF9B0D0D);
 const _gradEnd = Color(0xFFB70F0F);
@@ -22,7 +23,6 @@ class _DetailWorkPageState extends State<DetailWorkPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // FIX: method yang ada di provider adalah fetchDetail
       context.read<ServiceProvider>().fetchDetail(widget.serviceId);
     });
   }
@@ -43,7 +43,6 @@ class _DetailWorkPageState extends State<DetailWorkPage> {
         ),
         centerTitle: true,
       ),
-      // FIX: gunakan loading & lastError dari ServiceProvider
       body: prov.loading
           ? const Center(child: CircularProgressIndicator())
           : prov.lastError != null
@@ -72,6 +71,7 @@ class _Body extends StatelessWidget {
   num get _partsTotal =>
       (service.items ?? const <TransactionItem>[])
           .fold<num>(0, (a, b) => a + (b.subtotal ?? 0));
+
   num get _labor => service.price ?? 0;
   num get _grand => _partsTotal + _labor;
 
@@ -92,13 +92,13 @@ class _Body extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final v = service.vehicle; // biarkan dynamic / sesuai model
-    final c = service.customer; // biasanya Customer? dari model
+    final v = service.vehicle;
+    final c = service.customer;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       children: [
-        // status bar
+        // STATUS BAR
         _Panel(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -112,8 +112,10 @@ class _Body extends StatelessWidget {
                     style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
                 ),
-                Text('${(_progress * 100).toInt()}%',
-                    style: const TextStyle(fontWeight: FontWeight.w800)),
+                Text(
+                  '${(_progress * 100).toInt()}%',
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
               ]),
               const SizedBox(height: 8),
               ClipRRect(
@@ -136,13 +138,14 @@ class _Body extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const _SectionTitle(
-                  icon: Icons.person_outline, text: 'Informasi Customer'),
+                icon: Icons.person_outline,
+                text: 'Informasi Customer',
+              ),
               const SizedBox(height: 10),
               _TwoCol(
                 leftTitle: 'Nama lengkap',
                 leftValue: c?.name ?? '-',
                 rightTitle: 'Alamat',
-                // FIX: Customer tidak punya 'address' → ambil aman/dynamic atau '-'
                 rightValue: _customerAddressSafe(c),
               ),
               const SizedBox(height: 8),
@@ -167,17 +170,23 @@ class _Body extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const _SectionTitle(
-                  icon: Icons.tips_and_updates_outlined,
-                  text: 'Detail Pekerjaan'),
+                icon: Icons.tips_and_updates_outlined,
+                text: 'Detail Pekerjaan',
+              ),
               const SizedBox(height: 8),
-              Text(service.name,
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w800)),
-              // FIX: description bisa Object? → pastikan String dulu
+              Text(
+                service.name,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
               if ('${service.description ?? ''}'.isNotEmpty) ...[
                 const SizedBox(height: 4),
-                Text('${service.description}',
-                    style: const TextStyle(color: Colors.black54)),
+                Text(
+                  '${service.description}',
+                  style: const TextStyle(color: Colors.black54),
+                ),
               ],
               const SizedBox(height: 12),
               const Divider(height: 1),
@@ -198,25 +207,44 @@ class _Body extends StatelessWidget {
 
         // MEKANIK
         _Panel(
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Expanded(
-                child: _SectionTitle(
-                    icon: Icons.engineering_outlined,
-                    text: 'Mekanik yang Menangani'),
+              const _SectionTitle(
+                icon: Icons.engineering_outlined,
+                text: 'Mekanik yang Menangani',
               ),
-              ElevatedButton(
-                onPressed: () {}, // TODO: telpon/chat mekanik
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFEDE9FE),
-                  foregroundColor: const Color(0xFF7C3AED),
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24)),
-                ),
-                child: const Text('Hubungi'),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      service.mechanicName,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      // TODO: aksi hubungi mekanik (telp / chat) kalau diperlukan
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFEDE9FE),
+                      foregroundColor: const Color(0xFF7C3AED),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                    ),
+                    child: const Text('Hubungi'),
+                  ),
+                ],
               ),
             ],
           ),
@@ -229,11 +257,22 @@ class _Body extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const _SectionTitle(
-                  icon: Icons.event_outlined, text: 'Jadwal Pengerjaan'),
+                icon: Icons.event_outlined,
+                text: 'Jadwal Pengerjaan',
+              ),
               const SizedBox(height: 10),
-              _Tile(label: 'Tanggal', value: _date(service.scheduledDate)),
-              _Tile(label: 'Waktu mulai', value: '--:--'),
-              _Tile(label: 'Est. Selesai', value: '--:--'),
+              _Tile(
+                label: 'Tanggal',
+                value: _date(service.scheduledDate),
+              ),
+              _Tile(
+                label: 'Waktu mulai',
+                value: _time(service.scheduledDate),
+              ),
+              _Tile(
+                label: 'Est. Selesai',
+                value: _time(service.estimatedTime),
+              ),
             ],
           ),
         ),
@@ -245,12 +284,15 @@ class _Body extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const _SectionTitle(
-                  icon: Icons.shopping_cart_outlined,
-                  text: 'Sparepart yang digunakan'),
+                icon: Icons.shopping_cart_outlined,
+                text: 'Sparepart yang digunakan',
+              ),
               const SizedBox(height: 8),
               if ((service.items ?? const []).isEmpty)
-                const Text('Belum ada item',
-                    style: TextStyle(color: Colors.black45))
+                Text(
+                  _sparepartMessage(service.status),
+                  style: const TextStyle(color: Colors.black45),
+                )
               else
                 ...service.items!.map((e) => _PartRow(item: e)),
             ],
@@ -264,7 +306,9 @@ class _Body extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const _SectionTitle(
-                  icon: Icons.note_alt_outlined, text: 'Catatan Penting'),
+                icon: Icons.note_alt_outlined,
+                text: 'Catatan Penting',
+              ),
               const SizedBox(height: 8),
               _Note(text: service.note ?? 'Tidak ada catatan'),
             ],
@@ -273,7 +317,11 @@ class _Body extends StatelessWidget {
         const SizedBox(height: 12),
 
         // RINCIAN BIAYA
-        _CostCard(parts: _partsTotal, labor: _labor, total: _grand),
+        _CostCard(
+          parts: _partsTotal,
+          labor: _labor,
+          total: _grand,
+        ),
       ],
     );
   }
@@ -290,6 +338,23 @@ class _Body extends StatelessWidget {
         return '• Pekerjaan dibatalkan';
       default:
         return '• Menunggu konfirmasi';
+    }
+  }
+
+  /// Pesan sparepart tergantung status service (sesuai logika bisnis kamu)
+  String _sparepartMessage(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+      case 'accept':
+        return 'Belum bisa mengisi sparepart, pekerjaan belum dikerjakan.';
+      case 'in progress':
+        return 'Kendaraan sedang diperbaiki. Sparepart akan tercatat setelah pekerjaan selesai.';
+      case 'completed':
+        return 'Belum ada sparepart yang dicatat untuk pekerjaan ini.';
+      case 'cancelled':
+        return 'Pekerjaan dibatalkan, tidak ada sparepart yang digunakan.';
+      default:
+        return 'Belum ada data sparepart.';
     }
   }
 
@@ -325,7 +390,11 @@ class _Panel extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: const [
-          BoxShadow(color: Color(0x14000000), blurRadius: 12, offset: Offset(0, 6)),
+          BoxShadow(
+            color: Color(0x14000000),
+            blurRadius: 12,
+            offset: Offset(0, 6),
+          ),
         ],
       ),
       padding: const EdgeInsets.all(16),
@@ -344,8 +413,10 @@ class _SectionTitle extends StatelessWidget {
     return Row(children: [
       Icon(icon, color: _danger),
       const SizedBox(width: 8),
-      Text(text,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+      Text(
+        text,
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+      ),
     ]);
   }
 }
@@ -366,19 +437,25 @@ class _TwoCol extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(leftTitle, style: label),
-            const SizedBox(height: 4),
-            Text(leftValue, style: value),
-          ]),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(leftTitle, style: label),
+              const SizedBox(height: 4),
+              Text(leftValue, style: value),
+            ],
+          ),
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(rightTitle, style: label),
-            const SizedBox(height: 4),
-            Text(rightValue, style: value),
-          ]),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(rightTitle, style: label),
+              const SizedBox(height: 4),
+              Text(rightValue, style: value),
+            ],
+          ),
         ),
       ],
     );
@@ -407,110 +484,102 @@ class _Tile extends StatelessWidget {
   }
 }
 
-// FIX: Hilangkan referensi tipe Vehicle, gunakan dynamic + akses aman
+/* ------------ VEHICLE CARD (UPDATED) ------------ */
+
 class _VehicleCard extends StatelessWidget {
-  final dynamic vehicle;
+  final Vehicle? vehicle;
   const _VehicleCard({required this.vehicle});
+
+  String _nonEmpty(String? v) =>
+      (v == null || v.trim().isEmpty) ? '-' : v.trim();
+
+  String _nonZeroInt(int? v) => (v == null || v == 0) ? '-' : v.toString();
 
   @override
   Widget build(BuildContext context) {
     final v = vehicle;
+
+    final titleParts = <String>[];
+    if (_nonEmpty(v?.brand) != '-') titleParts.add(_nonEmpty(v?.brand));
+    if (_nonEmpty(v?.model) != '-') titleParts.add(_nonEmpty(v?.model));
+    if (_nonEmpty(v?.name) != '-') titleParts.add(_nonEmpty(v?.name));
+    final title = titleParts.isEmpty ? '-' : titleParts.join(' ');
+
+    final plate = _nonEmpty(v?.plateNumber);
+    final year = _nonZeroInt(v?.year);
+    final color = _nonEmpty(v?.color);
+    final odo = _nonZeroInt(v?.odometer);
+
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(colors: [_gradStart, _gradEnd]),
         borderRadius: BorderRadius.circular(16),
         boxShadow: const [
-          BoxShadow(color: Color(0x14000000), blurRadius: 12, offset: Offset(0, 6))
+          BoxShadow(
+            color: Color(0x14000000),
+            blurRadius: 12,
+            offset: Offset(0, 6),
+          ),
         ],
       ),
       child: Padding(
         padding: const EdgeInsets.all(14),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: const [
-            Icon(Icons.directions_car, color: Colors.white),
-            SizedBox(width: 8),
-            Text('Informasi Kendaraan',
-                style:
-                TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
-          ]),
-          const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(.12),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: const [
+              Icon(Icons.directions_car, color: Colors.white),
+              SizedBox(width: 8),
+              Text(
+                'Informasi Kendaraan',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ]),
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _vehTitle(v),
+                    title,
                     style: const TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.w800),
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                   const SizedBox(height: 2),
-                  Text('Plat: ${_vStr(v, ['plateNumber', 'plate', 'plate_number'])}',
-                      style: const TextStyle(color: Colors.white70)),
-                ]),
-          ),
-          const SizedBox(height: 10),
-          Row(children: [
-            _KV(title: 'Tahun', value: _vStr(v, ['year'])),
-            _KV(title: 'Warna', value: _vStr(v, ['color', 'warna'])),
-            _KV(title: 'Odometer', value: _vStr(v, ['odometer'])),
-          ]),
-        ]),
+                  Text(
+                    'Plat: $plate',
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(children: [
+              _KV(title: 'Tahun', value: year),
+              _KV(title: 'Warna', value: color),
+              _KV(title: 'Odometer', value: odo),
+            ]),
+          ],
+        ),
       ),
     );
-  }
-
-  static String _vehTitle(dynamic v) {
-    if (v == null) return '-';
-    final parts = <String>[
-      _vStr(v, ['brand']),
-      _vStr(v, ['model']),
-      _vStr(v, ['name']),
-    ].where((e) => e.isNotEmpty).toList();
-    final name = parts.join(' ');
-    return name.isEmpty ? '-' : name;
-  }
-
-  // ambil string aman dari object dynamic atau Map
-  static String _vStr(dynamic v, List<String> keys) {
-    if (v == null) return '-';
-    for (final k in keys) {
-      try {
-        final val = (v is Map)
-            ? v[k]
-            : (v as dynamic).__getattr__(k); // akan dilempar ke catch jika ga ada
-        if (val != null && val.toString().trim().isNotEmpty) {
-          return val.toString();
-        }
-      } catch (_) {
-        // ignore and try next key
-      }
-    }
-    return '-';
-  }
-}
-
-// helper untuk memanggil properti dynamic tanpa analyzer warning
-extension on Object {
-  dynamic __getattr__(String name) {
-    try {
-      // ignore: unnecessary_cast
-      final d = (this as dynamic);
-      return d.noSuchMethod; // dummy to force dynamic
-    } catch (_) {
-      // ignore
-    }
-    return null;
   }
 }
 
 class _KV extends StatelessWidget {
   final String title, value;
   const _KV({required this.title, required this.value});
+
   @override
   Widget build(BuildContext context) {
     return Expanded(
@@ -521,15 +590,29 @@ class _KV extends StatelessWidget {
           color: Colors.white.withOpacity(.12),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(title, style: const TextStyle(color: Colors.white70, fontSize: 12)),
-          const SizedBox(height: 2),
-          Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
-        ]),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(color: Colors.white70, fontSize: 12),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
+
+/* ---------------- SPAREPART, NOTE, COST ---------------- */
 
 class _PartRow extends StatelessWidget {
   final TransactionItem item;
@@ -548,15 +631,27 @@ class _PartRow extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child:
-            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(name, style: const TextStyle(fontWeight: FontWeight.w700)),
-              Text('Qty: ${item.quantity ?? 0}  @ ${_rupiah(item.price ?? 0)}',
-                  style: const TextStyle(color: Colors.black54, fontSize: 12)),
-            ]),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                Text(
+                  'Qty: ${item.quantity ?? 0}  @ ${_rupiah(item.price ?? 0)}',
+                  style: const TextStyle(
+                    color: Colors.black54,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
           ),
-          Text(_rupiah(item.subtotal ?? 0),
-              style: const TextStyle(fontWeight: FontWeight.w800)),
+          Text(
+            _rupiah(item.subtotal ?? 0),
+            style: const TextStyle(fontWeight: FontWeight.w800),
+          ),
         ],
       ),
     );
@@ -582,8 +677,10 @@ class _Note extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(child: Text(text)),
           const SizedBox(width: 6),
-          Text(_timeNow(),
-              style: const TextStyle(color: Colors.black38, fontSize: 12)),
+          Text(
+            _timeNow(),
+            style: const TextStyle(color: Colors.black38, fontSize: 12),
+          ),
         ],
       ),
     );
@@ -592,8 +689,11 @@ class _Note extends StatelessWidget {
 
 class _CostCard extends StatelessWidget {
   final num parts, labor, total;
-  const _CostCard(
-      {required this.parts, required this.labor, required this.total});
+  const _CostCard({
+    required this.parts,
+    required this.labor,
+    required this.total,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -602,32 +702,60 @@ class _CostCard extends StatelessWidget {
         gradient: const LinearGradient(colors: [_gradStart, _gradEnd]),
         borderRadius: BorderRadius.circular(16),
         boxShadow: const [
-          BoxShadow(color: Color(0x14000000), blurRadius: 12, offset: Offset(0, 6))
+          BoxShadow(
+            color: Color(0x14000000),
+            blurRadius: 12,
+            offset: Offset(0, 6),
+          ),
         ],
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child:
-        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('Rincian Biaya',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
-          const SizedBox(height: 12),
-          _RowCost(label: 'Biaya sparepart', value: _rupiah(parts), bold: false),
-          _RowCost(label: 'Biaya  jasa', value: _rupiah(labor), bold: false),
-          const Divider(color: Colors.white24),
-          _RowCost(label: 'Subtotal', value: _rupiah(total), bold: false),
-          const SizedBox(height: 8),
-          Container(
-            padding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(.12),
-              borderRadius: BorderRadius.circular(10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Rincian Biaya',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w800,
+              ),
             ),
-            child: _RowCost(
-                label: 'Total Biaya', value: _rupiah(total), bold: true),
-          ),
-        ]),
+            const SizedBox(height: 12),
+            _RowCost(
+              label: 'Biaya sparepart',
+              value: _rupiah(parts),
+              bold: false,
+            ),
+            _RowCost(
+              label: 'Biaya  jasa',
+              value: _rupiah(labor),
+              bold: false,
+            ),
+            const Divider(color: Colors.white24),
+            _RowCost(
+              label: 'Subtotal',
+              value: _rupiah(total),
+              bold: false,
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 12,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: _RowCost(
+                label: 'Total Biaya',
+                value: _rupiah(total),
+                bold: true,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -636,18 +764,28 @@ class _CostCard extends StatelessWidget {
 class _RowCost extends StatelessWidget {
   final String label, value;
   final bool bold;
-  const _RowCost({required this.label, required this.value, this.bold = false});
+  const _RowCost({
+    required this.label,
+    required this.value,
+    this.bold = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Row(children: [
       Expanded(
-          child: Text(label,
-              style: TextStyle(color: Colors.white.withOpacity(.9)))),
-      Text(value,
-          style: TextStyle(
-              color: Colors.white,
-              fontWeight: bold ? FontWeight.w900 : FontWeight.w700)),
+        child: Text(
+          label,
+          style: TextStyle(color: Colors.white.withOpacity(.9)),
+        ),
+      ),
+      Text(
+        value,
+        style: TextStyle(
+          color: Colors.white,
+          fontWeight: bold ? FontWeight.w900 : FontWeight.w700,
+        ),
+      ),
     ]);
   }
 }
@@ -655,11 +793,18 @@ class _RowCost extends StatelessWidget {
 class _Dot extends StatelessWidget {
   final Color color;
   const _Dot({required this.color});
+
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) {
+    return Container(
       width: 10,
       height: 10,
-      decoration: BoxDecoration(color: color, shape: BoxShape.circle));
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+      ),
+    );
+  }
 }
 
 /* ---------------- HELPERS ---------------- */
@@ -696,12 +841,20 @@ String _date(DateTime? dt) {
 
 String _estWaktu(DateTime? dt) {
   if (dt == null) return '-';
-  return '1 jam'; // (opsional) hitung dari scheduled_date ke estimated_time
+  // Kalau nanti mau dihitung dari scheduled_date ke estimated_time, tinggal ganti logika ini
+  return '1 jam';
 }
 
 String _timeNow() {
   final now = DateTime.now();
   final hh = now.hour.toString().padLeft(2, '0');
   final mm = now.minute.toString().padLeft(2, '0');
+  return '$hh:$mm';
+}
+
+String _time(DateTime? dt) {
+  if (dt == null) return '--:--';
+  final hh = dt.hour.toString().padLeft(2, '0');
+  final mm = dt.minute.toString().padLeft(2, '0');
   return '$hh:$mm';
 }

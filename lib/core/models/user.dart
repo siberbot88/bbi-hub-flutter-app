@@ -59,7 +59,7 @@ class User {
       }
     }
 
-    // Parse must_change_password dengan aman dari beberapa kemungkinan tipe
+    // Parse must_change_password dengan aman
     bool _parseMustChange(dynamic v) {
       if (v is bool) return v;
       if (v is num) return v == 1;
@@ -79,10 +79,19 @@ class User {
       role: userRole,
       workshops: parsedWorkshops,
       employment: parsedEmployment,
-      mustChangePassword:
-      _parseMustChange(json['must_change_password'] ?? json['mustChangePassword']),
+      mustChangePassword: _parseMustChange(
+          json['must_change_password'] ?? json['mustChangePassword']),
     );
   }
 
   bool hasRole(String roleName) => role == roleName;
+  String? get workshopUuid {
+    if (workshops != null && workshops!.isNotEmpty) {
+      return workshops!.first.id;
+    }
+    if (employment != null && employment!.workshop != null) {
+      return employment!.workshop!.id;
+    }
+    return null;
+  }
 }

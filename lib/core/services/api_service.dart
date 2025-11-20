@@ -1,9 +1,9 @@
 // core/services/api_service.dart
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'dart:io';
 
 import 'package:bengkel_online_flutter/core/models/voucher.dart';
 import 'package:bengkel_online_flutter/core/models/employment.dart';
@@ -17,11 +17,14 @@ class ApiService {
   final _storage = const FlutterSecureStorage();
 
   /* ===================== Common helpers ===================== */
+
   Future<String?> _getToken() async => _storage.read(key: 'auth_token');
 
   Future<Map<String, String>> _getAuthHeaders() async {
     final token = await _getToken();
-    if (token == null) throw Exception('Token not found. Please login again.');
+    if (token == null) {
+      throw Exception('Token not found. Please login again.');
+    }
     return {
       'Content-Type': 'application/json; charset=UTF-8',
       'Accept': 'application/json',
@@ -35,7 +38,9 @@ class ApiService {
   };
 
   bool _isJsonResponse(http.Response r) =>
-      (r.headers['content-type'] ?? '').toLowerCase().contains('application/json');
+      (r.headers['content-type'] ?? '')
+          .toLowerCase()
+          .contains('application/json');
 
   dynamic _tryDecodeJson(String body) {
     if (body.isEmpty) return null;
@@ -56,7 +61,8 @@ class ApiService {
       .replaceAll('"', "'")
       .trim();
 
-  void _debugRequest(String label, Uri uri, Map<String, String> headers, String? body) {
+  void _debugRequest(
+      String label, Uri uri, Map<String, String> headers, String? body) {
     // ignore: avoid_print
     print('[$label] ${uri.toString()}');
     // ignore: avoid_print
@@ -76,38 +82,31 @@ class ApiService {
     print('[$label] body: ${_firstChars(response.body)}');
   }
 
-  // --- Helper untuk mengambil pesan error dengan aman ---
+  // Helper untuk mengambil pesan error dengan aman dari JSON Laravel
   String _getErrorMessage(Map<String, dynamic> json) {
-    // Cek 'message' dulu
     final message = json['message'];
-    if (message is String) {
-      return message;
-    }
+    if (message is String) return message;
 
-    // Cek 'errors'
     final errors = json['errors'];
     if (errors is Map) {
       final firstErrorValue = errors.values.first;
       if (firstErrorValue is List && firstErrorValue.isNotEmpty) {
         final firstError = firstErrorValue[0];
-        if (firstError is String) {
-          return firstError;
-        }
+        if (firstError is String) return firstError;
       }
     }
 
-    // Fallback
     return 'Terjadi kesalahan yang tidak diketahui';
   }
 
-
   /* ========================= AUTH ========================= */
+
   Future<Map<String, dynamic>> login(String email, String password) async {
-    // ... (kode login tidak berubah)
     try {
       final uri = Uri.parse('${_baseUrl}auth/login');
       final headers = _getJsonHeaders();
       final body = jsonEncode({'email': email, 'password': password});
+
       _debugRequest('LOGIN', uri, headers, body);
       final res = await http.post(uri, headers: headers, body: body);
       _debugResponse('LOGIN', res);
@@ -117,8 +116,11 @@ class ApiService {
         if (json is Map<String, dynamic>) return json;
         throw Exception('Respon login bukan JSON.');
       }
+
       final json = _tryDecodeJson(res.body);
-      if (json is Map<String, dynamic>) throw Exception(_getErrorMessage(json));
+      if (json is Map<String, dynamic>) {
+        throw Exception(_getErrorMessage(json));
+      }
       throw Exception('Login gagal (HTTP ${res.statusCode}).');
     } catch (e) {
       throw Exception('Gagal login: ${e.toString()}');
@@ -132,7 +134,6 @@ class ApiService {
     required String password,
     required String passwordConfirmation,
   }) async {
-    // ... (kode register tidak berubah)
     try {
       final uri = Uri.parse('${_baseUrl}auth/register');
       final headers = _getJsonHeaders();
@@ -143,6 +144,7 @@ class ApiService {
         'password': password,
         'password_confirmation': passwordConfirmation,
       });
+
       _debugRequest('REGISTER', uri, headers, body);
       final res = await http.post(uri, headers: headers, body: body);
       _debugResponse('REGISTER', res);
@@ -152,8 +154,11 @@ class ApiService {
         if (json is Map<String, dynamic>) return json;
         throw Exception('Respon registrasi bukan JSON.');
       }
+
       final json = _tryDecodeJson(res.body);
-      if (json is Map<String, dynamic>) throw Exception(_getErrorMessage(json));
+      if (json is Map<String, dynamic>) {
+        throw Exception(_getErrorMessage(json));
+      }
       throw Exception('Registrasi gagal (HTTP ${res.statusCode}).');
     } catch (e) {
       throw Exception('Gagal registrasi: ${e.toString()}');
@@ -161,13 +166,14 @@ class ApiService {
   }
 
   Future<void> logout() async {
-    // ... (kode logout tidak berubah)
     try {
       final uri = Uri.parse('${_baseUrl}auth/logout');
       final headers = await _getAuthHeaders();
+
       _debugRequest('LOGOUT', uri, headers, null);
       final res = await http.post(uri, headers: headers);
       _debugResponse('LOGOUT', res);
+
       if (res.statusCode != 200) {
         // ignore: avoid_print
         print('Server logout failed with status: ${res.statusCode}');
@@ -179,10 +185,10 @@ class ApiService {
   }
 
   Future<User> fetchUser() async {
-    // ... (kode fetchUser tidak berubah)
     try {
       final uri = Uri.parse('${_baseUrl}auth/user');
       final headers = await _getAuthHeaders();
+
       _debugRequest('FETCH_USER', uri, headers, null);
       final res = await http.get(uri, headers: headers);
       _debugResponse('FETCH_USER', res);
@@ -190,24 +196,21 @@ class ApiService {
       if (res.statusCode == 200 && _isJsonResponse(res)) {
         final json = _tryDecodeJson(res.body);
 
-        // --- PERBAIKAN ---
-        // User ada di dalam key 'data'
         if (json is Map<String, dynamic> && json['data'] is Map<String, dynamic>) {
           return User.fromJson(json['data'] as Map<String, dynamic>);
         }
-        // --- AKHIR PERBAIKAN ---
 
         throw Exception('Respon user tidak valid.');
       } else if (res.statusCode == 401) {
         throw Exception('Unauthorized');
       }
+
       throw Exception('Gagal mengambil data user. Status: ${res.statusCode}');
     } catch (e) {
       throw Exception('Gagal mengambil data user: ${e.toString()}');
     }
   }
 
-  // --- (METHOD BARU YANG DITAMBAHKAN) ---
   Future<Map<String, dynamic>> changePassword({
     required String currentPassword,
     required String newPassword,
@@ -215,7 +218,6 @@ class ApiService {
   }) async {
     try {
       final uri = Uri.parse('${_baseUrl}auth/change-password');
-      // Panggil _getAuthHeaders() karena ini adalah route yang butuh login
       final headers = await _getAuthHeaders();
 
       final body = jsonEncode({
@@ -230,29 +232,25 @@ class ApiService {
 
       final json = _tryDecodeJson(res.body);
 
-      // Status 200 berarti sukses
       if (res.statusCode == 200) {
-        // --- PERBAIKAN ---
-        // Respon sukses dari trait kita memiliki 'message'
         if (json is Map<String, dynamic> && json['message'] != null) {
-          return json; // Kembalikan {'message': '...'}
+          return json;
         }
-        // --- AKHIR PERBAIKAN ---
         return {};
       }
 
-      // Handle error validasi (422) atau lainnya
-      if (json is Map<String, dynamic>) throw Exception(_getErrorMessage(json));
+      if (json is Map<String, dynamic>) {
+        throw Exception(_getErrorMessage(json));
+      }
 
       throw Exception('Gagal ganti password (HTTP ${res.statusCode}).');
     } catch (e) {
-      // Lempar error yang sudah bersih
-      throw Exception(e.toString().replaceFirst("Exception: ", ""));
+      throw Exception(e.toString().replaceFirst('Exception: ', ''));
     }
   }
 
   /* ======================= WORKSHOP ======================= */
-  // ... (Sisa kode tidak berubah) ...
+
   Future<Workshop> createWorkshop({
     required String name,
     required String description,
@@ -290,6 +288,7 @@ class ApiService {
         'closing_time': closingTime,
         'operational_days': operationalDays,
       });
+
       _debugRequest('CREATE_WORKSHOP', uri, headers, body);
       final res = await http.post(uri, headers: headers, body: body);
       _debugResponse('CREATE_WORKSHOP', res);
@@ -297,17 +296,18 @@ class ApiService {
       if (res.statusCode == 201 && _isJsonResponse(res)) {
         final json = _tryDecodeJson(res.body);
 
-        // --- PERBAIKAN ---
-        // Workshop ada di dalam key 'data'
         if (json is Map<String, dynamic> && json['data'] is Map<String, dynamic>) {
           return Workshop.fromJson(json['data'] as Map<String, dynamic>);
         }
-        // --- AKHIR PERBAIKAN ---
 
         throw Exception('Respon create workshop tidak valid.');
       }
+
       final json = _tryDecodeJson(res.body);
-      if (json is Map<String, dynamic>) throw Exception(_getErrorMessage(json));
+      if (json is Map<String, dynamic>) {
+        throw Exception(_getErrorMessage(json));
+      }
+
       throw Exception('Gagal membuat bengkel (HTTP ${res.statusCode}).');
     } catch (e) {
       throw Exception('Gagal membuat bengkel: ${e.toString()}');
@@ -322,7 +322,9 @@ class ApiService {
     try {
       final uri = Uri.parse('${_baseUrl}owners/documents');
       final headers = await _getAuthHeaders();
-      final body = jsonEncode({'workshop_uuid': workshopUuid, 'nib': nib, 'npwp': npwp});
+      final body =
+      jsonEncode({'workshop_uuid': workshopUuid, 'nib': nib, 'npwp': npwp});
+
       _debugRequest('CREATE_DOCUMENT', uri, headers, body);
       final res = await http.post(uri, headers: headers, body: body);
       _debugResponse('CREATE_DOCUMENT', res);
@@ -330,24 +332,29 @@ class ApiService {
       if (res.statusCode == 201 && _isJsonResponse(res)) {
         final json = _tryDecodeJson(res.body);
 
-        // --- PERBAIKAN ---
-        // Dokumen ada di dalam key 'data'
         if (json is Map<String, dynamic> && json['data'] is Map<String, dynamic>) {
-          return WorkshopDocument.fromJson(json['data'] as Map<String, dynamic>);
+          return WorkshopDocument.fromJson(
+              json['data'] as Map<String, dynamic>);
         }
-        // --- AKHIR PERBAIKAN ---
 
         throw Exception('Respon create document tidak valid.');
       }
+
       final json = _tryDecodeJson(res.body);
-      if (json is Map<String, dynamic>) throw Exception(_getErrorMessage(json));
-      throw Exception('Gagal menyimpan dokumen: ${e.toString().replaceFirst("Exception: ", "")}');
+      if (json is Map<String, dynamic>) {
+        throw Exception(_getErrorMessage(json));
+      }
+
+      throw Exception('Gagal menyimpan dokumen: '
+          '${e.toString().replaceFirst("Exception: ", "")}');
     } catch (e) {
-      throw Exception('Gagal menyimpan dokumen: ${e.toString().replaceFirst("Exception: ", "")}');
+      throw Exception('Gagal menyimpan dokumen: '
+          '${e.toString().replaceFirst("Exception: ", "")}');
     }
   }
 
   /* ======================= EMPLOYEE ======================= */
+
   Future<Employment> createEmployee({
     required String name,
     required String username,
@@ -367,8 +374,10 @@ class ApiService {
         'email': email.trim(),
         'role': role,
         'workshop_uuid': workshopUuid,
-        if (specialist != null && specialist.trim().isNotEmpty) 'specialist': _sanitize(specialist),
-        if (jobdesk != null && jobdesk.trim().isNotEmpty) 'jobdesk': _sanitize(jobdesk),
+        if (specialist != null && specialist.trim().isNotEmpty)
+          'specialist': _sanitize(specialist),
+        if (jobdesk != null && jobdesk.trim().isNotEmpty)
+          'jobdesk': _sanitize(jobdesk),
       };
       final body = jsonEncode(bodyMap);
 
@@ -377,9 +386,6 @@ class ApiService {
       _debugResponse('CREATE_EMPLOYEE', res);
 
       final ok = res.statusCode == 200 || res.statusCode == 201;
-
-      // --- PERBAIKAN ---
-      // Logika penanganan error dipindahkan ke sini agar lebih aman
       if (!ok) {
         if (_isJsonResponse(res)) {
           final j = _tryDecodeJson(res.body);
@@ -387,53 +393,61 @@ class ApiService {
             throw Exception(_getErrorMessage(j));
           }
         }
-        throw Exception('Gagal membuat karyawan (HTTP ${res.statusCode}). Body: ${_firstChars(res.body)}');
+        throw Exception(
+            'Gagal membuat karyawan (HTTP ${res.statusCode}). Body: ${_firstChars(res.body)}');
       }
-      // --- AKHIR PERBAIKAN ---
 
       if (!_isJsonResponse(res)) throw Exception('Server mengembalikan non-JSON.');
       final decoded = _tryDecodeJson(res.body);
 
-      // KODE INI SUDAH BENAR
-      final map = (decoded is Map<String, dynamic> && decoded['data'] is Map<String, dynamic>)
+      final map =
+      (decoded is Map<String, dynamic> && decoded['data'] is Map<String, dynamic>)
           ? decoded['data'] as Map<String, dynamic>
           : decoded as Map<String, dynamic>;
 
       return Employment.fromJson(map);
     } catch (e) {
-      throw Exception('Gagal membuat karyawan: ${e.toString().replaceFirst("Exception: ", "")}');
+      throw Exception('Gagal membuat karyawan: '
+          '${e.toString().replaceFirst("Exception: ", "")}');
     }
   }
 
   Future<List<Employment>> fetchOwnerEmployees() async {
-    // ... (kode fetchOwnerEmployees tidak berubah)
     try {
       final uri = Uri.parse('${_baseUrl}owners/employee');
       final headers = await _getAuthHeaders();
-      _debugRequest('FETCH_EMPLOYEES', uri, headers, null);
 
+      _debugRequest('FETCH_EMPLOYEES', uri, headers, null);
       final res = await http.get(uri, headers: headers);
       _debugResponse('FETCH_EMPLOYEES', res);
 
       if (res.statusCode == 401) {
         throw Exception('Akses ditolak. Silakan login kembali.');
       }
+
       final ok = res.statusCode == 200 || res.statusCode == 201;
-      if (!ok) throw Exception('Gagal mengambil data employee. Status: ${res.statusCode}');
+      if (!ok) {
+        throw Exception(
+            'Gagal mengambil data employee. Status: ${res.statusCode}');
+      }
+
       if (!_isJsonResponse(res)) throw Exception('Respon bukan JSON.');
 
       final decoded = _tryDecodeJson(res.body);
 
-      // KODE INI SUDAH BENAR
       final listJson = decoded is List
           ? decoded
           : (decoded is Map<String, dynamic> ? (decoded['data'] ?? []) : []);
 
       if (listJson is! List) return <Employment>[];
 
-      return listJson.whereType<Map<String, dynamic>>().map((e) => Employment.fromJson(e)).toList();
+      return listJson
+          .whereType<Map<String, dynamic>>()
+          .map((e) => Employment.fromJson(e))
+          .toList();
     } catch (e) {
-      throw Exception('Gagal mengambil data employee: ${e.toString().replaceFirst("Exception: ", "")}');
+      throw Exception('Gagal mengambil data employee: '
+          '${e.toString().replaceFirst("Exception: ", "")}');
     }
   }
 
@@ -449,7 +463,6 @@ class ApiService {
         String? jobdesk,
         String? status,
       }) async {
-    // ... (kode updateEmployee tidak berubah)
     try {
       final uri = Uri.parse('${_baseUrl}owners/employee/$id');
       final headers = await _getAuthHeaders();
@@ -459,7 +472,9 @@ class ApiService {
       if (username != null) map['username'] = username;
       if (email != null) map['email'] = email;
       if (password != null) map['password'] = password;
-      if (passwordConfirmation != null) map['password_confirmation'] = passwordConfirmation;
+      if (passwordConfirmation != null) {
+        map['password_confirmation'] = passwordConfirmation;
+      }
       if (role != null) map['role'] = role;
       if (specialist != null) map['specialist'] = _sanitize(specialist);
       if (jobdesk != null) map['jobdesk'] = _sanitize(jobdesk);
@@ -471,7 +486,6 @@ class ApiService {
       final res = await http.put(uri, headers: headers, body: body);
       _debugResponse('UPDATE_EMPLOYEE', res);
 
-      // --- PERBAIKAN ---
       if (!(res.statusCode == 200 || res.statusCode == 201)) {
         final j = _tryDecodeJson(res.body);
         if (j is Map<String, dynamic>) {
@@ -479,69 +493,130 @@ class ApiService {
         }
         throw Exception('Gagal update karyawan (HTTP ${res.statusCode}).');
       }
-      // --- AKHIR PERBAIKAN ---
 
       if (!_isJsonResponse(res)) throw Exception('Respon update bukan JSON.');
       final j = _tryDecodeJson(res.body);
 
-      // --- PERBAIKAN ---
-      // Data employee ada di dalam key 'data'
       if (j is Map<String, dynamic> && j['data'] is Map<String, dynamic>) {
         return Employment.fromJson(j['data'] as Map<String, dynamic>);
       }
-      // --- AKHIR PERBAIKAN ---
 
       throw Exception('Respon update bukan objek JSON.');
     } catch (e) {
-      throw Exception('Gagal update karyawan: ${e.toString().replaceFirst("Exception: ", "")}');
+      throw Exception('Gagal update karyawan: '
+          '${e.toString().replaceFirst("Exception: ", "")}');
     }
   }
 
   Future<void> updateEmployeeStatus(String id, String status) async {
-    // ... (kode updateEmployeeStatus tidak berubah)
     try {
       final uri = Uri.parse('${_baseUrl}owners/employee/$id/status');
       final headers = await _getAuthHeaders();
       final body = jsonEncode({'status': status});
+
       _debugRequest('UPDATE_EMP_STATUS', uri, headers, body);
       final res = await http.patch(uri, headers: headers, body: body);
       _debugResponse('UPDATE_EMP_STATUS', res);
 
-      // --- PERBAIKAN ---
       if (!(res.statusCode == 200 || res.statusCode == 204)) {
         final j = _tryDecodeJson(res.body);
-        if (j is Map<String, dynamic>) throw Exception(_getErrorMessage(j));
+        if (j is Map<String, dynamic>) {
+          throw Exception(_getErrorMessage(j));
+        }
         throw Exception('Gagal mengubah status (HTTP ${res.statusCode}).');
       }
-      // --- AKHIR PERBAIKAN ---
     } catch (e) {
-      throw Exception('Gagal mengubah status: ${e.toString().replaceFirst("Exception: ", "")}');
+      throw Exception('Gagal mengubah status: '
+          '${e.toString().replaceFirst("Exception: ", "")}');
     }
   }
 
   Future<void> deleteEmployee(String id) async {
-    // ... (kode deleteEmployee tidak berubah)
     try {
       final uri = Uri.parse('${_baseUrl}owners/employee/$id');
       final headers = await _getAuthHeaders();
+
       _debugRequest('DELETE_EMPLOYEE', uri, headers, null);
       final res = await http.delete(uri, headers: headers);
       _debugResponse('DELETE_EMPLOYEE', res);
 
-      // --- PERBAIKAN ---
       if (res.statusCode != 204) {
         final j = _tryDecodeJson(res.body);
-        if (j is Map<String, dynamic>) throw Exception(_getErrorMessage(j));
+        if (j is Map<String, dynamic>) {
+          throw Exception(_getErrorMessage(j));
+        }
         throw Exception('Gagal menghapus karyawan (HTTP ${res.statusCode}).');
       }
-      // --- AKHIR PERBAIKAN ---
     } catch (e) {
-      throw Exception('Gagal menghapus karyawan: ${e.toString().replaceFirst("Exception: ", "")}');
+      throw Exception('Gagal menghapus karyawan: '
+          '${e.toString().replaceFirst("Exception: ", "")}');
     }
   }
 
   /* ======================== SERVICES ======================= */
-  // ... (Sisa kode services tidak berubah) ...
+  //
+  // 1) fetchServicesRaw  -> dipakai untuk pagination (mengembalikan map lengkap Laravel paginator)
+  // 2) fetchServices     -> kompatibel lama, hanya list<ServiceModel> (pakai owners/services)
+  // 3) fetchServiceDetail, updateServiceStatus, createServiceDummy
+
+  /// PANGGILAN BARU: untuk pagination (dipakai ServiceProvider di ListWorkPage)
+  Future<Map<String, dynamic>> fetchServicesRaw({
+    String? status,
+    bool includeExtras = true,
+    String? workshopUuid,
+    String? code,
+    String? dateFrom,
+    String? dateTo,
+    int page = 1,
+    int perPage = 10,
+  }) async {
+    try {
+      final params = <String, String>{};
+      if (includeExtras) params['include'] = 'extras';
+      if (status != null && status.isNotEmpty) params['status'] = status;
+      if (workshopUuid != null && workshopUuid.isNotEmpty) {
+        params['workshop_uuid'] = workshopUuid;
+      }
+      if (code != null && code.isNotEmpty) params['code'] = code;
+      if (dateFrom != null && dateFrom.isNotEmpty) params['date_from'] = dateFrom;
+      if (dateTo != null && dateTo.isNotEmpty) params['date_to'] = dateTo;
+
+      params['page'] = page.toString();
+      params['per_page'] = perPage.toString();
+
+      // route: owners/services (sesuai backend yang Anda pakai)
+      final uri = Uri.parse('${_baseUrl}owners/services')
+          .replace(queryParameters: params);
+      final headers = await _getAuthHeaders();
+
+      _debugRequest('FETCH_SERVICES_RAW', uri, headers, null);
+      final res = await http.get(uri, headers: headers);
+      _debugResponse('FETCH_SERVICES_RAW', res);
+
+      if (!(res.statusCode == 200 || res.statusCode == 201)) {
+        final j = _tryDecodeJson(res.body);
+        if (j is Map<String, dynamic>) {
+          throw Exception(_getErrorMessage(j));
+        }
+        throw Exception(
+            'Gagal mengambil data service (HTTP ${res.statusCode}).');
+      }
+
+      if (!_isJsonResponse(res)) throw Exception('Respon bukan JSON.');
+
+      final j = _tryDecodeJson(res.body);
+      if (j is Map<String, dynamic>) {
+        return j;
+      }
+
+      throw Exception('Respon layanan tidak valid.');
+    } catch (e) {
+      throw Exception('Gagal mengambil data service: '
+          '${e.toString().replaceFirst("Exception: ", "")}');
+    }
+  }
+
+  /// Fungsi lama: ambil list ServiceModel saja (tanpa paging di sisi client)
   Future<List<ServiceModel>> fetchServices({
     String? status,
     bool includeExtras = true,
@@ -554,37 +629,45 @@ class ApiService {
       final params = <String, String>{};
       if (includeExtras) params['include'] = 'extras';
       if (status != null && status.isNotEmpty) params['status'] = status;
-      if (workshopUuid != null && workshopUuid.isNotEmpty) params['workshop_uuid'] = workshopUuid;
+      if (workshopUuid != null && workshopUuid.isNotEmpty) {
+        params['workshop_uuid'] = workshopUuid;
+      }
       if (code != null && code.isNotEmpty) params['code'] = code;
       if (dateFrom != null && dateFrom.isNotEmpty) params['date_from'] = dateFrom;
       if (dateTo != null && dateTo.isNotEmpty) params['date_to'] = dateTo;
 
-      final uri = Uri.parse('${_baseUrl}owners/services').replace(queryParameters: params);
+      final uri = Uri.parse('${_baseUrl}owners/services')
+          .replace(queryParameters: params);
       final headers = await _getAuthHeaders();
 
       _debugRequest('FETCH_SERVICES', uri, headers, null);
       final res = await http.get(uri, headers: headers);
       _debugResponse('FETCH_SERVICES', res);
 
-      // --- PERBAIKAN ---
       if (!(res.statusCode == 200 || res.statusCode == 201)) {
         final j = _tryDecodeJson(res.body);
-        if (j is Map<String, dynamic>) throw Exception(_getErrorMessage(j));
-        throw Exception('Gagal mengambil data service (HTTP ${res.statusCode}).');
+        if (j is Map<String, dynamic>) {
+          throw Exception(_getErrorMessage(j));
+        }
+        throw Exception(
+            'Gagal mengambil data service (HTTP ${res.statusCode}).');
       }
-      // --- AKHIR PERBAIKAN ---
+
       if (!_isJsonResponse(res)) throw Exception('Respon bukan JSON.');
 
       final j = _tryDecodeJson(res.body);
 
-      // KODE INI SUDAH BENAR
       final list = (j is Map && j['data'] is List)
           ? (j['data'] as List)
           : (j is List ? j : const []);
 
-      return list.whereType<Map<String, dynamic>>().map(ServiceModel.fromJson).toList();
+      return list
+          .whereType<Map<String, dynamic>>()
+          .map(ServiceModel.fromJson)
+          .toList();
     } catch (e) {
-      throw Exception('Gagal mengambil data service: ${e.toString().replaceFirst("Exception: ", "")}');
+      throw Exception('Gagal mengambil data service: '
+          '${e.toString().replaceFirst("Exception: ", "")}');
     }
   }
 
@@ -597,25 +680,27 @@ class ApiService {
       final res = await http.get(uri, headers: headers);
       _debugResponse('SERVICE_DETAIL', res);
 
-      // --- PERBAIKAN ---
       if (!(res.statusCode == 200 || res.statusCode == 201)) {
         final j = _tryDecodeJson(res.body);
-        if (j is Map<String, dynamic>) throw Exception(_getErrorMessage(j));
-        throw Exception('Gagal mengambil detail service (HTTP ${res.statusCode}).');
+        if (j is Map<String, dynamic>) {
+          throw Exception(_getErrorMessage(j));
+        }
+        throw Exception(
+            'Gagal mengambil detail service (HTTP ${res.statusCode}).');
       }
-      // --- AKHIR PERBAIKAN ---
+
       if (!_isJsonResponse(res)) throw Exception('Respon bukan JSON.');
 
       final j = _tryDecodeJson(res.body);
 
-      // KODE INI SUDAH BENAR
       final map = (j is Map && j['data'] is Map)
           ? Map<String, dynamic>.from(j['data'])
           : Map<String, dynamic>.from(j as Map);
 
       return ServiceModel.fromJson(map);
     } catch (e) {
-      throw Exception('Gagal mengambil detail service: ${e.toString().replaceFirst("Exception: ", "")}');
+      throw Exception('Gagal mengambil detail service: '
+          '${e.toString().replaceFirst("Exception: ", "")}');
     }
   }
 
@@ -629,15 +714,16 @@ class ApiService {
       final res = await http.patch(uri, headers: headers, body: body);
       _debugResponse('UPDATE_SERVICE', res);
 
-      // --- PERBAIKAN ---
       if (!(res.statusCode == 200 || res.statusCode == 204)) {
         final j = _tryDecodeJson(res.body);
-        if (j is Map<String, dynamic>) throw Exception(_getErrorMessage(j));
+        if (j is Map<String, dynamic>) {
+          throw Exception(_getErrorMessage(j));
+        }
         throw Exception('Gagal update status (HTTP ${res.statusCode}).');
       }
-      // --- AKHIR PERBAIKAN ---
     } catch (e) {
-      throw Exception('Gagal update status: ${e.toString().replaceFirst("Exception: ", "")}');
+      throw Exception('Gagal update status: '
+          '${e.toString().replaceFirst("Exception: ", "")}');
     }
   }
 
@@ -663,7 +749,8 @@ class ApiService {
         'description': description,
         'price': price,
         'scheduled_date': scheduledDate.toIso8601String(),
-        if (estimatedTime != null) 'estimated_time': estimatedTime.toIso8601String(),
+        if (estimatedTime != null)
+          'estimated_time': estimatedTime.toIso8601String(),
         'status': status,
       });
 
@@ -671,7 +758,6 @@ class ApiService {
       final res = await http.post(uri, headers: headers, body: body);
       _debugResponse('CREATE_SERVICE', res);
 
-      // --- PERBAIKAN ---
       if (!(res.statusCode == 200 || res.statusCode == 201)) {
         final j = _tryDecodeJson(res.body);
         if (j is Map<String, dynamic>) {
@@ -679,19 +765,18 @@ class ApiService {
         }
         throw Exception('Gagal membuat service (HTTP ${res.statusCode}).');
       }
-      // --- AKHIR PERBAIKAN ---
 
       if (!_isJsonResponse(res)) throw Exception('Respon bukan JSON.');
       final j = _tryDecodeJson(res.body);
 
-      // KODE INI SUDAH BENAR
       final map = (j is Map && j['data'] is Map)
           ? j['data'] as Map<String, dynamic>
           : j as Map<String, dynamic>;
 
       return ServiceModel.fromJson(map);
     } catch (e) {
-      throw Exception('Gagal membuat service: ${e.toString().replaceFirst("Exception: ", "")}');
+      throw Exception('Gagal membuat service: '
+          '${e.toString().replaceFirst("Exception: ", "")}');
     }
   }
 
@@ -699,8 +784,8 @@ class ApiService {
 
   Future<List<Voucher>> fetchVouchers({String? status}) async {
     try {
-      final uri = Uri.parse('${_baseUrl}owners/vouchers').replace(
-          queryParameters: status != null ? {'status': status} : {});
+      final uri = Uri.parse('${_baseUrl}owners/vouchers')
+          .replace(queryParameters: status != null ? {'status': status} : {});
 
       final headers = await _getAuthHeaders();
       _debugRequest('FETCH_VOUCHERS', uri, headers, null);
@@ -714,7 +799,10 @@ class ApiService {
             ? (j['data'] as List)
             : (j is List ? j : const []);
 
-        return list.whereType<Map<String, dynamic>>().map(Voucher.fromJson).toList();
+        return list
+            .whereType<Map<String, dynamic>>()
+            .map(Voucher.fromJson)
+            .toList();
       }
       throw Exception('Gagal mengambil data voucher (HTTP ${res.statusCode})');
     } catch (e) {
@@ -729,16 +817,16 @@ class ApiService {
     required String discountValue,
     required String quota,
     required String minTransaction,
-    required String validFrom, // Format yyyy-MM-dd
-    required String validUntil, // Format yyyy-MM-dd
+    required String validFrom, // yyyy-MM-dd
+    required String validUntil, // yyyy-MM-dd
     File? image,
   }) async {
     try {
       final uri = Uri.parse('${_baseUrl}owners/vouchers');
       final headers = await _getAuthHeaders();
-      headers.remove('Content-Type'); // Multipart request sets its own boundary
+      headers.remove('Content-Type'); // Multipart set boundary sendiri
 
-      var request = http.MultipartRequest('POST', uri);
+      final request = http.MultipartRequest('POST', uri);
       request.headers.addAll(headers);
 
       request.fields['workshop_uuid'] = workshopUuid;
@@ -752,25 +840,26 @@ class ApiService {
       request.fields['is_active'] = '1';
 
       if (image != null) {
-        request.files.add(await http.MultipartFile.fromPath('image', image.path));
+        request.files
+            .add(await http.MultipartFile.fromPath('image', image.path));
       }
 
-      _debugRequest('CREATE_VOUCHER', uri, headers, request.fields.toString());
+      _debugRequest(
+          'CREATE_VOUCHER', uri, headers, request.fields.toString());
 
       final streamedResponse = await request.send();
       final res = await http.Response.fromStream(streamedResponse);
       _debugResponse('CREATE_VOUCHER', res);
 
-      if (res.statusCode == 201) {
-        return true;
-      }
+      if (res.statusCode == 201) return true;
 
       final j = _tryDecodeJson(res.body);
-      if (j is Map<String, dynamic>) throw Exception(_getErrorMessage(j));
+      if (j is Map<String, dynamic>) {
+        throw Exception(_getErrorMessage(j));
+      }
       throw Exception('Gagal membuat voucher (HTTP ${res.statusCode})');
-
     } catch (e) {
-      throw Exception(e.toString().replaceFirst("Exception: ", ""));
+      throw Exception(e.toString().replaceFirst('Exception: ', ''));
     }
   }
 
@@ -790,12 +879,10 @@ class ApiService {
       final headers = await _getAuthHeaders();
       headers.remove('Content-Type');
 
-      var request = http.MultipartRequest('POST', uri);
+      final request = http.MultipartRequest('POST', uri);
       request.headers.addAll(headers);
 
-      // Trik Laravel agar dianggap sebagai PATCH
       request.fields['_method'] = 'PATCH';
-
       request.fields['title'] = title;
       request.fields['code_voucher'] = codeVoucher;
       request.fields['discount_value'] = discountValue;
@@ -803,28 +890,28 @@ class ApiService {
       request.fields['min_transaction'] = minTransaction;
       request.fields['valid_from'] = validFrom;
       request.fields['valid_until'] = validUntil;
-      // is_active biarkan default atau handle terpisah jika perlu
 
       if (image != null) {
-        request.files.add(await http.MultipartFile.fromPath('image', image.path));
+        request.files
+            .add(await http.MultipartFile.fromPath('image', image.path));
       }
 
-      _debugRequest('UPDATE_VOUCHER', uri, headers, request.fields.toString());
+      _debugRequest(
+          'UPDATE_VOUCHER', uri, headers, request.fields.toString());
 
       final streamedResponse = await request.send();
       final res = await http.Response.fromStream(streamedResponse);
       _debugResponse('UPDATE_VOUCHER', res);
 
-      if (res.statusCode == 200) {
-        return true;
-      }
+      if (res.statusCode == 200) return true;
 
       final j = _tryDecodeJson(res.body);
-      if (j is Map<String, dynamic>) throw Exception(_getErrorMessage(j));
+      if (j is Map<String, dynamic>) {
+        throw Exception(_getErrorMessage(j));
+      }
       throw Exception('Gagal update voucher (HTTP ${res.statusCode})');
-
     } catch (e) {
-      throw Exception(e.toString().replaceFirst("Exception: ", ""));
+      throw Exception(e.toString().replaceFirst('Exception: ', ''));
     }
   }
 
