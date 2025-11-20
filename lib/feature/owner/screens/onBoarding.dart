@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -71,6 +72,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   // ================================
   // BUILD UTAMA
+  // (Tidak Berubah)
   // ================================
   @override
   Widget build(BuildContext context) {
@@ -135,6 +137,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   // ================================
   // HALAMAN ONBOARDING
+  // (Tidak Berubah)
   // ================================
   Widget _buildOnboardingPage(
       OnboardingPage page,
@@ -248,6 +251,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   // ================================
   // INDIKATOR TITIK
+  // (Tidak Berubah)
   // ================================
   Widget _buildPageIndicator() {
     return Row(
@@ -271,7 +275,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   // ================================
-  // TOMBOL BAWAH
+  // TOMBOL BAWAH (DENGAN PENINGKATAN LOGIKA)
   // ================================
   Widget _buildBottomButton(double availableHeight, double screenWidth) {
     final String buttonText = _pages[_currentPage].buttonText;
@@ -280,16 +284,32 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       width: screenWidth * 0.7,
       height: availableHeight * 0.052,
       child: ElevatedButton(
-        onPressed: () {
+        // --- (FUNGSI INI DI-UPGRADE MENJADI ASYNC) ---
+        onPressed: () async {
           if (_currentPage == _pages.length - 1) {
-            Navigator.pushReplacementNamed(context, '/login');
+
+            // --- PENINGKATAN LOGIKA ADA DI SINI ---
+            // 1. Dapatkan SharedPreferences
+            final prefs = await SharedPreferences.getInstance();
+
+            // 2. Simpan flag bahwa onboarding sudah selesai
+            await prefs.setBool('hasSeenOnboarding', true);
+
+            // 3. Navigasi ke login SETELAH disimpan
+            if (mounted) {
+              Navigator.pushReplacementNamed(context, '/login');
+            }
+            // --- AKHIR PENINGKATAN ---
+
           } else {
+            // (Logika ini tetap sama)
             _pageController.nextPage(
               duration: const Duration(milliseconds: 400),
               curve: Curves.easeInOutCubic,
             );
           }
         },
+        // --- (Sisa widget tidak berubah) ---
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFDC2626),
           shape: RoundedRectangleBorder(
@@ -312,6 +332,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
 // ===================================
 // MODEL DATA
+// (Tidak Berubah)
 // ===================================
 class OnboardingPage {
   final String title;

@@ -3,24 +3,26 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:bengkel_online_flutter/core/services/api_service.dart';
 import 'package:bengkel_online_flutter/core/models/user.dart';
 
-
 class AuthProvider with ChangeNotifier {
-  // --- STATE INTERNAL ---
   final ApiService _apiService = ApiService();
   final _storage = const FlutterSecureStorage();
-  String get role => _user?.role ?? 'guest';
-  bool hasRole(String r) => _user?.role == r;
 
   User? _user;
   String? _token;
   bool _isLoggedIn = false;
   String? _authError;
+  bool _mustChangePassword = false; // <- flag paksa ganti password
 
-  // --- GETTERS (Untuk dibaca oleh UI) ---
+  // --- GETTERS (Untuk dibaca UI) ---
   User? get user => _user;
   bool get isLoggedIn => _isLoggedIn;
   String? get token => _token;
   String? get authError => _authError;
+  String get role => _user?.role ?? 'guest';
+  bool hasRole(String r) => _user?.role == r;
+  bool get mustChangePassword => _mustChangePassword;
+
+  /* ================= AUTH ================ */
 
   Future<bool> register({
     required String name,
@@ -39,17 +41,25 @@ class AuthProvider with ChangeNotifier {
         passwordConfirmation: passwordConfirmation,
       );
 
-      // Jika register sukses, API Laravel mengembalikan token dan user
-      _token = response['access_token'];
-      _user = User.fromJson(response['user']);
-      _isLoggedIn = true;
+      final data = response['data'];
+      if (data is Map<String, dynamic>) {
+        _token = data['access_token'] as String?;
+        final userJson = data['user'];
+        if (userJson is Map<String, dynamic>) {
+          _user = User.fromJson(userJson);
+        }
+        _mustChangePassword = _extractMustChangePassword(data, userJson);
+      }
+      // --- AKHIR PERBAIKAN ---
 
-      // Simpan token dengan aman
-      await _storage.write(key: 'auth_token', value: _token);
+      _isLoggedIn = _token != null && _user != null;
+
+      if (_token != null) {
+        await _storage.write(key: 'auth_token', value: _token);
+      }
 
       notifyListeners();
-      return true;
-
+      return _isLoggedIn;
     } catch (e) {
       _isLoggedIn = false;
       _authError = e.toString().replaceFirst("Exception: ", "");
@@ -59,18 +69,31 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<bool> login(String email, String password) async {
-    _authError = null; // Reset error
+    _authError = null;
     try {
       final response = await _apiService.login(email, password);
 
-      _token = response['access_token'];
-      _user = User.fromJson(response['user']);
-      _isLoggedIn = true;
+      // --- PERBAIKAN ---
+      // Ambil 'data' dari response
+      final data = response['data'];
+      if (data is Map<String, dynamic>) {
+        _token = data['access_token'] as String?;
+        final userJson = data['user'];
+        if (userJson is Map<String, dynamic>) {
+          _user = User.fromJson(userJson);
+        }
+        _mustChangePassword = _extractMustChangePassword(data, userJson);
+      }
+      // --- AKHIR PERBAIKAN ---
 
-      await _storage.write(key: 'auth_token', value: _token);
+      _isLoggedIn = _token != null && _user != null;
+
+      if (_token != null) {
+        await _storage.write(key: 'auth_token', value: _token);
+      }
+
       notifyListeners();
-      return true;
-
+      return _isLoggedIn;
     } catch (e) {
       _isLoggedIn = false;
       _authError = e.toString().replaceFirst("Exception: ", "");
@@ -85,23 +108,26 @@ class AuthProvider with ChangeNotifier {
         await _apiService.logout();
       }
     } catch (e) {
-      print("Error calling API logout (ignored): $e");
+      // abaikan error logout server
     }
 
     _token = null;
     _user = null;
     _isLoggedIn = false;
     _authError = null;
+    _mustChangePassword = false;
     await _storage.delete(key: 'auth_token');
 
     notifyListeners();
   }
 
   Future<void> checkLoginStatus() async {
-    String? storedToken = await _storage.read(key: 'auth_token');
-
+    final storedToken = await _storage.read(key: 'auth_token');
     if (storedToken == null) {
       _isLoggedIn = false;
+      _user = null;
+      _token = null;
+      _mustChangePassword = false;
       notifyListeners();
       return;
     }
@@ -112,12 +138,37 @@ class AuthProvider with ChangeNotifier {
       _user = fetchedUser;
       _isLoggedIn = true;
       _authError = null;
-      notifyListeners();
 
+      // Cek flag mustChangePassword dari data user
+      _mustChangePassword = fetchedUser.mustChangePassword;
+
+      notifyListeners();
     } catch (e) {
-      print("checkLoginStatus failed: ${e.toString()}");
-      await logout();
+      await logout(); // token invalid → bersihkan
     }
   }
-}
 
+  /// Dipanggil dari ubahPasswordPage setelah API sukses
+  void clearMustChangePassword() {
+    _mustChangePassword = false;
+    notifyListeners();
+  }
+
+  /* ============== Helpers ============== */
+
+  bool _extractMustChangePassword(Map data, dynamic userJson) {
+    // Cek di dalam 'user' object dulu
+    if (userJson is Map<String, dynamic>) {
+      final u1 = userJson['must_change_password'];
+      if (u1 is bool) return u1;
+      final u2 = userJson['mustChangePassword'];
+      if (u2 is bool) return u2;
+    }
+    // Fallback ke top-level 'data'
+    final top1 = data['must_change_password'];
+    if (top1 is bool) return top1;
+    final top2 = data['mustChangePassword'];
+    if (top2 is bool) return top2;
+    return false;
+  }
+}

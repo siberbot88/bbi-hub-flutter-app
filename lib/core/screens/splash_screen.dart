@@ -1,24 +1,25 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+// (IMPORT LOGIKA GATING)
+import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
 
 enum CurtainStyle {
-  horizontalSplit, // kiri-kanan geser
-  verticalSplit,   // atas-bawah geser
-  circularReveal,  // lingkaran mengembang
-  diamondReveal,   // belah ketupat mengembang
+  horizontalSplit,
+  verticalSplit,
+  circularReveal,
+  diamondReveal,
 }
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({
     super.key,
     this.style = CurtainStyle.diamondReveal, // pilih gaya tirai di sini
-    this.nextRoute = '/onboarding',
-    this.holdAfterShow = const Duration(seconds: 3), // splash 2 stay
   });
-
+  // (nextRoute dan holdAfterShow dihapus karena sekarang dinamis)
   final CurtainStyle style;
-  final String nextRoute;
-  final Duration holdAfterShow;
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -26,16 +27,15 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
-  // Curtain open (easeInOut)
+  // (Durasi minimal splash screen agar logo + spinner terlihat)
+  static const _minHoldDuration = Duration(milliseconds: 2000);
+
+  // (Semua controller animasi Anda tetap sama)
   late final AnimationController _curtainCtrl;
   late final CurvedAnimation _curtainAnim;
-
-  // Content (logo + text)
-  late final AnimationController _logoCtrl;      // bounce
-  late final AnimationController _textFadeCtrl;  // dissolve
-  late final AnimationController _loadingFadeCtrl; // <-- spinner fade-in
-
-  // Close (dissolve + mini bounce)
+  late final AnimationController _logoCtrl;
+  late final AnimationController _textFadeCtrl;
+  late final AnimationController _loadingFadeCtrl;
   late final AnimationController _closeCtrl;
   late final Animation<double> _closeFade;
   late final Animation<double> _closeScale;
@@ -46,15 +46,15 @@ class _SplashScreenState extends State<SplashScreen>
 
     _curtainCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 600), // sesuai kodenya sekarang
+      duration: const Duration(milliseconds: 600),
     );
     _curtainAnim = CurvedAnimation(parent: _curtainCtrl, curve: Curves.easeInOut);
 
     _logoCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 800));
     _textFadeCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
-    _loadingFadeCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 300)); // <-- NEW
-
+    _loadingFadeCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
     _closeCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
+
     _closeFade = Tween<double>(begin: 1, end: 0).animate(
       CurvedAnimation(parent: _closeCtrl, curve: Curves.easeInOut),
     );
@@ -64,41 +64,88 @@ class _SplashScreenState extends State<SplashScreen>
       TweenSequenceItem(tween: Tween(begin: 0.98, end: 1.0), weight: 30),
     ]).animate(CurvedAnimation(parent: _closeCtrl, curve: Curves.easeInOut));
 
-    _runSequence();
+    // (Panggil sequence baru)
+    _runCombinedSequence();
   }
 
-  Future<void> _runSequence() async {
-    // After delay 800ms → open curtain
-    await Future.delayed(const Duration(milliseconds: 800));
+  // --- (LOGIKA INI DI-UPGRADE TOTAL) ---
+  Future<void> _runCombinedSequence() async {
+    // 1. Mulai logika "gating" DI LATAR BELAKANG.
+    //    Ini akan menjalankan checkLoginStatus() dan SharedPreferences.
+    final routeFuture = _decideNextRoute();
+
+    // 2. Jalankan animasi visual Anda
+    await Future.delayed(const Duration(milliseconds: 800)); // Delay awal
     if (!mounted) return;
-    await _curtainCtrl.forward();
+    await _curtainCtrl.forward(); // Buka tirai
 
-    // Show content
-    _logoCtrl.forward();        // bounce logo
-    _textFadeCtrl.forward();    // dissolve teks
-    _loadingFadeCtrl.forward(); // <-- spinner muncul saat menunggu
+    // Tampilkan konten (logo, teks, dan spinner)
+    _logoCtrl.forward();
+    _textFadeCtrl.forward();
+    _loadingFadeCtrl.forward(); // <-- Spinner kini berputar selagi logic berjalan
 
-    // Stay (Splash 2)
-    await Future.delayed(widget.holdAfterShow);
+    // 3. Tunggu KEDUA proses selesai
+    //    - Animasi harus terlihat minimal 2 detik (_minHoldDuration)
+    //    - Logika _decideNextRoute() harus selesai
+    final results = await Future.wait([
+      Future.delayed(_minHoldDuration),
+      routeFuture,
+    ]);
 
-    // Close + navigate
-    await _closeCtrl.forward();
+    // 4. Ambil rute yang sudah ditentukan
+    final String nextRoute = results[1] as String;
+
+    // 5. Tutup animasi dan navigasi
     if (!mounted) return;
-    Navigator.of(context).pushReplacementNamed(widget.nextRoute);
+    await _closeCtrl.forward(); // Animasi tutup
+
+    if (!mounted) return;
+    Navigator.of(context).pushReplacementNamed(nextRoute);
   }
+
+  // --- (LOGIKA GATING DARI SPLASH SCREEN SEBELUMNYA) ---
+  Future<String> _decideNextRoute() async {
+    try {
+      final auth = context.read<AuthProvider>();
+      final prefs = await SharedPreferences.getInstance();
+      final bool hasSeenOnboarding = prefs.getBool('hasSeenOnboarding') ?? false;
+
+      // Ini adalah 'pekerjaan' sebenarnya, cek token & ambil data user
+      await auth.checkLoginStatus();
+
+      if (auth.isLoggedIn) {
+        // KASUS 1: User sudah login
+        return '/gate'; // Langsung ke gerbang utama (RoleEntry)
+      } else {
+        // KASUS 2: User TIDAK login
+        if (hasSeenOnboarding) {
+          // Pernah lihat onboarding, tapi belum login (atau sudah logout)
+          return '/login';
+        } else {
+          // Belum pernah buka aplikasi sama sekali
+          return '/onboarding';
+        }
+      }
+    } catch (e) {
+      // Jika gagal (misal: tidak ada internet), arahkan ke login
+      return '/login';
+    }
+  }
+  // --- (AKHIR DARI LOGIKA BARU) ---
 
   @override
   void dispose() {
     _curtainCtrl.dispose();
     _logoCtrl.dispose();
     _textFadeCtrl.dispose();
-    _loadingFadeCtrl.dispose(); // <-- NEW
+    _loadingFadeCtrl.dispose();
     _closeCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    // (TAMPILAN BUILD ANDA TIDAK BERUBAH SAMA SEKALI)
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
@@ -119,7 +166,7 @@ class _SplashScreenState extends State<SplashScreen>
                   _CenterContent(
                     logoCtrl: _logoCtrl,
                     textFadeCtrl: _textFadeCtrl,
-                    loadingFadeCtrl: _loadingFadeCtrl, // <-- NEW
+                    loadingFadeCtrl: _loadingFadeCtrl,
                   ),
 
                   // --- Stage 1: Tirai (overlay) ---
@@ -134,6 +181,7 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   // ================== CURTAIN BUILDER ==================
+  // (TIDAK BERUBAH)
   Widget _buildCurtain(Size size, double t, CurtainStyle style) {
     const c1 = Color(0xFF9B0D0D);
     const c2 = Color(0xFFDC2626);
@@ -146,8 +194,7 @@ class _SplashScreenState extends State<SplashScreen>
 
     switch (style) {
       case CurtainStyle.horizontalSplit:
-      // Dua panel: kiri & kanan geser keluar
-        final panelW = size.width / 2 + 24; // overlap biar gak ada seam
+        final panelW = size.width / 2 + 24;
         final dx = t * (size.width / 2 + 24);
         return Stack(children: [
           Transform.translate(
@@ -175,7 +222,6 @@ class _SplashScreenState extends State<SplashScreen>
         ]);
 
       case CurtainStyle.verticalSplit:
-      // Dua panel: atas & bawah geser keluar
         final panelH = size.height / 2 + 24;
         final dy = t * (size.height / 2 + 24);
         return Stack(children: [
@@ -204,7 +250,6 @@ class _SplashScreenState extends State<SplashScreen>
         ]);
 
       case CurtainStyle.circularReveal:
-      // Overlay merah berlubang lingkaran yang mengembang dari tengah
         return CustomPaint(
           size: Size.infinite,
           painter: _RevealPainter(
@@ -215,7 +260,6 @@ class _SplashScreenState extends State<SplashScreen>
         );
 
       case CurtainStyle.diamondReveal:
-      // Overlay merah berlubang belah ketupat dari tengah
         return CustomPaint(
           size: Size.infinite,
           painter: _RevealPainter(
@@ -229,16 +273,17 @@ class _SplashScreenState extends State<SplashScreen>
 }
 
 // ================== CENTER CONTENT ==================
+// (TIDAK BERUBAH)
 class _CenterContent extends StatelessWidget {
   const _CenterContent({
     required this.logoCtrl,
     required this.textFadeCtrl,
-    required this.loadingFadeCtrl, // <-- NEW
+    required this.loadingFadeCtrl,
   });
 
   final AnimationController logoCtrl;
   final AnimationController textFadeCtrl;
-  final AnimationController loadingFadeCtrl; // <-- NEW
+  final AnimationController loadingFadeCtrl;
 
   @override
   Widget build(BuildContext context) {
@@ -250,7 +295,6 @@ class _CenterContent extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Logo 145x145, bounce
             ScaleTransition(
               scale: CurvedAnimation(parent: logoCtrl, curve: Curves.elasticOut),
               child: Image.asset(
@@ -260,8 +304,6 @@ class _CenterContent extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 36),
-
-            // Text 1 (gradient)
             const _GradientText(
               'Welcome to',
               fontSize: 20,
@@ -269,8 +311,6 @@ class _CenterContent extends StatelessWidget {
               stops: [0.24, 0.55, 1.0],
             ),
             const SizedBox(height: 6),
-
-            // Text 2 + plus
             Row(
               mainAxisSize: MainAxisSize.min,
               children: const [
@@ -293,8 +333,6 @@ class _CenterContent extends StatelessWidget {
                 ),
               ],
             ),
-
-            // --- Loading spinner tepat di bawah text 2 ---
             const SizedBox(height: 164),
             FadeTransition(
               opacity: CurvedAnimation(parent: loadingFadeCtrl, curve: Curves.easeInOut),
@@ -315,6 +353,7 @@ class _CenterContent extends StatelessWidget {
 }
 
 // ================== GRADIENT TEXT ==================
+// (TIDAK BERUBAH)
 class _GradientText extends StatelessWidget {
   const _GradientText(
       this.text, {
@@ -354,11 +393,12 @@ class _GradientText extends StatelessWidget {
 }
 
 // ================== REVEAL PAINTER ==================
+// (TIDAK BERUBAH)
 enum _RevealType { circle, diamond }
 
 class _RevealPainter extends CustomPainter {
   _RevealPainter({
-    required this.progress, // 0..1
+    required this.progress,
     required this.type,
     required this.gradient,
   });
@@ -370,21 +410,15 @@ class _RevealPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
-
-    // Layer: gambar overlay merah lalu "lubangi" dengan clear
     canvas.saveLayer(rect, Paint());
-
-    // Overlay gradient
     final paint = Paint()..shader = gradient.createShader(rect);
     canvas.drawRect(rect, paint);
-
-    // Punch hole: lingkaran / diamond → BlendMode.clear
     final clearPaint = Paint()..blendMode = BlendMode.clear;
 
     switch (type) {
       case _RevealType.circle:
         final diag = math.sqrt(size.width * size.width + size.height * size.height);
-        final radius = progress * diag; // 0..max
+        final radius = progress * diag;
         final center = Offset(size.width / 2, size.height / 2);
         canvas.drawCircle(center, radius, clearPaint);
         break;

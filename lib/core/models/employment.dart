@@ -27,6 +27,7 @@ class Employment {
   });
 
   String get role {
+// ... (fungsi getter tidak berubah) ...
     final r = (roleName ?? '').trim();
     if (r.isNotEmpty) return r;
     return (user?.role ?? '').trim();
@@ -37,6 +38,7 @@ class Employment {
   bool get isActive => (status ?? 'active') == 'active';
 
   Employment copyWith({
+// ... (fungsi copyWith tidak berubah) ...
     String? id,
     String? userUuid,
     String? workshopUuid,
@@ -64,6 +66,7 @@ class Employment {
 
   factory Employment.fromJson(Map<String, dynamic> json) {
     String? extractRole(Map<String, dynamic> j) {
+// ... (fungsi extractRole tidak berubah) ...
       final r = j['role'];
       if (r is String && r.trim().isNotEmpty) return r.trim();
 
@@ -83,11 +86,16 @@ class Employment {
       return null;
     }
 
+    // ==========================================================
+    // PERBAIKAN DI SINI:
+    // Ubah `as String` menjadi `(json[...] ?? '').toString()`
+    // untuk menangani nilai null dengan aman.
+    // ==========================================================
     return Employment(
-      id: json['id'] as String,
-      userUuid: json['user_uuid'] as String,
-      workshopUuid: json['workshop_uuid'] as String,
-      code: json['code'] as String,
+      id: (json['id'] ?? '').toString(),
+      userUuid: (json['user_uuid'] ?? '').toString(),
+      workshopUuid: (json['workshop_uuid'] ?? '').toString(),
+      code: (json['code'] ?? '').toString(),
       specialist: json['specialist'] as String?,
       jobdesk: json['jobdesk'] as String?,
       status: json['status'] as String?,
@@ -102,6 +110,7 @@ class Employment {
   }
 
   Map<String, dynamic> toJson() => {
+// ... (fungsi toJson tidak berubah) ...
     'id': id,
     'user_uuid': userUuid,
     'workshop_uuid': workshopUuid,

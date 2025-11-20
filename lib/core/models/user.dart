@@ -10,6 +10,7 @@ class User {
   final String role;
   final List<Workshop>? workshops;
   final Employment? employment;
+  final bool mustChangePassword;
 
   User({
     required this.id,
@@ -20,71 +21,77 @@ class User {
     required this.role,
     this.workshops,
     this.employment,
+    this.mustChangePassword = false,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
-    // Ambil role
     String userRole = 'user';
-    if (json['roles'] != null &&
-        json['roles'] is List &&
-        (json['roles'] as List).isNotEmpty) {
-      userRole = json['roles'][0]['name'] ?? 'user';
+    if (json['roles'] is List && (json['roles'] as List).isNotEmpty) {
+      final first = (json['roles'] as List).first;
+      if (first is Map && first['name'] is String) {
+        userRole = first['name'] as String;
+      }
     }
 
     // Parsing workshops
     List<Workshop>? parsedWorkshops;
-    if (json['workshops'] != null && json['workshops'] is List) {
-      var workshopsList = json['workshops'] as List;
-
-      print('--- DEBUG User.fromJson ---');
-      print('Ditemukan ${workshopsList.length} workshops di JSON.');
-      print('Data mentah workshops: ${json['workshops']}');
-
-      if (workshopsList.isNotEmpty) {
-        try {
-          parsedWorkshops = workshopsList.map((item) {
-            print('Parsing workshop item: $item');
-            return Workshop.fromJson(item as Map<String, dynamic>);
-          }).toList();
-
-          print('Berhasil mem-parsing ${parsedWorkshops.length} workshops.');
-        } catch (e, stack) {
-          print('ERROR parsing workshops in User.fromJson: $e');
-          print('Stack trace: $stack');
-          parsedWorkshops = null;
-        }
-      } else {
-        parsedWorkshops = [];
+    if (json['workshops'] is List) {
+      try {
+        parsedWorkshops = (json['workshops'] as List)
+            .whereType<Map<String, dynamic>>()
+            .map(Workshop.fromJson)
+            .toList();
+      } catch (_) {
+        parsedWorkshops = null;
       }
-    } else {
-      print('json["workshops"] tidak ditemukan atau bukan List');
+    } else if (json['workshops'] == null) {
+      parsedWorkshops = null;
     }
 
     // Parsing employment
     Employment? parsedEmployment;
-    if (json['employment'] != null && json['employment'] is Map) {
+    if (json['employment'] is Map<String, dynamic>) {
       try {
         parsedEmployment =
             Employment.fromJson(json['employment'] as Map<String, dynamic>);
-      } catch (e) {
-        print('Error parsing employment in User.fromJson: $e');
+      } catch (_) {
         parsedEmployment = null;
       }
     }
 
+    // Parse must_change_password dengan aman
+    bool _parseMustChange(dynamic v) {
+      if (v is bool) return v;
+      if (v is num) return v == 1;
+      if (v is String) {
+        final s = v.trim().toLowerCase();
+        return s == '1' || s == 'true' || s == 'yes';
+      }
+      return false;
+    }
+
     return User(
-      id: json['id'] ?? 'unknown_id',
-      name: json['name'] ?? 'Unknown Name',
-      username: json['username'] ?? 'unknown_user',
-      email: json['email'] ?? 'unknown@mail.com',
-      photo: json['photo'],
+      id: (json['id'] ?? '').toString(),
+      name: (json['name'] ?? '').toString(),
+      username: (json['username'] ?? '').toString(),
+      email: (json['email'] ?? '').toString(),
+      photo: json['photo']?.toString(),
       role: userRole,
       workshops: parsedWorkshops,
       employment: parsedEmployment,
+      mustChangePassword: _parseMustChange(
+          json['must_change_password'] ?? json['mustChangePassword']),
     );
   }
 
-  bool hasRole(String roleName) {
-    return role == roleName;
+  bool hasRole(String roleName) => role == roleName;
+  String? get workshopUuid {
+    if (workshops != null && workshops!.isNotEmpty) {
+      return workshops!.first.id;
+    }
+    if (employment != null && employment!.workshop != null) {
+      return employment!.workshop!.id;
+    }
+    return null;
   }
 }

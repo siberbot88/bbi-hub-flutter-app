@@ -1,9 +1,11 @@
+// listWork.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'package:bengkel_online_flutter/core/models/service.dart';
 import 'package:bengkel_online_flutter/feature/owner/providers/service_provider.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/detailWork.dart';
 
 const Color _gradStart = Color(0xFF9B0D0D);
 const Color _gradEnd   = Color(0xFFB70F0F);
@@ -12,6 +14,7 @@ const Color _danger    = Color(0xFFDC2626);
 enum WorkStatus { pending, process, done }
 
 class WorkItem {
+  final String id;
   final String workOrder;
   final String customer;
   final String vehicle;
@@ -23,6 +26,7 @@ class WorkItem {
   final WorkStatus status;
 
   WorkItem({
+    required this.id,
     required this.workOrder,
     required this.customer,
     required this.vehicle,
@@ -36,7 +40,10 @@ class WorkItem {
 }
 
 class ListWorkPage extends StatefulWidget {
-  const ListWorkPage({super.key});
+  const ListWorkPage({Key? key, this.workshopUuid}) : super(key: key);
+
+  /// Filter server‑side agar hanya menampilkan service milik bengkel ini.
+  final String? workshopUuid;
 
   @override
   State<ListWorkPage> createState() => _ListWorkPageState();
@@ -51,7 +58,8 @@ class _ListWorkPageState extends State<ListWorkPage> {
     super.initState();
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ServiceProvider>().fetchServices();
+      final prov = context.read<ServiceProvider>();
+      prov.fetchServices(workshopUuid: widget.workshopUuid);
     });
   }
 
@@ -61,25 +69,23 @@ class _ListWorkPageState extends State<ListWorkPage> {
     super.dispose();
   }
 
-  // Map ServiceModel -> WorkItem (hanya gunakan field yang ada)
   WorkItem _map(ServiceModel s) {
     final status = _mapStatus(s.status);
-
     final vehicleName = s.vehicle?.name ??
         '${s.vehicle?.brand ?? ''} ${s.vehicle?.model ?? ''}'.trim();
-
-    final plate = s.vehicle?.plateDisplay ??
-        s.vehicle?.plateNumber ??
+    final plate = s.vehicle?.plateNumber ??
+        (tryOrNull(() => (s as dynamic).vehicle?.plate) as String?) ??
         '-';
 
     return WorkItem(
+      id: s.id,
       workOrder: s.code,
       customer: s.customer?.name ?? '-',
       vehicle: vehicleName.isEmpty ? '-' : vehicleName,
       plate: plate,
       service: s.name,
       schedule: s.scheduledDate,
-      mechanic: '-', // belum ada mekanik di skema service
+      mechanic: s.mechanicName.isEmpty ? '-' : s.mechanicName,
       price: s.price,
       status: status,
     );
@@ -159,7 +165,7 @@ class _ListWorkPageState extends State<ListWorkPage> {
                 ),
                 actions: [
                   IconButton(
-                    onPressed: () => context.read<ServiceProvider>().fetchServices(),
+                    onPressed: () => prov.fetchServices(workshopUuid: widget.workshopUuid),
                     icon: const Icon(Icons.refresh, color: Colors.white),
                     tooltip: 'Refresh',
                   ),
@@ -266,7 +272,7 @@ class _ListWorkPageState extends State<ListWorkPage> {
                 ),
               ),
 
-              // konten
+              // konten body
               if (prov.loading)
                 const SliverFillRemaining(
                   child: Center(child: CircularProgressIndicator(color: Colors.white)),
@@ -291,9 +297,38 @@ class _ListWorkPageState extends State<ListWorkPage> {
                   sliver: SliverList.separated(
                     itemCount: list.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 14),
-                    itemBuilder: (context, i) => _WorkCard(item: list[i]),
+                    itemBuilder: (context, i) {
+                      return _AnimatedWorkCard(item: list[i]);
+                    },
                   ),
                 ),
+
+              // pagination controls
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton(
+                        onPressed: prov.currentPage > 1 && !prov.loading
+                            ? () => prov.goToPage(prov.currentPage - 1, workshopUuid: widget.workshopUuid)
+                            : null,
+                        child: const Text('Prev'),
+                      ),
+                      const SizedBox(width: 16),
+                      Text('Page ${prov.currentPage} of ${prov.totalPages}'),
+                      const SizedBox(width: 16),
+                      ElevatedButton(
+                        onPressed: prov.currentPage < prov.totalPages && !prov.loading
+                            ? () => prov.goToPage(prov.currentPage + 1, workshopUuid: widget.workshopUuid)
+                            : null,
+                        child: const Text('Next'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
 
               SliverToBoxAdapter(
                 child: SizedBox(height: media.padding.bottom + 8),
@@ -348,165 +383,178 @@ class _StatusChip extends StatelessWidget {
   }
 }
 
-class _WorkCard extends StatelessWidget {
-  const _WorkCard({required this.item});
+class _AnimatedWorkCard extends StatefulWidget {
   final WorkItem item;
+  const _AnimatedWorkCard({required this.item});
+
+  @override
+  State<_AnimatedWorkCard> createState() => _AnimatedWorkCardState();
+}
+
+class _AnimatedWorkCardState extends State<_AnimatedWorkCard> with SingleTickerProviderStateMixin {
+  late AnimationController _animCtrl;
+  late Animation<double> _fade;
+
+  @override
+  void initState() {
+    super.initState();
+    _animCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
+    _fade = CurvedAnimation(parent: _animCtrl, curve: Curves.easeIn);
+    _animCtrl.forward();
+  }
+
+  @override
+  void dispose() {
+    _animCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final item = widget.item;
     final price = item.price == null ? 'RP. -' : 'RP. ${_rupiah(item.price!)}';
 
-    return Material(
-      color: Colors.white,
-      elevation: 0,
-      borderRadius: BorderRadius.circular(22),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
+    return FadeTransition(
+      opacity: _fade,
+      child: Material(
+        color: Colors.white,
+        elevation: 0,
+        borderRadius: BorderRadius.circular(22),
+        child: InkWell(
           borderRadius: BorderRadius.circular(22),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x22000000),
-              blurRadius: 18,
-              offset: Offset(0, 10),
+          onTap: () {
+            if (item.id.isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('ID service tidak tersedia')));
+              return;
+            }
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => DetailWorkPage(serviceId: item.id)),
+            );
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(22),
+              boxShadow: const [
+                BoxShadow(color: Color(0x22000000), blurRadius: 18, offset: Offset(0, 10)),
+              ],
             ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 12, 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // header
-              Row(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 12, 16),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Text(
-                      item.workOrder,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: .2,
+                  // header
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          item.workOrder,
+                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, letterSpacing: .2),
+                        ),
                       ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () {},
-                    icon: const Icon(Icons.more_vert, color: Colors.black54),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  const Icon(Icons.person_2_outlined, size: 18, color: Colors.black45),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      item.customer,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.black54,
-                        fontWeight: FontWeight.w600,
+                      IconButton(
+                        onPressed: () { /* bisa tambahkan menu pilihan */ },
+                        icon: const Icon(Icons.more_vert, color: Colors.black54),
                       ),
-                    ),
+                    ],
                   ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // vehicle
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF3F4F6),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.directions_car, color: Colors.black54),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            item.vehicle,
-                            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.person_2_outlined, size: 18, color: Colors.black45),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          item.customer,
+                          style: const TextStyle(fontSize: 16, color: Colors.black54, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  // vehicle info
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF3F4F6),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.directions_car, color: Colors.black54),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(item.vehicle, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                              const SizedBox(height: 2),
+                              Text(item.plate, style: const TextStyle(color: Colors.black54, fontSize: 13)),
+                            ],
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            item.plate,
-                            style: const TextStyle(color: Colors.black54, fontSize: 13),
-                          ),
-                        ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(item.service, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 16),
+                  const Divider(height: 1),
+                  const SizedBox(height: 12),
+                  // schedule + price
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.event_outlined, size: 18, color: Colors.black45),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _dateTime(item.schedule),
+                          style: const TextStyle(color: Colors.black54, fontSize: 14),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 16),
-              Text(item.service, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 16),
-              const Divider(height: 1),
-              const SizedBox(height: 12),
-
-              // schedule + price
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(Icons.event_outlined, size: 18, color: Colors.black45),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      _dateTime(item.schedule),
-                      style: const TextStyle(color: Colors.black54, fontSize: 14),
-                    ),
+                      Text(
+                        price,
+                        style: const TextStyle(color: Color(0xFF7A0F0F), fontSize: 18, fontWeight: FontWeight.w800),
+                      ),
+                    ],
                   ),
-                  Text(
-                    price,
-                    style: const TextStyle(
-                      color: Color(0xFF7A0F0F),
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                    ),
+                  const SizedBox(height: 8),
+                  // mechanic name
+                  Row(
+                    children: [
+                      const Icon(Icons.groups_2_outlined, size: 18, color: Colors.black45),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(item.mechanic, style: const TextStyle(color: Colors.black45, fontSize: 14)),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(Icons.groups_2_outlined, size: 18, color: Colors.black45),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      item.mechanic,
-                      style: const TextStyle(color: Colors.black45, fontSize: 14),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => DetailWorkPage(serviceId: item.id)),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _danger,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        elevation: 0,
+                      ),
+                      child: const Text('Lihat Detail', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16)),
                     ),
                   ),
                 ],
               ),
-
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _danger,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    elevation: 0,
-                  ),
-                  child: const Text(
-                    'Lihat Detail',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -534,4 +582,9 @@ String _rupiah(num nominal) {
     if (rev > 1 && rev % 3 == 1) buf.write('.');
   }
   return buf.toString();
+}
+
+/// Helper aman untuk akses properti dynamic
+T? tryOrNull<T>(T Function() f) {
+  try { return f(); } catch (_) { return null; }
 }
