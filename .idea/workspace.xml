@@ -4,14 +4,8 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0f1fd287-7e8a-4e9a-beb2-7c2c21e8966b" name="Changes" comment="refactor: Enhance service detail UI and data models&#10;&#10;This commit introduces significant refactoring and enhancements to the service detail screen (`detailWork.dart`), related data models, and the voucher creation flow for improved data accuracy, robustness, and a cleaner user experience.&#10;&#10;### Key Changes:&#10;&#10;*   **Service Detail Screen (`detailWork.dart`):**&#10;    *   **UI and Data Refinement**: The screen has been heavily refactored for clarity and to display more complete data from the backend, including estimated finish time, mechanic's name, and more detailed vehicle information.&#10;    *   **Robust Data Handling**: Replaced dynamic/unsafe data access with strongly-typed `Vehicle` and `Customer` models, ensuring no crashes from missing or malformed data.&#10;    *   **Conditional Logic**: Added logic to display status-aware messages, such as for the spare parts section (e.g., &quot;Belum bisa mengisi sparepart...&quot;).&#10;    *   **Code Cleanup**: Removed numerous `FIX:` comments, simplified widget structures, and improved code readability.&#10;&#10;*   **Voucher Creation (`voucher_previewpage.dart`):**&#10;    *   **Reliable Workshop ID**: The logic for fetching the `workshop_uuid` is now robust. It uses a new `user.workshopUuid` getter, which reliably finds the ID from either the owner's workshop list or their employment record, preventing `null` errors during voucher creation.&#10;    *   **Improved Error Handling**: Error messages shown to the user are now cleaner and more informative.&#10;&#10;*   **Data Model Enhancements:**&#10;    *   **`User` Model (`user.dart`):** Added a `workshopUuid` getter to provide a single, reliable way to access the user's associated workshop ID.&#10;    *   **`ServiceModel` (`service.dart`):** Greatly expanded to include more fields from the API like `acceptanceStatus`, `acceptedAt`, `completedAt`, and `feedbackMechanic`. The `fromJson` factory is now more resilient.&#10;    *   **`Vehicle` Model (`vehicle.dart`):** Expanded to include `year`, `color`, and `odometer`, with safe parsing.&#10;    *   **`Customer` Model (`customer.dart`):** Added an `address` field.&#10;    *   **`TransactionItem` Model (`transaction_item.dart`):** Hardened with safe parsers for numbers and quantities to prevent crashes from invalid data types.&#10;&#10;*   **General Code Quality:**&#10;    *   Numerous small cleanups and optimizations have been applied across the affected files to improve consistency and maintainability.">
-      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Flutter_Plugins.xml" beforeDir="false" />
+    <list default="true" id="0f1fd287-7e8a-4e9a-beb2-7c2c21e8966b" name="Changes" comment="Fix: Refine .gitignore for IDE files&#10;&#10;This commit updates the `.gitignore` file to more specifically ignore the `.idea` directory by changing `.idea` to `.idea/`. It also explicitly adds `*.iml` to ensure all IntelliJ module files are ignored by version control.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/core/models/vehicle.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/core/models/vehicle.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/feature/owner/screens/detailWork.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/owner/screens/detailWork.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/feature/owner/screens/homepageOwner.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/owner/screens/homepageOwner.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/feature/owner/screens/listWork.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/owner/screens/listWork.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -62,30 +56,31 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Flutter.main.dart.executor&quot;: &quot;Debug&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
-    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
-    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;recover-local&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;io.flutter.project.isFirstOpen&quot;: &quot;true&quot;,
-    &quot;io.flutter.reload.alreadyRun&quot;: &quot;true&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;SDKs&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;AndroidSdkUpdater&quot;,
-    &quot;show.migrate.to.gradle.popup&quot;: &quot;false&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Flutter.main.dart.executor": "Debug",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "dart.analysis.tool.window.visible": "false",
+    "git-widget-placeholder": "new-local-project",
+    "ignore.virus.scanning.warn.message": "true",
+    "io.flutter.project.isFirstOpen": "true",
+    "io.flutter.reload.alreadyRun": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/fadil/StudioProjects/project - Copy (2)",
+    "project.structure.last.edited": "SDKs",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2",
+    "settings.editor.selected.configurable": "AndroidSdkUpdater",
+    "show.migrate.to.gradle.popup": "false"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\fadil\StudioProjects\project\lib\core\screens\registers" />
