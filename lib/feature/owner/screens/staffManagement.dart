@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
 import 'package:bengkel_online_flutter/feature/owner/providers/employee_provider.dart';
 import 'package:bengkel_online_flutter/core/models/employment.dart';
 import 'package:bengkel_online_flutter/feature/owner/screens/addStaff.dart';
@@ -27,11 +26,6 @@ class _ManajemenKaryawanPageState extends State<ManajemenKaryawanPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      // kalau butuh workshopUuid bisa ambil dari auth:
-      // final auth = context.read<AuthProvider>();
-      // final workshops = auth.user?.workshops;
-      // final workshopUuid = (workshops != null && workshops.isNotEmpty) ? workshops.first.id : null;
-
       await context.read<EmployeeProvider>().fetchOwnerEmployees();
     });
   }
@@ -53,7 +47,10 @@ class _ManajemenKaryawanPageState extends State<ManajemenKaryawanPage> {
       final role = e.role.toLowerCase();
       final specialist = (e.specialist ?? '').toLowerCase();
       final jobdesk = (e.jobdesk ?? '').toLowerCase();
-      return name.contains(q) || role.contains(q) || specialist.contains(q) || jobdesk.contains(q);
+      return name.contains(q) ||
+          role.contains(q) ||
+          specialist.contains(q) ||
+          jobdesk.contains(q);
     }).toList();
 
     return Scaffold(
@@ -61,13 +58,17 @@ class _ManajemenKaryawanPageState extends State<ManajemenKaryawanPage> {
       body: RefreshIndicator.adaptive(
         onRefresh: _refresh,
         child: CustomScrollView(
-          physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
           slivers: [
+            // HEADER ala ReportPage (tanpa back hitam)
             SliverAppBar(
               pinned: true,
+              automaticallyImplyLeading: false, // ⬅️ tidak ada back bawaan
               backgroundColor: _grad2,
               elevation: 0,
-              expandedHeight: 280,
+              expandedHeight: 260,
               flexibleSpace: FlexibleSpaceBar(
                 collapseMode: CollapseMode.parallax,
                 background: Container(
@@ -85,32 +86,18 @@ class _ManajemenKaryawanPageState extends State<ManajemenKaryawanPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            children: [
-                              InkWell(
-                                onTap: () => Navigator.pushReplacementNamed(context, "/main"),
-                                borderRadius: BorderRadius.circular(30),
-                                child: Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.3),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(Icons.arrow_back, color: Colors.white),
-                                ),
+                          const SizedBox(height: 4),
+                          const Center(
+                            child: Text(
+                              'Manajemen Karyawan',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800,
                               ),
-                              const SizedBox(width: 16),
-                              const Text(
-                                'Manajemen Karyawan',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 24),
                           Text(
                             '${items.length} Karyawan',
                             style: const TextStyle(
@@ -120,21 +107,31 @@ class _ManajemenKaryawanPageState extends State<ManajemenKaryawanPage> {
                             ),
                           ),
                           const SizedBox(height: 4),
-                          const Text(' ', style: TextStyle(color: Colors.white70, fontSize: 12)),
-                          const SizedBox(height: 24),
+                          const Text(
+                            'Kelola staff bengkel Anda dengan mudah',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(height: 22),
 
-                          // fitur quick actions
+                          // Quick actions
                           Material(
                             elevation: 6,
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(18),
                             child: Container(
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: BorderRadius.circular(16),
+                                borderRadius: BorderRadius.circular(18),
                               ),
-                              padding: const EdgeInsets.symmetric(vertical: 18),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 18,
+                                horizontal: 8,
+                              ),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                mainAxisAlignment:
+                                MainAxisAlignment.spaceEvenly,
                                 children: [
                                   _FeatureButton(
                                     icon: Icons.person_add,
@@ -142,7 +139,10 @@ class _ManajemenKaryawanPageState extends State<ManajemenKaryawanPage> {
                                     onTap: () async {
                                       await Navigator.push(
                                         context,
-                                        MaterialPageRoute(builder: (_) => const AddStaffRegisterPage()),
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                          const AddStaffRegisterPage(),
+                                        ),
                                       );
                                       await _refresh();
                                     },
@@ -153,7 +153,10 @@ class _ManajemenKaryawanPageState extends State<ManajemenKaryawanPage> {
                                     onTap: () {
                                       Navigator.push(
                                         context,
-                                        MaterialPageRoute(builder: (_) => const ManajemenKaryawanTablePage()),
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                          const ManajemenKaryawanTablePage(),
+                                        ),
                                       );
                                     },
                                   ),
@@ -166,7 +169,6 @@ class _ManajemenKaryawanPageState extends State<ManajemenKaryawanPage> {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 20),
                         ],
                       ),
                     ),
@@ -175,18 +177,22 @@ class _ManajemenKaryawanPageState extends State<ManajemenKaryawanPage> {
               ),
             ),
 
-            // Search
+            // SEARCH BAR
             SliverToBoxAdapter(
               child: _searchSection(
-                outerPadding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                innerPadding: const EdgeInsets.symmetric(horizontal: 20),
-                fieldContentPadding: const EdgeInsets.symmetric(vertical: 14),
+                outerPadding:
+                const EdgeInsets.fromLTRB(16, 14, 16, 12),
+                innerPadding:
+                const EdgeInsets.symmetric(horizontal: 20),
+                fieldContentPadding:
+                const EdgeInsets.symmetric(vertical: 14),
               ),
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: 12)),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 4)),
             SliverToBoxAdapter(child: _listHeaderSection()),
 
-            // List
+            // LIST
             if (prov.loading)
               const SliverToBoxAdapter(
                 child: Padding(
@@ -207,12 +213,17 @@ class _ManajemenKaryawanPageState extends State<ManajemenKaryawanPage> {
                       (context, i) {
                     final e = filtered[i];
                     return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       child: _StaffCard(
                         name: e.user?.name ?? '-',
                         role: e.role.isEmpty ? '-' : e.role,
-                        specialist: (e.specialist ?? '').isEmpty ? '-' : e.specialist!,
-                        jobdesk: (e.jobdesk ?? '').isEmpty ? '-' : e.jobdesk!,
+                        specialist:
+                        (e.specialist ?? '').isEmpty ? '-' : e.specialist!,
+                        jobdesk:
+                        (e.jobdesk ?? '').isEmpty ? '-' : e.jobdesk!,
                       ),
                     );
                   },
@@ -290,8 +301,18 @@ class _ManajemenKaryawanPageState extends State<ManajemenKaryawanPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: const [
-          Text('List Jobdesk Staff', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-          Text('Lainnya', style: TextStyle(fontSize: 13, color: Color(0xFFDC2626), fontWeight: FontWeight.w500)),
+          Text(
+            'List Jobdesk Staff',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          ),
+          Text(
+            'Lainnya',
+            style: TextStyle(
+              fontSize: 13,
+              color: Color(0xFFDC2626),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ],
       ),
     );
@@ -303,7 +324,11 @@ class _FeatureButton extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
 
-  const _FeatureButton({required this.icon, required this.label, required this.onTap});
+  const _FeatureButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -316,7 +341,11 @@ class _FeatureButton extends StatelessWidget {
           children: [
             Icon(icon, color: _primaryRed, size: 28),
             const SizedBox(height: 6),
-            Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, color: Colors.black87)),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 12, color: Colors.black87),
+            ),
           ],
         ),
       ),
@@ -368,16 +397,27 @@ class _StaffCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   name,
-                  style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w700),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.white),
                   borderRadius: BorderRadius.circular(50),
                 ),
-                child: Text(role, style: const TextStyle(color: Colors.white, fontSize: 11)),
+                child: Text(
+                  role,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                  ),
+                ),
               ),
             ],
           ),
@@ -387,12 +427,20 @@ class _StaffCard extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 6.0),
               child: Text(
                 specialist,
-                style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           Text(
             jobdesk,
-            style: const TextStyle(color: Colors.white70, fontSize: 11, height: 1.4),
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 11,
+              height: 1.4,
+            ),
           ),
         ],
       ),
