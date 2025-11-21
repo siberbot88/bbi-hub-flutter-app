@@ -9,46 +9,30 @@ environment:
 
 dependencies:
   intl: ^0.19.0
+  syncfusion_flutter_datepicker: ^25.1.42
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
   google_fonts: ^6.3.1
   http: ^1.5.0
   image_picker: ^1.2.0
-  flutter_svg: ^2.2.1
-  fl_chart: ^0.68.0
-  syncfusion_flutter_charts: ^31.2.3
-  syncfusion_flutter_datepicker: ^31.2.3
-  flutter_secure_storage: ^9.2.2
-  provider: ^6.1.2
+  fl_chart: ^0.65.0
 
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
-  flutter_launcher_icons: ^0.13.1
+  flutter_svg: ^2.0.9
 
 flutter:
   uses-material-design: true
   assets:
     - assets/image/
     - assets/icons/
-    - assets/svg/
-    - assets/svg/logo.svg
     - assets/logo.png
     - assets/bg.png
-    - assets/image/gambar_1.png
-    - assets/image/gambar_2.png
-    - assets/image/gambar_3.png
-    - assets/icons/app_icon.png
-    - assets/icons/logo_splash.png
-
-flutter_icons:
-  android: true
-  ios: true
-  image_path: "assets/icon/app_icon.png"
-
+  
   fonts:
     - family: Poppins
       fonts:

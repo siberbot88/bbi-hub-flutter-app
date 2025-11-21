@@ -4,9 +4,6 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'package:flutter/services.dart';
 import 'service_page.dart';
-import 'package:bengkel_online_flutter/feature/admin/widgets/smartasset.dart';
-
-
 
 void main() {
   runApp(const MyApp());
@@ -62,7 +59,7 @@ class RoundelAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.todayTasks = 12,
     this.date,
     this.userName = 'AHASS',
-    this.roleLabel = 'admin workshop',
+    this.roleLabel = 'admin',
     this.avatar,
     this.onAvatarTap,
     this.greetingSize = 26,
@@ -487,90 +484,63 @@ class _HomeContentState extends State<HomeContent> {
         const SizedBox(height: 8),
 
         // Stat cards
-      LayoutBuilder(
-      builder: (context, constraints) {
-      final screenWidth = constraints.maxWidth;
-      final aspectRatio = screenWidth < 360 ? 1.0 : 1.4; // responsif
-
-      return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
-      childAspectRatio: 1.6,
-      children:  [
-        _StatCard(title: "Servis Hari ini", value: "24", assetPath: "assets/icons/servishariini.svg", ),
-        _StatCard(title: "Perlu di Assign", value: "12",  assetPath: "assets/icons/assign.svg",),
-        _StatCard(title: "Feedback", value: "5", assetPath: "assets/icons/feedback.svg",),
-        _StatCard(title: "Selesai", value: "2", assetPath: "assets/icons/selesai.svg",),
-      ],
-    );
-  },
-),
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          childAspectRatio: 1.2,
+          children: const [
+            _StatCard(title: "Servis Hari ini", value: "24"),
+            _StatCard(title: "Perlu di Assign", value: "12"),
+            _StatCard(title: "Feedback", value: "5"),
+            _StatCard(title: "Selesai", value: "2"),
+          ],
+        ),
 
         const SizedBox(height: 24),
 
-//=================================== FITUR CEPAT =============================
-Center(
-  child: Text(
-    'Fitur Cepat',
-    style: TextStyle(
-      fontSize: 18,
-      fontWeight: FontWeight.w600,
-      color: Colors.black87,
-    ),
-  ),
-),
-
-const SizedBox(height: 14),
-
-LayoutBuilder(
-  builder: (context, constraints) {
-    final double width = constraints.maxWidth;
-
-    // 🔹 Responsif: jumlah kolom otomatis tergantung lebar layar
-    int columns = 3;
-    if (width > 700) columns = 5;
-    else if (width > 500) columns = 4;
-
-    // 🔹 Hitung lebar item biar pas dan sejajar batas StatCard
-    final double spacing = 16;
-    final double itemWidth = (width - (columns - 1) * spacing - 32) / columns;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Wrap(
-        spacing: spacing,
-        runSpacing: 18,
-        alignment: WrapAlignment.start,
-        children: [
-          _QuickFeature(
-            assetPath: 'assets/icons/riwayatservis.svg',
-            label: "Riwayat\nServis",
-            iconSize: 26,
-            onTap: () {},
+        // Fitur Cepat title (center)
+        Center(
+          child: Text(
+            'Fitur Cepat',
+            style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87),
           ),
-          _QuickFeature(
-            assetPath: 'assets/icons/terimajadwal.svg',
-            label: "Terima\nJadwal",
-            iconSize: 26,
-            onTap: () {},
-          ),
-          _QuickFeature(
-            assetPath: 'assets/icons/feedback.svg',
-            label: "Umpan\nBalik",
-            iconSize: 26,
-            onTap: () {},
-          ),
-        ].map((w) => SizedBox(width: itemWidth, child: w)).toList(),
-      ),
-    );
-  },
-),
+        ),
 
-const SizedBox(height: 24),
+        const SizedBox(height: 14),
 
+        // Grid fitur cepat: 4 kolom, lebih besar
+        GridView.count(
+          crossAxisCount: 4,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          childAspectRatio: 0.95, // sedikit lebih besar/tinggi
+          children: [
+            _QuickFeature(
+              assetPath: 'assets/icons/teknisi.png',
+              label: "Riwayat \nService",
+              onTap: () {},
+            ),
+            _QuickFeature(
+              assetPath: 'assets/icons/search.png',
+              label: "Terima \nJadwal",
+              onTap: () {},
+            ),
+            _QuickFeature(
+              assetPath: 'assets/icons/dashboard_tipis.png',
+              label: "Feedback",
+              onTap: () {},
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
 
         // removed extra gap - langsung Warning card
 
@@ -583,7 +553,7 @@ const SizedBox(height: 24),
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const ServicePageAdmin()),
+                MaterialPageRoute(builder: (_) => const ServicePage()),
               );
             },
             child: Padding(
@@ -770,134 +740,94 @@ class _StatCard extends StatelessWidget {
   final String value;
   final String updateDate;
   final String percentage;
-  final String assetPath;
 
   const _StatCard({
     required this.title,
     required this.value,
-    required this.assetPath,
-    this.updateDate = "2 days ago",
+    this.updateDate = "20 July 2024",
     this.percentage = "+15%",
-    super.key,
   });
 
   @override
   Widget build(BuildContext context) {
-    final bool isNegative = percentage.startsWith('-');
-    final Color trendColor = isNegative ? Colors.red : Colors.green;
-
-    final screenWidth = MediaQuery.of(context).size.width;
-
-    // 🔹 Ukuran adaptif berdasarkan lebar layar
-    final double iconSize = screenWidth < 360 ? 24 : 28;
-    final double fontSizeTitle = screenWidth < 360 ? 12 : 13;
-    final double fontSizeValue = screenWidth < 360 ? 20 : 24;
-    final double fontSizeFooter = screenWidth < 360 ? 9 : 11;
-    final double iconSizeFooter = screenWidth < 360 ? 9 : 10.5;
-    final double paddingVertical = screenWidth < 360 ? 8 : 10;
-    final double paddingHorizontal = screenWidth < 360 ? 10 : 14;
-
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 5,
-            offset: const Offset(0, 2),
-          ),
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          )
         ],
       ),
-      padding: EdgeInsets.symmetric(
-        horizontal: paddingHorizontal,
-        vertical: paddingVertical,
-      ),
-      child: IntrinsicHeight(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 🔹 Judul
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: fontSizeTitle,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFFDC2626),
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Judul
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          // Nilai utama
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ),
+
+          const Spacer(),
+
+          // Footer update + persentase
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(
+                child: Text(
+                  "Update: $updateDate",
+                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 4),
-
-            // 🔹 Angka + Icon sejajar
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Flexible(
-                  child: Text(
-                    value,
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    percentage.startsWith('-')
+                        ? Icons.arrow_downward
+                        : Icons.arrow_upward,
+                    size: 14,
+                    color:
+                        percentage.startsWith('-') ? Colors.red : Colors.green,
+                  ),
+                  const SizedBox(width: 2),
+                  Text(
+                    percentage,
                     style: TextStyle(
-                      fontSize: fontSizeValue,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFFDC2626),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: percentage.startsWith('-')
+                          ? Colors.red
+                          : Colors.green,
                     ),
-                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-                SizedBox(
-                  width: iconSize,
-                  height: iconSize,
-                  child: SmartAsset(
-                    path: assetPath,
-                    fit: BoxFit.contain,
-                  ),
-                ),
-              ],
-            ),
-
-            const Spacer(),
-
-            // 🔹 Footer update + persen (versi responsif)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Flexible(
-                  child: Text(
-                    "Update: $updateDate",
-                    style: TextStyle(
-                      fontSize: fontSizeFooter,
-                      color: Colors.grey.shade600,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      isNegative ? Icons.arrow_downward : Icons.arrow_upward,
-                      size: iconSizeFooter,
-                      color: trendColor,
-                    ),
-                    const SizedBox(width: 2),
-                    Text(
-                      percentage,
-                      style: TextStyle(
-                        fontSize: fontSizeFooter,
-                        fontWeight: FontWeight.w500,
-                        color: trendColor,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
-        ),
+                ],
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -905,18 +835,20 @@ class _StatCard extends StatelessWidget {
 
 // ---------------- Quick Feature (interactive) ----------------
 class _QuickFeature extends StatefulWidget {
-  final String assetPath;
+  final IconData? icon;
+  final String? assetPath;
   final String label;
   final double iconSize;
   final VoidCallback? onTap;
 
   const _QuickFeature({
-    required this.assetPath,
+    this.icon,
+    this.assetPath,
     required this.label,
-    this.iconSize = 26,
+    this.iconSize = 28,
     this.onTap,
     super.key,
-  });
+  }) : assert(icon != null || assetPath != null, 'Berikan icon atau assetPath');
 
   @override
   State<_QuickFeature> createState() => _QuickFeatureState();
@@ -926,18 +858,14 @@ class _QuickFeatureState extends State<_QuickFeature>
     with SingleTickerProviderStateMixin {
   late final AnimationController _animationController;
   late final Animation<double> _scaleAnimation;
-  bool _hovering = false;
 
   @override
   void initState() {
     super.initState();
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 120),
-      vsync: this,
-    );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.94).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
-    );
+        duration: const Duration(milliseconds: 120), vsync: this);
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.92).animate(
+        CurvedAnimation(parent: _animationController, curve: Curves.easeOut));
   }
 
   @override
@@ -946,76 +874,44 @@ class _QuickFeatureState extends State<_QuickFeature>
     super.dispose();
   }
 
+  // for hover on desktop/web
+  bool _hovering = false;
+
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final bg = Colors.red.shade100;
 
-    // Responsif ukuran
-    final double adaptiveIconSize =
-        screenWidth < 360 ? widget.iconSize - 4 : widget.iconSize;
-    final double adaptiveFontSize =
-        screenWidth < 360 ? 10 : (screenWidth > 600 ? 13 : 11);
+    Widget iconWidget;
+    if (widget.assetPath != null) {
+      // use Image.asset with errorBuilder so app doesn't crash if not found
+      iconWidget = Image.asset(
+        widget.assetPath!,
+        width: widget.iconSize,
+        height: widget.iconSize,
+        fit: BoxFit.contain,
+        // if your PNG is monochrome and you want tinting, use ImageIcon(AssetImage(...))
+        errorBuilder: (context, error, stackTrace) {
+          return Icon(widget.icon ?? Icons.help_outline,
+              size: widget.iconSize, color: Colors.red);
+        },
+      );
+    } else {
+      iconWidget = Icon(widget.icon, size: widget.iconSize, color: Colors.red);
+    }
 
-    final Color bgColor = Colors.red.shade100;
-
-    final iconWidget = SmartAsset(
-      path: widget.assetPath,
-      width: adaptiveIconSize,
-      height: adaptiveIconSize,
-      fit: BoxFit.contain,
-    );
-
-
-  final double cardWidth = screenWidth > 800
-    ? screenWidth * 0.18 // laptop / desktop
-    : screenWidth > 600
-        ? screenWidth * 0.22 // tablet
-        : screenWidth * 0.26; // mobile (lebih lebar dikit)
-
-    final featureCard = Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 5,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              color: bgColor,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.all(12),
-            child: iconWidget,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            widget.label,
-            style: TextStyle(
-              fontSize: adaptiveFontSize,
-              fontWeight: FontWeight.w500,
-              color: Colors.black87,
-              height: 1.2,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
+    final child = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          decoration:
+              BoxDecoration(color: bg, borderRadius: BorderRadius.circular(12)),
+          padding: const EdgeInsets.all(10),
+          child: iconWidget,
+        ),
+        const SizedBox(height: 6),
+        Text(widget.label,
+            style: const TextStyle(fontSize: 11), textAlign: TextAlign.center),
+      ],
     );
 
     Widget interactive = GestureDetector(
@@ -1025,30 +921,28 @@ class _QuickFeatureState extends State<_QuickFeature>
         _animationController.reverse();
         widget.onTap?.call();
       },
-      child: ScaleTransition(scale: _scaleAnimation, child: featureCard),
+      child: ScaleTransition(scale: _scaleAnimation, child: child),
     );
 
-    // Hover animasi (web/desktop)
     if (kIsWeb ||
         Theme.of(context).platform == TargetPlatform.macOS ||
         Theme.of(context).platform == TargetPlatform.windows ||
         Theme.of(context).platform == TargetPlatform.linux) {
+      // wrap with MouseRegion for hover effect on web/desktop
       interactive = MouseRegion(
         onEnter: (_) => setState(() => _hovering = true),
         onExit: (_) => setState(() => _hovering = false),
         cursor: SystemMouseCursors.click,
         child: AnimatedScale(
-          scale: _hovering ? 1.03 : 1.0,
-          duration: const Duration(milliseconds: 120),
-          child: interactive,
-        ),
+            scale: _hovering ? 1.03 : 1.0,
+            duration: const Duration(milliseconds: 120),
+            child: interactive),
       );
     }
 
     return interactive;
   }
 }
-
 
 // ---------------- BannerData ----------------
 class BannerData {
