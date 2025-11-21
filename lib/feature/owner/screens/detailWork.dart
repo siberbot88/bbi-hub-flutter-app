@@ -71,7 +71,6 @@ class _Body extends StatelessWidget {
   num get _partsTotal =>
       (service.items ?? const <TransactionItem>[])
           .fold<num>(0, (a, b) => a + (b.subtotal ?? 0));
-
   num get _labor => service.price ?? 0;
   num get _grand => _partsTotal + _labor;
 
@@ -98,7 +97,7 @@ class _Body extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       children: [
-        // STATUS BAR
+        // STATUS
         _Panel(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -132,7 +131,7 @@ class _Body extends StatelessWidget {
         ),
         const SizedBox(height: 12),
 
-        // INFORMASI CUSTOMER
+        // CUSTOMER
         _Panel(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -160,7 +159,7 @@ class _Body extends StatelessWidget {
         ),
         const SizedBox(height: 12),
 
-        // INFORMASI KENDARAAN
+        // VEHICLE
         _VehicleCard(vehicle: v),
         const SizedBox(height: 12),
 
@@ -228,15 +227,13 @@ class _Body extends StatelessWidget {
                   ),
                   ElevatedButton(
                     onPressed: () {
-                      // TODO: aksi hubungi mekanik (telp / chat) kalau diperlukan
+                      // TODO: aksi hubungi mekanik (telp / chat)
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFEDE9FE),
                       foregroundColor: const Color(0xFF7C3AED),
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 8,
-                      ),
+                          horizontal: 14, vertical: 8),
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(24),
@@ -289,9 +286,9 @@ class _Body extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               if ((service.items ?? const []).isEmpty)
-                Text(
-                  _sparepartMessage(service.status),
-                  style: const TextStyle(color: Colors.black45),
+                const Text(
+                  'Belum ada item',
+                  style: TextStyle(color: Colors.black45),
                 )
               else
                 ...service.items!.map((e) => _PartRow(item: e)),
@@ -317,11 +314,7 @@ class _Body extends StatelessWidget {
         const SizedBox(height: 12),
 
         // RINCIAN BIAYA
-        _CostCard(
-          parts: _partsTotal,
-          labor: _labor,
-          total: _grand,
-        ),
+        _CostCard(parts: _partsTotal, labor: _labor, total: _grand),
       ],
     );
   }
@@ -338,23 +331,6 @@ class _Body extends StatelessWidget {
         return '• Pekerjaan dibatalkan';
       default:
         return '• Menunggu konfirmasi';
-    }
-  }
-
-  /// Pesan sparepart tergantung status service (sesuai logika bisnis kamu)
-  String _sparepartMessage(String status) {
-    switch (status.toLowerCase()) {
-      case 'pending':
-      case 'accept':
-        return 'Belum bisa mengisi sparepart, pekerjaan belum dikerjakan.';
-      case 'in progress':
-        return 'Kendaraan sedang diperbaiki. Sparepart akan tercatat setelah pekerjaan selesai.';
-      case 'completed':
-        return 'Belum ada sparepart yang dicatat untuk pekerjaan ini.';
-      case 'cancelled':
-        return 'Pekerjaan dibatalkan, tidak ada sparepart yang digunakan.';
-      default:
-        return 'Belum ada data sparepart.';
     }
   }
 
@@ -484,7 +460,7 @@ class _Tile extends StatelessWidget {
   }
 }
 
-/* ------------ VEHICLE CARD (UPDATED) ------------ */
+/* ------------ VEHICLE CARD (brand + model + tahun) ------------ */
 
 class _VehicleCard extends StatelessWidget {
   final Vehicle? vehicle;
@@ -493,22 +469,23 @@ class _VehicleCard extends StatelessWidget {
   String _nonEmpty(String? v) =>
       (v == null || v.trim().isEmpty) ? '-' : v.trim();
 
-  String _nonZeroInt(int? v) => (v == null || v == 0) ? '-' : v.toString();
-
   @override
   Widget build(BuildContext context) {
     final v = vehicle;
 
+    final brand = _nonEmpty(v?.brand);
+    final model = _nonEmpty(v?.model);
+    final year  = _nonEmpty(v?.year?.toString());
+
     final titleParts = <String>[];
-    if (_nonEmpty(v?.brand) != '-') titleParts.add(_nonEmpty(v?.brand));
-    if (_nonEmpty(v?.model) != '-') titleParts.add(_nonEmpty(v?.model));
-    if (_nonEmpty(v?.name) != '-') titleParts.add(_nonEmpty(v?.name));
+    if (brand != '-') titleParts.add(brand);
+    if (model != '-') titleParts.add(model);
+    if (year  != '-') titleParts.add(year);
     final title = titleParts.isEmpty ? '-' : titleParts.join(' ');
 
     final plate = _nonEmpty(v?.plateNumber);
-    final year = _nonZeroInt(v?.year);
     final color = _nonEmpty(v?.color);
-    final odo = _nonZeroInt(v?.odometer);
+    final odo   = _nonEmpty(v?.odometer?.toString());
 
     return Container(
       decoration: BoxDecoration(
@@ -519,7 +496,7 @@ class _VehicleCard extends StatelessWidget {
             color: Color(0x14000000),
             blurRadius: 12,
             offset: Offset(0, 6),
-          ),
+          )
         ],
       ),
       child: Padding(
@@ -576,10 +553,10 @@ class _VehicleCard extends StatelessWidget {
   }
 }
 
+
 class _KV extends StatelessWidget {
   final String title, value;
   const _KV({required this.title, required this.value});
-
   @override
   Widget build(BuildContext context) {
     return Expanded(
@@ -590,23 +567,19 @@ class _KV extends StatelessWidget {
           color: Colors.white.withOpacity(.12),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(color: Colors.white70, fontSize: 12),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              value,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ],
-        ),
+        child:
+        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(
+            title,
+            style: const TextStyle(color: Colors.white70, fontSize: 12),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: const TextStyle(
+                color: Colors.white, fontWeight: FontWeight.w800),
+          ),
+        ]),
       ),
     );
   }
@@ -632,21 +605,19 @@ class _PartRow extends StatelessWidget {
         children: [
           Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-                Text(
-                  'Qty: ${item.quantity ?? 0}  @ ${_rupiah(item.price ?? 0)}',
-                  style: const TextStyle(
-                    color: Colors.black54,
-                    fontSize: 12,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style:
+                    const TextStyle(fontWeight: FontWeight.w700),
                   ),
-                ),
-              ],
-            ),
+                  Text(
+                    'Qty: ${item.quantity ?? 0}  @ ${_rupiah(item.price ?? 0)}',
+                    style: const TextStyle(
+                        color: Colors.black54, fontSize: 12),
+                  ),
+                ]),
           ),
           Text(
             _rupiah(item.subtotal ?? 0),
@@ -673,13 +644,15 @@ class _Note extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.sticky_note_2_outlined, color: Colors.black45),
+          const Icon(Icons.sticky_note_2_outlined,
+              color: Colors.black45),
           const SizedBox(width: 8),
           Expanded(child: Text(text)),
           const SizedBox(width: 6),
           Text(
             _timeNow(),
-            style: const TextStyle(color: Colors.black38, fontSize: 12),
+            style: const TextStyle(
+                color: Colors.black38, fontSize: 12),
           ),
         ],
       ),
@@ -689,11 +662,8 @@ class _Note extends StatelessWidget {
 
 class _CostCard extends StatelessWidget {
   final num parts, labor, total;
-  const _CostCard({
-    required this.parts,
-    required this.labor,
-    required this.total,
-  });
+  const _CostCard(
+      {required this.parts, required this.labor, required this.total});
 
   @override
   Widget build(BuildContext context) {
@@ -706,56 +676,46 @@ class _CostCard extends StatelessWidget {
             color: Color(0x14000000),
             blurRadius: 12,
             offset: Offset(0, 6),
-          ),
+          )
         ],
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Rincian Biaya',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(height: 12),
-            _RowCost(
+        child:
+        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text(
+            'Rincian Biaya',
+            style:
+            TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 12),
+          _RowCost(
               label: 'Biaya sparepart',
               value: _rupiah(parts),
-              bold: false,
-            ),
-            _RowCost(
+              bold: false),
+          _RowCost(
               label: 'Biaya  jasa',
               value: _rupiah(labor),
-              bold: false,
-            ),
-            const Divider(color: Colors.white24),
-            _RowCost(
+              bold: false),
+          const Divider(color: Colors.white24),
+          _RowCost(
               label: 'Subtotal',
               value: _rupiah(total),
-              bold: false,
+              bold: false),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(
+                horizontal: 12, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(.12),
+              borderRadius: BorderRadius.circular(10),
             ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 12,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(.12),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: _RowCost(
+            child: _RowCost(
                 label: 'Total Biaya',
                 value: _rupiah(total),
-                bold: true,
-              ),
-            ),
-          ],
-        ),
+                bold: true),
+          ),
+        ]),
       ),
     );
   }
@@ -764,11 +724,8 @@ class _CostCard extends StatelessWidget {
 class _RowCost extends StatelessWidget {
   final String label, value;
   final bool bold;
-  const _RowCost({
-    required this.label,
-    required this.value,
-    this.bold = false,
-  });
+  const _RowCost(
+      {required this.label, required this.value, this.bold = false});
 
   @override
   Widget build(BuildContext context) {
@@ -793,18 +750,12 @@ class _RowCost extends StatelessWidget {
 class _Dot extends StatelessWidget {
   final Color color;
   const _Dot({required this.color});
-
   @override
-  Widget build(BuildContext context) {
-    return Container(
+  Widget build(BuildContext context) => Container(
       width: 10,
       height: 10,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-      ),
-    );
-  }
+      decoration:
+      BoxDecoration(color: color, shape: BoxShape.circle));
 }
 
 /* ---------------- HELPERS ---------------- */
@@ -841,7 +792,7 @@ String _date(DateTime? dt) {
 
 String _estWaktu(DateTime? dt) {
   if (dt == null) return '-';
-  // Kalau nanti mau dihitung dari scheduled_date ke estimated_time, tinggal ganti logika ini
+  // kalau nanti mau hitung durasi dari scheduled_date ke estimated_time
   return '1 jam';
 }
 
