@@ -6,6 +6,9 @@
   <component name="ChangeListManager">
     <list default="true" id="0f1fd287-7e8a-4e9a-beb2-7c2c21e8966b" name="Changes" comment="Fix: Refine .gitignore for IDE files&#10;&#10;This commit updates the `.gitignore` file to more specifically ignore the `.idea` directory by changing `.idea` to `.idea/`. It also explicitly adds `*.iml` to ensure all IntelliJ module files are ignored by version control.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/feature/owner/screens/custom_header.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/feature/owner/screens/reportPages.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/owner/screens/reportPages.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/feature/owner/screens/staffManagement.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/owner/screens/staffManagement.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -23,6 +26,11 @@
     </option>
   </component>
   <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="main" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="GitHubPullRequestSearchHistory">{
