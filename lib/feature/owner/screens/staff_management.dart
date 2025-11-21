@@ -4,8 +4,8 @@ import 'package:provider/provider.dart';
 
 import 'package:bengkel_online_flutter/feature/owner/providers/employee_provider.dart';
 import 'package:bengkel_online_flutter/core/models/employment.dart';
-import 'package:bengkel_online_flutter/feature/owner/screens/add_staff.dart';
-import 'package:bengkel_online_flutter/feature/owner/screens/list_staff.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/addStaff.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/listStaff.dart';
 
 const Color _grad1 = Color(0xFF510606);
 const Color _grad2 = Color(0xFF9B0D0D);
@@ -53,8 +53,6 @@ class _ManajemenKaryawanPageState extends State<ManajemenKaryawanPage> {
           jobdesk.contains(q);
     }).toList();
 
-    final canPop = Navigator.of(context).canPop();
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: RefreshIndicator.adaptive(
@@ -64,13 +62,13 @@ class _ManajemenKaryawanPageState extends State<ManajemenKaryawanPage> {
             parent: AlwaysScrollableScrollPhysics(),
           ),
           slivers: [
+            // HEADER ala ReportPage (tanpa back hitam)
             SliverAppBar(
               pinned: true,
+              automaticallyImplyLeading: false, // ⬅️ tidak ada back bawaan
               backgroundColor: _grad2,
               elevation: 0,
-              expandedHeight: 280,
-              automaticallyImplyLeading: canPop,
-              iconTheme: const IconThemeData(color: Colors.white),
+              expandedHeight: 260,
               flexibleSpace: FlexibleSpaceBar(
                 collapseMode: CollapseMode.parallax,
                 background: Container(
@@ -84,23 +82,22 @@ class _ManajemenKaryawanPageState extends State<ManajemenKaryawanPage> {
                   child: SafeArea(
                     bottom: false,
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const SizedBox(height: 4),
-                          // Judul ditaruh di tengah, independen dari tombol back
                           const Center(
                             child: Text(
-                              'Manajemen Staff',
+                              'Manajemen Karyawan',
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800,
                               ),
                             ),
                           ),
-                          const SizedBox(height: 18),
+                          const SizedBox(height: 24),
                           Text(
                             '${items.length} Karyawan',
                             style: const TextStyle(
@@ -117,19 +114,21 @@ class _ManajemenKaryawanPageState extends State<ManajemenKaryawanPage> {
                               fontSize: 12,
                             ),
                           ),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 22),
 
                           // Quick actions
                           Material(
                             elevation: 6,
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(18),
                             child: Container(
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: BorderRadius.circular(16),
+                                borderRadius: BorderRadius.circular(18),
                               ),
-                              padding:
-                              const EdgeInsets.symmetric(vertical: 18),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 18,
+                                horizontal: 8,
+                              ),
                               child: Row(
                                 mainAxisAlignment:
                                 MainAxisAlignment.spaceEvenly,
@@ -170,7 +169,6 @@ class _ManajemenKaryawanPageState extends State<ManajemenKaryawanPage> {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 20),
                         ],
                       ),
                     ),
@@ -179,21 +177,22 @@ class _ManajemenKaryawanPageState extends State<ManajemenKaryawanPage> {
               ),
             ),
 
-            // Search
+            // SEARCH BAR
             SliverToBoxAdapter(
               child: _searchSection(
                 outerPadding:
-                const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                const EdgeInsets.fromLTRB(16, 14, 16, 12),
                 innerPadding:
                 const EdgeInsets.symmetric(horizontal: 20),
                 fieldContentPadding:
                 const EdgeInsets.symmetric(vertical: 14),
               ),
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: 12)),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 4)),
             SliverToBoxAdapter(child: _listHeaderSection()),
 
-            // List
+            // LIST
             if (prov.loading)
               const SliverToBoxAdapter(
                 child: Padding(
@@ -221,12 +220,10 @@ class _ManajemenKaryawanPageState extends State<ManajemenKaryawanPage> {
                       child: _StaffCard(
                         name: e.user?.name ?? '-',
                         role: e.role.isEmpty ? '-' : e.role,
-                        specialist: (e.specialist ?? '').isEmpty
-                            ? '-'
-                            : e.specialist!,
-                        jobdesk: (e.jobdesk ?? '').isEmpty
-                            ? '-'
-                            : e.jobdesk!,
+                        specialist:
+                        (e.specialist ?? '').isEmpty ? '-' : e.specialist!,
+                        jobdesk:
+                        (e.jobdesk ?? '').isEmpty ? '-' : e.jobdesk!,
                       ),
                     );
                   },
@@ -299,11 +296,11 @@ class _ManajemenKaryawanPageState extends State<ManajemenKaryawanPage> {
   }
 
   Widget _listHeaderSection() {
-    return const Padding(
-      padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
+        children: const [
           Text(
             'List Jobdesk Staff',
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
@@ -385,7 +382,7 @@ class _StaffCard extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black12.withAlpha(26),
+            color: Colors.black12.withOpacity(0.1),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
