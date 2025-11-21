@@ -129,7 +129,8 @@ app.*.symbols
 
 # IDE / tools
 .fleet
-.idea
+.idea/
+*.iml
 .nova
 .phpunit.cache
 .vscode
