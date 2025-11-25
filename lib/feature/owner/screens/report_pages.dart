@@ -1,19 +1,15 @@
+import 'dart:math';
+
 import 'package:bengkel_online_flutter/feature/owner/screens/list_work.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../widgets/report/report_app_bar_header.dart';
-import '../widgets/report/report_charts.dart';
-import '../widgets/report/report_data.dart';
-import '../widgets/report/report_health_tile.dart';
-import '../widgets/report/report_helpers.dart';
-import '../widgets/report/report_kpi_card.dart';
-import '../widgets/report/report_panels.dart';
-
 const Color kRedStart = Color(0xFF9B0D0D);
 const Color kRedEnd = Color(0xFFB70F0F);
 const Color kDanger = Color(0xFFDC2626);
+
+enum TimeRange { daily, weekly, monthly }
 
 class ReportPage extends StatefulWidget {
   const ReportPage({super.key});
@@ -37,7 +33,6 @@ class _ReportPageState extends State<ReportPage> {
   Widget build(BuildContext context) {
     final d = _data.forRange(_range);
     final canPop = Navigator.of(context).canPop();
-    final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -49,17 +44,76 @@ class _ReportPageState extends State<ReportPage> {
             automaticallyImplyLeading: false,
             leading: canPop
                 ? IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () => Navigator.pop(context),
-                  )
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
+            )
                 : null,
             backgroundColor: kRedStart,
             elevation: 0,
             expandedHeight: 230,
             flexibleSpace: FlexibleSpaceBar(
-              background: ReportAppBarHeader(
-                selectedRange: _range,
-                onRangeChanged: (range) => setState(() => _range = range),
+              background: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [kRedStart, kRedEnd],
+                  ),
+                ),
+                child: SafeArea(
+                  bottom: false,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Laporan',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Dashboard Analitik',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                        Row(
+                          children: [
+                            _RangeChip(
+                              text: 'Harian',
+                              selected: _range == TimeRange.daily,
+                              onTap: () =>
+                                  setState(() => _range = TimeRange.daily),
+                            ),
+                            const SizedBox(width: 12),
+                            _RangeChip(
+                              text: 'Mingguan',
+                              selected: _range == TimeRange.weekly,
+                              onTap: () =>
+                                  setState(() => _range = TimeRange.weekly),
+                            ),
+                            const SizedBox(width: 12),
+                            _RangeChip(
+                              text: 'Bulanan',
+                              selected: _range == TimeRange.monthly,
+                              highlight: true,
+                              onTap: () =>
+                                  setState(() => _range = TimeRange.monthly),
+                            ),
+                          ],
+                        ),
+                        const Spacer(),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -76,14 +130,14 @@ class _ReportPageState extends State<ReportPage> {
                     spacing: 14,
                     runSpacing: 14,
                     children: [
-                      ReportKpiCard(
+                      _KpiCard(
                         icon: Icons.attach_money,
-                        title: 'Rp. ${formatCurrency(d.revenueThisPeriod)}',
+                        title: 'Rp. ${_formatCurrency(d.revenueThisPeriod)}',
                         subtitle: _range == TimeRange.monthly
                             ? 'Pendapatan bulan ini'
                             : _range == TimeRange.weekly
-                                ? 'Pendapatan minggu ini'
-                                : 'Pendapatan hari ini',
+                            ? 'Pendapatan minggu ini'
+                            : 'Pendapatan hari ini',
                         growthText: d.revenueGrowthText,
                         onTap: () {
                           Navigator.push(
@@ -94,7 +148,7 @@ class _ReportPageState extends State<ReportPage> {
                           );
                         },
                       ),
-                      ReportKpiCard(
+                      _KpiCard(
                         icon: Icons.assignment_turned_in_rounded,
                         title: d.jobsDone.toString(),
                         subtitle: 'Pekerjaan Selesai',
@@ -108,7 +162,7 @@ class _ReportPageState extends State<ReportPage> {
                           );
                         },
                       ),
-                      ReportKpiCard(
+                      _KpiCard(
                         icon: Icons.groups_rounded,
                         title: '${d.occupancy}%',
                         subtitle: 'Occupancy Rate',
@@ -117,13 +171,12 @@ class _ReportPageState extends State<ReportPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) =>
-                                  const DummyDetail(title: 'Detail Occupancy'),
+                              builder: (_) => const OccupancyDetailPage(),
                             ),
                           );
                         },
                       ),
-                      ReportKpiCard(
+                      _KpiCard(
                         icon: Icons.verified_rounded,
                         title: d.avgRating.toStringAsFixed(1),
                         subtitle: 'Rating rata-rata',
@@ -132,8 +185,7 @@ class _ReportPageState extends State<ReportPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) =>
-                                  const DummyDetail(title: 'Detail Rating'),
+                              builder: (_) => const RatingDetailPage(),
                             ),
                           );
                         },
@@ -143,23 +195,25 @@ class _ReportPageState extends State<ReportPage> {
                   const SizedBox(height: 18),
 
                   // Line chart
-                  ReportPanel(
+                  _Panel(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const ReportPanelHeader(
+                        const _PanelHeader(
                           title: 'Grafik Tren',
                           subtitle: 'Pendapatan & pekerjaan',
                         ),
                         const SizedBox(height: 8),
                         SizedBox(
-                          height: screenHeight * 0.25,
+                          height: 220,
                           child: LineChart(
-                            ReportCharts.lineChartData(
+                            _lineChartData(
                               labels: d.labels,
                               seriesA: d.revenueTrend,
+                              seriesALabel: 'Pendapatan (juta)',
                               colorA: const Color(0xFF7C3AED),
                               seriesB: d.jobsTrend,
+                              seriesBLabel: 'Pekerjaan',
                               colorB: const Color(0xFF2563EB),
                             ),
                             duration: const Duration(milliseconds: 400),
@@ -169,12 +223,12 @@ class _ReportPageState extends State<ReportPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: const [
-                            ReportLegend(
+                            _Legend(
                               color: Color(0xFF7C3AED),
                               text: 'Pendapatan (juta)',
                             ),
                             SizedBox(width: 16),
-                            ReportLegend(
+                            _Legend(
                               color: Color(0xFF2563EB),
                               text: 'Pekerjaan',
                             ),
@@ -189,46 +243,46 @@ class _ReportPageState extends State<ReportPage> {
                   Row(
                     children: [
                       Expanded(
-                        child: ReportPanel(
+                        child: _Panel(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const ReportPanelHeader(title: 'Jenis Service'),
+                              const _PanelHeader(title: 'Jenis Service'),
                               const SizedBox(height: 8),
                               SizedBox(
-                                height: screenHeight * 0.22,
+                                height: 180,
                                 child: PieChart(
-                                  ReportCharts.donutData(d.serviceBreakdown),
+                                  _donutData(d.serviceBreakdown),
                                   swapAnimationDuration:
-                                      const Duration(milliseconds: 350),
+                                  const Duration(milliseconds: 350),
                                 ),
                               ),
                               const SizedBox(height: 8),
                               Column(
                                 children: [
-                                  ReportLegendRow(
+                                  _LegendRow(
                                     color: const Color(0xFF7C3AED),
                                     text: 'Service Rutin',
                                     value:
-                                        '${d.serviceBreakdown['Service Rutin']!.toInt()}%',
+                                    '${d.serviceBreakdown['Service Rutin']!.toInt()}%',
                                   ),
-                                  ReportLegendRow(
+                                  _LegendRow(
                                     color: const Color(0xFF22C55E),
                                     text: 'Perbaikan',
                                     value:
-                                        '${d.serviceBreakdown['Perbaikan']!.toInt()}%',
+                                    '${d.serviceBreakdown['Perbaikan']!.toInt()}%',
                                   ),
-                                  ReportLegendRow(
+                                  _LegendRow(
                                     color: const Color(0xFF06B6D4),
                                     text: 'Ganti Onderdil',
                                     value:
-                                        '${d.serviceBreakdown['Ganti Onderdil']!.toInt()}%',
+                                    '${d.serviceBreakdown['Ganti Onderdil']!.toInt()}%',
                                   ),
-                                  ReportLegendRow(
+                                  _LegendRow(
                                     color: const Color(0xFFF59E0B),
                                     text: 'Body Repair',
                                     value:
-                                        '${d.serviceBreakdown['Body Repair']!.toInt()}%',
+                                    '${d.serviceBreakdown['Body Repair']!.toInt()}%',
                                   ),
                                 ],
                               ),
@@ -238,18 +292,18 @@ class _ReportPageState extends State<ReportPage> {
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: ReportPanel(
+                        child: _Panel(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const ReportPanelHeader(
+                              const _PanelHeader(
                                 title: 'Avg. Antrian',
                               ),
                               const SizedBox(height: 8),
                               SizedBox(
-                                height: screenHeight * 0.22,
+                                height: 180,
                                 child: BarChart(
-                                  ReportCharts.barsData(
+                                  _barsData(
                                     values: d.avgQueueBars,
                                     labels: const [
                                       'Sen',
@@ -263,7 +317,7 @@ class _ReportPageState extends State<ReportPage> {
                                     color: const Color(0xFF7C3AED),
                                   ),
                                   swapAnimationDuration:
-                                      const Duration(milliseconds: 350),
+                                  const Duration(milliseconds: 350),
                                 ),
                               ),
                             ],
@@ -275,26 +329,26 @@ class _ReportPageState extends State<ReportPage> {
                   const SizedBox(height: 16),
 
                   // Peak hour
-                  ReportPanel(
+                  _Panel(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const ReportPanelHeader(
+                        const _PanelHeader(
                           title: 'Peak Hour',
                           subtitle: 'Jam Sibuk bengkel',
                           trailingIcon: Icons.access_time,
                         ),
                         const SizedBox(height: 8),
                         SizedBox(
-                          height: screenHeight * 0.25,
+                          height: 220,
                           child: BarChart(
-                            ReportCharts.barsData(
+                            _barsData(
                               values: d.peakHourBars,
                               labels: d.peakHourLabels,
                               color: const Color(0xFF3B82F6),
                             ),
                             swapAnimationDuration:
-                                const Duration(milliseconds: 350),
+                            const Duration(milliseconds: 350),
                           ),
                         ),
                       ],
@@ -302,84 +356,52 @@ class _ReportPageState extends State<ReportPage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Operational health - using redesigned ReportHealthTile
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF7C3AED), Color(0xFF9333EA)],
-                              ),
-                              borderRadius: BorderRadius.circular(12),
+                  // Operational health
+                  _Panel(
+                    background: const Color(0xFFFFF1F2),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Kesehatan Operasional',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 12,
+                          children: [
+                            _HealthTile(
+                              title: 'Rata-rata antrian',
+                              value: '${d.avgQueue} mobil',
+                              tag: 'Normal',
+                              tagColor: const Color(0xFF22C55E),
                             ),
-                            child: const Icon(
-                              Icons.health_and_safety_rounded,
-                              color: Colors.white,
-                              size: 24,
+                            _HealthTile(
+                              title: 'Occupancy Bengkel',
+                              value: '${d.occupancy}%',
+                              tag: 'Tinggi',
+                              tagColor: kDanger,
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          const Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Kesehatan Operasional',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w800,
-                                    color: Color(0xFF1A1A1A),
-                                  ),
-                                ),
-                                SizedBox(height: 2),
-                                Text(
-                                  'Status performa bengkel saat ini',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: Color(0xFF666666),
-                                  ),
-                                ),
-                              ],
+                            _HealthTile(
+                              title: 'Peak Hours',
+                              value: d.peakRange,
+                              tag: 'Optimal',
+                              tagColor: const Color(0xFF3B82F6),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Wrap(
-                        spacing: 12,
-                        runSpacing: 12,
-                        children: [
-                          ReportHealthTile(
-                            title: 'Rata-rata antrian',
-                            value: '${d.avgQueue} mobil',
-                            tag: 'Normal',
-                            tagColor: const Color(0xFF22C55E),
-                          ),
-                          ReportHealthTile(
-                            title: 'Occupancy Bengkel',
-                            value: '${d.occupancy}%',
-                            tag: 'Tinggi',
-                            tagColor: kDanger,
-                          ),
-                          ReportHealthTile(
-                            title: 'Peak Hours',
-                            value: d.peakRange,
-                            tag: 'Optimal',
-                            tagColor: const Color(0xFF3B82F6),
-                          ),
-                          ReportHealthTile(
-                            title: 'Efisiensi',
-                            value: '${d.efficiency}%',
-                            tag: 'Baik',
-                            tagColor: const Color(0xFF22C55E),
-                          ),
-                        ],
-                      ),
-                    ],
+                            _HealthTile(
+                              title: 'Efisiensi',
+                              value: '${d.efficiency}%',
+                              tag: 'Baik',
+                              tagColor: const Color(0xFF22C55E),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 18),
 
@@ -415,12 +437,771 @@ class _ReportPageState extends State<ReportPage> {
   }
 }
 
+/* =========================
+   CHIP & KPI
+   ========================= */
+
+class _RangeChip extends StatelessWidget {
+  const _RangeChip({
+    required this.text,
+    required this.selected,
+    required this.onTap,
+    this.highlight = false,
+  });
+
+  final String text;
+  final bool selected;
+  final bool highlight;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final bg = selected
+        ? (highlight ? const Color(0xFFF59E0B) : Colors.white)
+        : const Color(0xFF7F0F0F);
+    final fg =
+    selected ? (highlight ? Colors.white : kDanger) : Colors.white70;
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          height: 44,
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            text,
+            style: TextStyle(
+              color: fg,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _KpiCard extends StatelessWidget {
+  const _KpiCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.growthText,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final String growthText;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final w = (MediaQuery.of(context).size.width - 16 * 2 - 14) / 2;
+    final radius = BorderRadius.circular(20);
+
+    return SizedBox(
+      width: w,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: radius,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: radius,
+          child: Container(
+            height: 120,
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF7A0F0F), Color(0xFFB01212)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: radius,
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x14000000),
+                  blurRadius: 12,
+                  offset: Offset(0, 6),
+                )
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(.15),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.trending_up_rounded,
+                            color: Colors.white,
+                            size: 14,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            growthText,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(icon, color: Colors.white),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            subtitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/* =========================
+   CHART BUILDERS (fl_chart)
+   ========================= */
+
+LineChartData _lineChartData({
+  required List<String> labels,
+  required List<double> seriesA,
+  required String seriesALabel,
+  required Color colorA,
+  required List<double> seriesB,
+  required String seriesBLabel,
+  required Color colorB,
+}) {
+  final maxY = [...seriesA, ...seriesB].reduce(max) * 1.2;
+
+  SideTitles bottomTitles() => SideTitles(
+    showTitles: true,
+    reservedSize: 28,
+    getTitlesWidget: (value, meta) {
+      final i = value.toInt();
+      if (i < 0 || i >= labels.length) {
+        return const SizedBox.shrink();
+      }
+      return Padding(
+        padding: const EdgeInsets.only(top: 6),
+        child: Text(
+          labels[i],
+          style: const TextStyle(
+            fontSize: 10,
+            color: Colors.black54,
+          ),
+        ),
+      );
+    },
+  );
+
+  FlDotData _dot(Color c) => FlDotData(
+    show: true,
+    getDotPainter: (spot, percent, barData, index) =>
+        FlDotCirclePainter(radius: 3, color: c, strokeWidth: 0),
+  );
+
+  return LineChartData(
+    minY: 0,
+    maxY: maxY,
+    gridData: FlGridData(
+      show: true,
+      drawVerticalLine: false,
+      horizontalInterval: maxY / 4,
+    ),
+    titlesData: FlTitlesData(
+      topTitles: const AxisTitles(
+        sideTitles: SideTitles(showTitles: false),
+      ),
+      rightTitles: const AxisTitles(
+        sideTitles: SideTitles(showTitles: false),
+      ),
+      leftTitles: const AxisTitles(
+        sideTitles: SideTitles(showTitles: false),
+      ),
+      bottomTitles: AxisTitles(sideTitles: bottomTitles()),
+    ),
+    lineBarsData: [
+      LineChartBarData(
+        spots: List.generate(
+          seriesA.length,
+              (i) => FlSpot(i.toDouble(), seriesA[i]),
+        ),
+        isCurved: true,
+        color: colorA,
+        barWidth: 3,
+        dotData: _dot(colorA),
+      ),
+      LineChartBarData(
+        spots: List.generate(
+          seriesB.length,
+              (i) => FlSpot(i.toDouble(), seriesB[i]),
+        ),
+        isCurved: true,
+        color: colorB,
+        barWidth: 3,
+        dotData: _dot(colorB),
+      ),
+    ],
+    borderData: FlBorderData(show: false),
+  );
+}
+
+PieChartData _donutData(Map<String, double> breakdown) {
+  final entries = breakdown.entries.toList();
+  final colors = [
+    const Color(0xFF7C3AED),
+    const Color(0xFF22C55E),
+    const Color(0xFF06B6D4),
+    const Color(0xFFF59E0B),
+  ];
+
+  return PieChartData(
+    centerSpaceRadius: 46,
+    sectionsSpace: 2,
+    sections: List.generate(entries.length, (i) {
+      return PieChartSectionData(
+        value: entries[i].value,
+        color: colors[i % colors.length],
+        radius: 34,
+        title: '',
+      );
+    }),
+  );
+}
+
+BarChartData _barsData({
+  required List<double> values,
+  required List<String> labels,
+  required Color color,
+}) {
+  final maxY = values.reduce(max) * 1.2;
+
+  return BarChartData(
+    maxY: maxY,
+    minY: 0,
+    gridData: FlGridData(
+      show: true,
+      drawVerticalLine: false,
+      horizontalInterval: maxY / 4,
+    ),
+    titlesData: FlTitlesData(
+      topTitles: const AxisTitles(
+        sideTitles: SideTitles(showTitles: false),
+      ),
+      leftTitles: const AxisTitles(
+        sideTitles: SideTitles(showTitles: false),
+      ),
+      rightTitles: const AxisTitles(
+        sideTitles: SideTitles(showTitles: false),
+      ),
+      bottomTitles: AxisTitles(
+        sideTitles: SideTitles(
+          showTitles: true,
+          reservedSize: 26,
+          getTitlesWidget: (value, meta) {
+            final i = value.toInt();
+            if (i < 0 || i >= labels.length) {
+              return const SizedBox.shrink();
+            }
+            return Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text(
+                labels[i],
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: Colors.black54,
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    ),
+    borderData: FlBorderData(show: false),
+    barGroups: List.generate(values.length, (i) {
+      return BarChartGroupData(
+        x: i,
+        barRods: [
+          BarChartRodData(
+            toY: values[i],
+            color: color,
+            width: 14,
+            borderRadius: BorderRadius.circular(6),
+          ),
+        ],
+      );
+    }),
+  );
+}
+
+/* =========================
+   SUPPORT UI
+   ========================= */
+
+class _Panel extends StatelessWidget {
+  const _Panel({
+    required this.child,
+    this.background = Colors.white,
+  });
+
+  final Widget child;
+  final Color background;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x11000000),
+            blurRadius: 18,
+            offset: Offset(0, 10),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+}
+
+class _PanelHeader extends StatelessWidget {
+  const _PanelHeader({
+    required this.title,
+    this.subtitle,
+    this.trailingIcon,
+  });
+
+  final String title;
+  final String? subtitle;
+  final IconData? trailingIcon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            if (subtitle != null)
+              Text(
+                subtitle!,
+                style: const TextStyle(
+                  color: Colors.black54,
+                  fontSize: 12,
+                ),
+              ),
+          ],
+        ),
+        const Spacer(),
+        if (trailingIcon != null)
+          Icon(
+            trailingIcon,
+            color: const Color(0xFF9CA3AF),
+          ),
+      ],
+    );
+  }
+}
+
+class _Legend extends StatelessWidget {
+  const _Legend({
+    required this.color,
+    required this.text,
+  });
+
+  final Color color;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          text,
+          style: const TextStyle(
+            fontSize: 12,
+            color: Colors.black87,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _LegendRow extends StatelessWidget {
+  const _LegendRow({
+    required this.color,
+    required this.text,
+    required this.value,
+  });
+
+  final Color color;
+  final String text;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        children: [
+          _Legend(color: color, text: text),
+          const Spacer(),
+          Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HealthTile extends StatelessWidget {
+  const _HealthTile({
+    required this.title,
+    required this.value,
+    required this.tag,
+    required this.tagColor,
+  });
+
+  final String title;
+  final String value;
+  final String tag;
+  final Color tagColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final w = (MediaQuery.of(context).size.width - 16 * 2 - 12) / 2;
+
+    return SizedBox(
+      width: w,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style:
+              const TextStyle(color: Colors.black54, fontSize: 12),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              tag,
+              style: TextStyle(
+                color: tagColor,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/* =========================
+   DATA DUMMY & MAPPER
+   ========================= */
+
+class ReportData {
+  final Map<String, double> serviceBreakdown;
+  final List<double> revenueTrend;
+  final List<double> jobsTrend;
+  final List<String> labels;
+
+  final int jobsDone;
+  final int occupancy;
+  final double avgRating;
+  final int revenueThisPeriod;
+
+  final String revenueGrowthText;
+  final String jobsGrowthText;
+  final String occupancyGrowthText;
+  final String ratingGrowthText;
+
+  final List<double> avgQueueBars;
+  final List<double> peakHourBars;
+  final List<String> peakHourLabels;
+
+  final int avgQueue;
+  final String peakRange;
+  final int efficiency;
+
+  ReportData({
+    required this.serviceBreakdown,
+    required this.revenueTrend,
+    required this.jobsTrend,
+    required this.labels,
+    required this.jobsDone,
+    required this.occupancy,
+    required this.avgRating,
+    required this.revenueThisPeriod,
+    required this.revenueGrowthText,
+    required this.jobsGrowthText,
+    required this.occupancyGrowthText,
+    required this.ratingGrowthText,
+    required this.avgQueueBars,
+    required this.peakHourBars,
+    required this.peakHourLabels,
+    required this.avgQueue,
+    required this.peakRange,
+    required this.efficiency,
+  });
+
+  static ReportData seed() {
+    return ReportData(
+      serviceBreakdown: const {
+        'Service Rutin': 35,
+        'Perbaikan': 28,
+        'Ganti Onderdil': 22,
+        'Body Repair': 15,
+      },
+      revenueTrend: const [40, 48, 43, 60, 57, 65],
+      jobsTrend: const [35, 45, 40, 50, 48, 56],
+      labels: const ['Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt'],
+      jobsDone: 22,
+      occupancy: 89,
+      avgRating: 4.8,
+      revenueThisPeriod: 64700000,
+      revenueGrowthText: '+12,5%',
+      jobsGrowthText: '+8%',
+      occupancyGrowthText: '−3%',
+      ratingGrowthText: '+5%',
+      avgQueueBars: const [9, 12, 14, 11, 18, 22, 7],
+      peakHourBars: const [28, 60, 84, 76, 88, 92, 54, 32],
+      peakHourLabels: const [
+        '08:00',
+        '10:00',
+        '12:00',
+        '14:00',
+        '16:00',
+        '18:00',
+        '20:00',
+        '22:00'
+      ],
+      avgQueue: 15,
+      peakRange: '14:00 - 18:00',
+      efficiency: 92,
+    );
+  }
+
+  ReportData forRange(TimeRange r) {
+    if (r == TimeRange.monthly) return this;
+
+    if (r == TimeRange.weekly) {
+      return ReportData(
+        serviceBreakdown: serviceBreakdown,
+        revenueTrend: const [8, 10, 9, 12, 11, 13],
+        jobsTrend: const [5, 7, 6, 8, 9, 10],
+        labels: const ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'],
+        jobsDone: 12,
+        occupancy: 86,
+        avgRating: 4.7,
+        revenueThisPeriod: 13200000,
+        revenueGrowthText: '+3,1%',
+        jobsGrowthText: '+2,6%',
+        occupancyGrowthText: '−1%',
+        ratingGrowthText: '+1%',
+        avgQueueBars: const [10, 13, 15, 12, 18, 21, 8],
+        peakHourBars: const [20, 48, 61, 70, 65, 72, 40, 22],
+        peakHourLabels: const [
+          '08',
+          '10',
+          '12',
+          '14',
+          '16',
+          '18',
+          '20',
+          '22'
+        ],
+        avgQueue: 14,
+        peakRange: '12:00 - 18:00',
+        efficiency: 90,
+      );
+    }
+
+    return ReportData(
+      serviceBreakdown: serviceBreakdown,
+      revenueTrend: const [2.1, 3.4, 2.8, 3.0, 3.6, 3.1],
+      jobsTrend: const [3, 5, 4, 6, 7, 6],
+      labels: const ['08', '10', '12', '14', '16', '18'],
+      jobsDone: 5,
+      occupancy: 82,
+      avgRating: 4.8,
+      revenueThisPeriod: 3600000,
+      revenueGrowthText: '+0,8%',
+      jobsGrowthText: '+1%',
+      occupancyGrowthText: '+0,5%',
+      ratingGrowthText: '+0,2%',
+      avgQueueBars: const [4, 6, 8, 12, 10, 6, 2],
+      peakHourBars: const [6, 14, 22, 20, 18, 8, 4, 2],
+      peakHourLabels: const [
+        '08',
+        '10',
+        '12',
+        '14',
+        '16',
+        '18',
+        '20',
+        '22'
+      ],
+      avgQueue: 12,
+      peakRange: '12:00 - 16:00',
+      efficiency: 91,
+    );
+  }
+}
+
+/* =========================
+   HELPERS
+   ========================= */
+
+String _formatCurrency(int value) {
+  final s = value.toString();
+  final buf = StringBuffer();
+  for (int i = 0; i < s.length; i++) {
+    final idx = s.length - i;
+    buf.write(s[i]);
+    if (idx > 1 && idx % 3 == 1) {
+      buf.write('.');
+    }
+  }
+  return buf.toString();
+}
+
 /* ============================================================
    DUMMY DETAIL PAGES
    ============================================================ */
 
-class DummyDetail extends StatelessWidget {
-  const DummyDetail({required this.title, super.key});
+class RevenueDetailPage extends StatelessWidget {
+  const RevenueDetailPage({super.key});
+
+  @override
+  Widget build(BuildContext context) =>
+      const _DummyDetail(title: 'Detail Pendapatan');
+}
+
+class JobsDetailPage extends StatelessWidget {
+  const JobsDetailPage({super.key});
+
+  @override
+  Widget build(BuildContext context) =>
+      const _DummyDetail(title: 'Detail Pekerjaan Selesai');
+}
+
+class OccupancyDetailPage extends StatelessWidget {
+  const OccupancyDetailPage({super.key});
+
+  @override
+  Widget build(BuildContext context) =>
+      const _DummyDetail(title: 'Detail Occupancy');
+}
+
+class RatingDetailPage extends StatelessWidget {
+  const RatingDetailPage({super.key});
+
+  @override
+  Widget build(BuildContext context) =>
+      const _DummyDetail(title: 'Detail Rating');
+}
+
+class _DummyDetail extends StatelessWidget {
+  const _DummyDetail({required this.title, super.key});
   final String title;
 
   @override

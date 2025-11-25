@@ -1,7 +1,5 @@
 import 'dart:async';
-import 'package:bengkel_online_flutter/feature/admin/screens/homepage.dart';
-import 'package:bengkel_online_flutter/feature/admin/screens/service_page.dart';
-import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/date_symbol_data_local.dart'; // ✅ Import intl
 
 import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import 'package:bengkel_online_flutter/core/screens/loading_gate.dart';
 import 'package:bengkel_online_flutter/core/screens/login.dart' as login_screen;
+import 'package:bengkel_online_flutter/core/screens/register.dart';
 
 import 'package:bengkel_online_flutter/core/screens/registers/register.dart';
 
@@ -17,9 +16,13 @@ import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
 
 // ADMIN
 import 'package:bengkel_online_flutter/feature/admin/screens/dashboard.dart';
+import 'package:bengkel_online_flutter/feature/admin/screens/homepage.dart';
 import 'package:bengkel_online_flutter/feature/admin/screens/profil_page.dart' as admin_profil;
+import 'package:bengkel_online_flutter/feature/admin/screens/service_page.dart' as admin;
 import 'package:bengkel_online_flutter/feature/admin/widgets/bottom_nav.dart';
 import 'package:bengkel_online_flutter/core/screens/registers/change_password.dart' as change_screen;
+
+
 
 // OWNER
 import 'package:bengkel_online_flutter/feature/owner/providers/employee_provider.dart';
@@ -85,8 +88,8 @@ class _MyAppState extends State<MyApp> {
     } catch (_) {}
 
     _linkSub = _appLinks.uriLinkStream.listen(
-      (uri) {
-        _handleUri(uri);
+          (uri) {
+        if (uri != null) _handleUri(uri);
       },
       onError: (_) {},
     );
@@ -142,6 +145,7 @@ class _MyAppState extends State<MyApp> {
         "/home": (context) => const DashboardScreen(),
         "/changePassword": (context) => const change_screen.UbahPasswordPage(),
         "/list": (context) => const ListWorkPage(),
+
 
         "/dashboard": (context) => const DashboardPage(),
         "/register/owner": (context) => const RegisterFlowPage(),
@@ -241,23 +245,13 @@ class _MainPageState extends State<MainPage> {
     switch (widget.role) {
       case "owner":
         pages = [
-          const DashboardScreen(),
+          DashboardScreen(),
           const ManajemenKaryawanPage(),
           const ReportPage(),
           owner_profil.ProfilePageOwner(),
         ];
         bottomNavBar = CustomBottomNavBarOwner(
-          selectedIndex: _selectedIndex,
-          onTap: _onItemTapped,
-        );
-        break;
-
-      case "admin":
-        pages = [
-          const HomePage(),
-          const ServicePageAdmin(),
-          const DashboardPage(),
-          const admin_profil.ProfilePageAdmin(),
+          admin_profil.ProfilePageAdmin(),
         ];
         bottomNavBar = CustomBottomNavBarAdmin(
           selectedIndex: _selectedIndex,
