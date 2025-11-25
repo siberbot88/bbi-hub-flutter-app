@@ -24,7 +24,7 @@ class ReportHealthTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black.withOpacity(0.05)),
+        border: Border.all(color: const Color(0x0D000000)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -58,7 +58,7 @@ class ReportHealthTile extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-              color: tagColor.withOpacity(0.1),
+              color: tagColor.withAlpha(25),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(

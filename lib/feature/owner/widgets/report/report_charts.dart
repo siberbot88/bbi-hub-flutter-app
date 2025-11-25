@@ -17,7 +17,7 @@ class ReportCharts {
     SideTitles bottomTitles() => SideTitles(
           showTitles: true,
           reservedSize: 28,
-          getTitlesWidget: (value, meta) {
+          getTitlesWidget: (value, _) {
             final i = value.toInt();
             if (i < 0 || i >= labels.length) {
               return const SizedBox.shrink();
@@ -37,7 +37,7 @@ class ReportCharts {
 
     FlDotData dot(Color c) => FlDotData(
           show: true,
-          getDotPainter: (spot, percent, barData, index) =>
+          getDotPainter: (_, __, ___, ____) =>
               FlDotCirclePainter(radius: 3, color: c, strokeWidth: 0),
         );
 
@@ -139,7 +139,7 @@ class ReportCharts {
           sideTitles: SideTitles(
             showTitles: true,
             reservedSize: 26,
-            getTitlesWidget: (value, meta) {
+            getTitlesWidget: (value, _) {
               final i = value.toInt();
               if (i < 0 || i >= labels.length) {
                 return const SizedBox.shrink();
