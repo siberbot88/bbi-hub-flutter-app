@@ -1,11 +1,13 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-import 'package:bengkel_online_flutter/feature/owner/screens/addStaff.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/add_staff.dart';
 import 'package:bengkel_online_flutter/core/models/employment.dart';
 import 'package:bengkel_online_flutter/feature/owner/providers/employee_provider.dart';
+
+import '../widgets/manajemen_karyawan/staff_table.dart';
+import '../widgets/manajemen_karyawan/staff_edit_sheet.dart';
 
 class ManajemenKaryawanTablePage extends StatefulWidget {
   const ManajemenKaryawanTablePage({super.key});
@@ -94,7 +96,7 @@ class _ManajemenKaryawanTablePageState extends State<ManajemenKaryawanTablePage>
   }
 
   Future<void> _editEmployee(Employment e) async {
-    final result = await showModalBottomSheet<_EditResult>(
+    final result = await showModalBottomSheet<StaffEditResult>(
       context: context,
       useSafeArea: true,
       isScrollControlled: true,
@@ -102,12 +104,14 @@ class _ManajemenKaryawanTablePageState extends State<ManajemenKaryawanTablePage>
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
       ),
-      builder: (ctx) => _EditSheet(employment: e),
+      builder: (ctx) => StaffEditSheet(employment: e),
     );
     if (result == null) return;
+    if (!mounted) return;
 
+    final prov = context.read<EmployeeProvider>();
     try {
-      await context.read<EmployeeProvider>().updateEmployee(
+      await prov.updateEmployee(
         e.id,
         name: result.name,
         username: result.username,
@@ -147,9 +151,11 @@ class _ManajemenKaryawanTablePageState extends State<ManajemenKaryawanTablePage>
       ),
     );
     if (ok != true) return;
+    if (!mounted) return;
 
+    final prov = context.read<EmployeeProvider>();
     try {
-      await context.read<EmployeeProvider>().deleteEmployee(e.id);
+      await prov.deleteEmployee(e.id);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -213,7 +219,7 @@ class _ManajemenKaryawanTablePageState extends State<ManajemenKaryawanTablePage>
                                 icon: const Icon(Icons.arrow_back, color: Colors.white),
                                 style: ButtonStyle(
                                   backgroundColor:
-                                  WidgetStatePropertyAll(Colors.white.withOpacity(0.25)),
+                                  WidgetStatePropertyAll(Colors.white.withAlpha(64)),
                                   shape: const WidgetStatePropertyAll(CircleBorder()),
                                 ),
                               ),
@@ -285,7 +291,7 @@ class _ManajemenKaryawanTablePageState extends State<ManajemenKaryawanTablePage>
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 32), // margin bawah 32px
-                child: _TableCardEmployment(
+                child: StaffTable(
                   rows: filtered,
                   headerController: _hHeader,
                   bodyHController: _hBody,
@@ -313,442 +319,4 @@ class _ManajemenKaryawanTablePageState extends State<ManajemenKaryawanTablePage>
       ),
     );
   }
-}
-
-/* ==================== TABEL EMPLOYMENT ==================== */
-
-class _TableCardEmployment extends StatelessWidget {
-  const _TableCardEmployment({
-    required this.rows,
-    required this.headerController,
-    required this.bodyHController,
-    required this.bodyVController,
-    required this.onToggleActive,
-    required this.onEdit,
-    required this.onDelete,
-  });
-
-  final List<Employment> rows;
-
-  final ScrollController headerController;
-  final ScrollController bodyHController;
-  final ScrollController bodyVController;
-
-  final Future<void> Function(Employment, bool) onToggleActive;
-  final Future<void> Function(Employment) onEdit;
-  final Future<void> Function(Employment) onDelete;
-
-  static const double wAvatar = 64; // kolom foto
-  static const double wName = 220;
-  static const double wPos = 180;
-  static const double wEmail = 240;
-  static const double wStatus = 140;
-  static const double wActions = 120;
-
-  static const double rowHeight = 64;
-
-  static double get totalWidth => wAvatar + wName + wPos + wEmail + wStatus + wActions;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      elevation: 6,
-      shadowColor: Colors.black12,
-      borderRadius: BorderRadius.circular(10), // radius kecil
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10), // radius kecil
-          border: Border.all(color: const Color(0xFFE6EAF0)),
-        ),
-        child: Column(
-          children: [
-            // Header
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
-              child: Container(
-                color: const Color(0xFFF9FAFB),
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                child: SingleChildScrollView(
-                  controller: headerController,
-                  scrollDirection: Axis.horizontal,
-                  physics: const BouncingScrollPhysics(),
-                  child: SizedBox(
-                    width: max(totalWidth, MediaQuery.of(context).size.width - 32),
-                    child: Row(
-                      children: [
-                        // Icon saja agar tidak overflow (hilangin tulisan Photo)
-                        _headerCell(
-                          width: wAvatar,
-                          child: const Icon(Icons.person, size: 18, color: Color(0xFF475467)),
-                        ),
-                        _headerCell(width: wName, label: 'NAME'),
-                        _headerCell(width: wPos, label: 'Position'),
-                        _headerCell(width: wEmail, label: 'E-Mail'),
-                        _headerCell(width: wStatus, label: 'Status'),
-                        _headerCell(width: wActions, label: ''),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const Divider(height: 1),
-
-            // Body (dibikin lebih tinggi)
-            SizedBox(
-              height: min(680.0, MediaQuery.of(context).size.height * 0.72),
-              child: Scrollbar(
-                controller: bodyVController,
-                radius: const Radius.circular(10),
-                thickness: 6,
-                child: SingleChildScrollView(
-                  controller: bodyHController,
-                  scrollDirection: Axis.horizontal,
-                  physics: const BouncingScrollPhysics(),
-                  child: SizedBox(
-                    width: max(totalWidth, MediaQuery.of(context).size.width - 32),
-                    child: ListView.separated(
-                      controller: bodyVController,
-                      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-                      itemBuilder: (context, i) {
-                        final e = rows[i];
-                        return _RowEmployment(
-                          data: e,
-                          onToggleActive: (v) => onToggleActive(e, v),
-                          onEdit: () => onEdit(e),
-                          onDelete: () => onDelete(e),
-                        );
-                      },
-                      separatorBuilder: (_, __) => const Divider(height: 1),
-                      itemCount: rows.length,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _headerCell({required double width, String? label, Widget? child}) {
-    const style = TextStyle(
-      fontSize: 12,
-      color: Color(0xFF475467),
-      fontWeight: FontWeight.w700,
-      letterSpacing: 0.2,
-    );
-    return SizedBox(
-      width: width,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Align(
-          alignment: Alignment.centerLeft,
-          child: child ?? Text(label ?? '', style: style),
-        ),
-      ),
-    );
-  }
-}
-
-class _RowEmployment extends StatelessWidget {
-  const _RowEmployment({
-    required this.data,
-    required this.onToggleActive,
-    required this.onEdit,
-    required this.onDelete,
-  });
-
-  final Employment data;
-  final ValueChanged<bool> onToggleActive;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
-
-  static const double wAvatar = _TableCardEmployment.wAvatar;
-  static const double wName = _TableCardEmployment.wName;
-  static const double wPos = _TableCardEmployment.wPos;
-  static const double wEmail = _TableCardEmployment.wEmail;
-  static const double wStatus = _TableCardEmployment.wStatus;
-  static const double wActions = _TableCardEmployment.wActions;
-
-  @override
-  Widget build(BuildContext context) {
-    final ts = Theme.of(context).textTheme;
-
-    return SizedBox(
-      height: _TableCardEmployment.rowHeight,
-      child: Row(
-        children: [
-          // AVATAR
-          SizedBox(
-            width: wAvatar,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: CircleAvatar(
-                radius: 18,
-                backgroundColor: _avatarBg(data.name),
-                child: Text(
-                  _initials(data.name),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          // NAME (tanpa kotak ungu)
-          SizedBox(
-            width: wName,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(color: const Color(0xFFE6EAF0)),
-                  borderRadius: BorderRadius.circular(8), // lebih kotak
-                ),
-                child: Text(
-                  data.name.isEmpty ? '-' : data.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: ts.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-                ),
-              ),
-            ),
-          ),
-          // POSITION
-          SizedBox(
-            width: wPos,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                data.role.isEmpty ? '-' : data.role,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: ts.bodyMedium?.copyWith(
-                  color: const Color(0xFF344054),
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ),
-          // EMAIL
-          SizedBox(
-            width: wEmail,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                data.email.isEmpty ? '-' : data.email,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: ts.bodyMedium?.copyWith(color: const Color(0xFF344054)),
-              ),
-            ),
-          ),
-          // STATUS
-          SizedBox(
-            width: wStatus,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: _StatusPill(active: data.isActive),
-                    ),
-                  ),
-                  Switch.adaptive(
-                    value: data.isActive,
-                    onChanged: onToggleActive,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    activeColor: const Color(0xFF16A34A),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          // ACTIONS
-          SizedBox(
-            width: wActions,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  IconButton(
-                    tooltip: 'Edit',
-                    icon: const Icon(Icons.edit_outlined),
-                    onPressed: onEdit,
-                  ),
-                  IconButton(
-                    tooltip: 'Delete',
-                    icon: const Icon(Icons.delete_outline),
-                    onPressed: onDelete,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatusPill extends StatelessWidget {
-  const _StatusPill({required this.active});
-  final bool active;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = active ? const Color(0xFFDCFCE7) : const Color(0xFFF1F5F9);
-    final textColor = active ? const Color(0xFF166534) : const Color(0xFF475467);
-    final label = active ? 'Active' : 'Inactive';
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: const Color(0xFFE6EAF0)),
-      ),
-      child: Text(label, style: TextStyle(fontSize: 12, color: textColor, fontWeight: FontWeight.w600)),
-    );
-  }
-}
-
-/* ==================== EDIT SHEET (tetap) ==================== */
-
-class _EditResult {
-  final String? name;
-  final String? username;
-  final String? email;
-  final String? role;
-  final String? specialist;
-  final String? jobdesk;
-  _EditResult({this.name, this.username, this.email, this.role, this.specialist, this.jobdesk});
-}
-
-class _EditSheet extends StatefulWidget {
-  const _EditSheet({required this.employment});
-  final Employment employment;
-
-  @override
-  State<_EditSheet> createState() => _EditSheetState();
-}
-
-class _EditSheetState extends State<_EditSheet> {
-  static const _danger = Color(0xFFDC2626);
-
-  late final TextEditingController _name =
-  TextEditingController(text: widget.employment.name);
-  late final TextEditingController _username =
-  TextEditingController(text: widget.employment.user?.username ?? '');
-  late final TextEditingController _mail =
-  TextEditingController(text: widget.employment.email);
-  late final TextEditingController _specialist =
-  TextEditingController(text: widget.employment.specialist ?? '');
-  late final TextEditingController _jobdesk =
-  TextEditingController(text: widget.employment.jobdesk ?? '');
-  late String _role = (widget.employment.role.isEmpty) ? 'mechanic' : widget.employment.role;
-
-  @override
-  void dispose() {
-    _name.dispose();
-    _username.dispose();
-    _mail.dispose();
-    _specialist.dispose();
-    _jobdesk.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final viewInsets = MediaQuery.of(context).viewInsets.bottom;
-    return Padding(
-      padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + viewInsets),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(width: 36, height: 4, decoration: BoxDecoration(color: Colors.black12, borderRadius: BorderRadius.circular(999))),
-          const SizedBox(height: 16),
-          const Text('Edit Karyawan', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _danger)),
-          const SizedBox(height: 16),
-          TextField(controller: _name, decoration: const InputDecoration(labelText: 'Nama')),
-          const SizedBox(height: 12),
-          TextField(controller: _username, decoration: const InputDecoration(labelText: 'Username')),
-          const SizedBox(height: 12),
-          TextField(controller: _mail, decoration: const InputDecoration(labelText: 'E-Mail')),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<String>(
-            value: _role,
-            items: const [
-              DropdownMenuItem(value: 'admin', child: Text('Admin')),
-              DropdownMenuItem(value: 'mechanic', child: Text('Mekanik')),
-            ],
-            onChanged: (v) => setState(() => _role = v ?? 'mechanic'),
-            decoration: const InputDecoration(labelText: 'Role'),
-          ),
-          const SizedBox(height: 12),
-          TextField(controller: _specialist, decoration: const InputDecoration(labelText: 'Spesialis')),
-          const SizedBox(height: 12),
-          TextField(controller: _jobdesk, decoration: const InputDecoration(labelText: 'Jobdesk')),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: _danger,
-                    side: const BorderSide(color: _danger),
-                  ),
-                  child: const Text('Batal'),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: FilledButton(
-                  style: FilledButton.styleFrom(backgroundColor: _danger, foregroundColor: Colors.white),
-                  onPressed: () {
-                    Navigator.pop(
-                      context,
-                      _EditResult(
-                        name: _name.text.trim(),
-                        username: _username.text.trim(),
-                        email: _mail.text.trim(),
-                        role: _role,
-                        specialist: _specialist.text.trim(),
-                        jobdesk: _jobdesk.text.trim(),
-                      ),
-                    );
-                  },
-                  child: const Text('Simpan'),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/* ==================== Helpers ==================== */
-
-String _initials(String name) {
-  final parts = name.trim().split(RegExp(r'\s+'));
-  if (parts.isEmpty) return '?';
-  if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
-  return (parts.first.substring(0, 1) + parts.last.substring(0, 1)).toUpperCase();
-}
-
-Color _avatarBg(String seed) {
-  final hash = seed.codeUnits.fold<int>(0, (p, c) => p + c);
-  final hue = (hash % 360).toDouble();
-  return HSLColor.fromAHSL(1, hue, 0.45, 0.62).toColor();
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
@@ -71,7 +72,7 @@ class _AdvancedFilter {
 }
 
 class ListWorkPage extends StatefulWidget {
-  const ListWorkPage({Key? key, this.workshopUuid}) : super(key: key);
+  const ListWorkPage({super.key, this.workshopUuid});
 
   final String? workshopUuid;
 

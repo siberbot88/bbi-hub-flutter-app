@@ -174,7 +174,7 @@ class _ReportPageState extends State<ReportPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const OccupancyDetailPage(),
+                              builder: (_) => const DummyDetail(title: 'Detail Occupancy'),
                             ),
                           );
                         },
@@ -188,7 +188,7 @@ class _ReportPageState extends State<ReportPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const RatingDetailPage(),
+                              builder: (_) => const DummyDetail(title: 'Detail Rating'),
                             ),
                           );
                         },
@@ -213,10 +213,8 @@ class _ReportPageState extends State<ReportPage> {
                             ReportCharts.lineChartData(
                               labels: d.labels,
                               seriesA: d.revenueTrend,
-                              seriesALabel: 'Pendapatan (juta)',
                               colorA: const Color(0xFF7C3AED),
                               seriesB: d.jobsTrend,
-                              seriesBLabel: 'Pekerjaan',
                               colorB: const Color(0xFF2563EB),
                             ),
                             duration: const Duration(milliseconds: 400),
@@ -444,40 +442,10 @@ class _ReportPageState extends State<ReportPage> {
    DUMMY DETAIL PAGES
    ============================================================ */
 
-class RevenueDetailPage extends StatelessWidget {
-  const RevenueDetailPage({super.key});
 
-  @override
-  Widget build(BuildContext context) =>
-      const _DummyDetail(title: 'Detail Pendapatan');
-}
 
-class JobsDetailPage extends StatelessWidget {
-  const JobsDetailPage({super.key});
-
-  @override
-  Widget build(BuildContext context) =>
-      const _DummyDetail(title: 'Detail Pekerjaan Selesai');
-}
-
-class OccupancyDetailPage extends StatelessWidget {
-  const OccupancyDetailPage({super.key});
-
-  @override
-  Widget build(BuildContext context) =>
-      const _DummyDetail(title: 'Detail Occupancy');
-}
-
-class RatingDetailPage extends StatelessWidget {
-  const RatingDetailPage({super.key});
-
-  @override
-  Widget build(BuildContext context) =>
-      const _DummyDetail(title: 'Detail Rating');
-}
-
-class _DummyDetail extends StatelessWidget {
-  const _DummyDetail({required this.title, super.key});
+class DummyDetail extends StatelessWidget {
+  const DummyDetail({required this.title, super.key});
   final String title;
 
   @override

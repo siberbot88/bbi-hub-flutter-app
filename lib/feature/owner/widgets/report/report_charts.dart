@@ -6,10 +6,8 @@ class ReportCharts {
   static LineChartData lineChartData({
     required List<String> labels,
     required List<double> seriesA,
-    required String seriesALabel,
     required Color colorA,
     required List<double> seriesB,
-    required String seriesBLabel,
     required Color colorB,
   }) {
     final maxY = [...seriesA, ...seriesB].reduce(max) * 1.2;
