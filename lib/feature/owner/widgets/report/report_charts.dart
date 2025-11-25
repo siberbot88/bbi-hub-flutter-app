@@ -6,8 +6,10 @@ class ReportCharts {
   static LineChartData lineChartData({
     required List<String> labels,
     required List<double> seriesA,
+    required String seriesALabel,
     required Color colorA,
     required List<double> seriesB,
+    required String seriesBLabel,
     required Color colorB,
   }) {
     final maxY = [...seriesA, ...seriesB].reduce(max) * 1.2;
@@ -15,7 +17,7 @@ class ReportCharts {
     SideTitles bottomTitles() => SideTitles(
           showTitles: true,
           reservedSize: 28,
-          getTitlesWidget: (value, _) {
+          getTitlesWidget: (value, meta) {
             final i = value.toInt();
             if (i < 0 || i >= labels.length) {
               return const SizedBox.shrink();
@@ -35,7 +37,7 @@ class ReportCharts {
 
     FlDotData dot(Color c) => FlDotData(
           show: true,
-          getDotPainter: (_, __, ___, ____) =>
+          getDotPainter: (spot, percent, barData, index) =>
               FlDotCirclePainter(radius: 3, color: c, strokeWidth: 0),
         );
 
@@ -137,7 +139,7 @@ class ReportCharts {
           sideTitles: SideTitles(
             showTitles: true,
             reservedSize: 26,
-            getTitlesWidget: (value, _) {
+            getTitlesWidget: (value, meta) {
               final i = value.toInt();
               if (i < 0 || i >= labels.length) {
                 return const SizedBox.shrink();
