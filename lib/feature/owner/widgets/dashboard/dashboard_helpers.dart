@@ -1,7 +1,6 @@
 import 'package:bengkel_online_flutter/core/models/service.dart';
 import 'package:flutter/material.dart';
-
-enum SummaryRange { today, week, month }
+import 'package:bengkel_online_flutter/feature/owner/screens/homepage_owner.dart';
 
 /// Summary data for dashboard
 class SummaryData {
@@ -64,7 +63,7 @@ SummaryData buildSummary(List<ServiceModel> list, SummaryRange range) {
 /// Calculate total revenue from a service (price + parts)
 num serviceRevenue(ServiceModel s) {
   final partsTotal = (s.items ?? const [])
-      .fold<num>(0, (a, it) => a + it.subtotal);
+      .fold<num>(0, (a, it) => a + (it.subtotal ?? 0));
   return (s.price ?? 0) + partsTotal;
 }
 
@@ -179,37 +178,24 @@ Color statusColor(String raw) {
 String? pickWorkshopUuid(dynamic user) {
   if (user == null) return null;
   try {
-    // ignore: avoid_dynamic_calls
-    final ws = user.workshops;
-    if (ws is List && ws.isNotEmpty) {
+    final ws = user.workshops as List?;
+    if (ws != null && ws.isNotEmpty) {
       final first = ws.first;
-      if (first is Map) {
-        return first['id']?.toString();
-      }
-      // ignore: avoid_dynamic_calls
-      return first.id?.toString();
+      try {
+        final id = (first.id ?? first['id']) as String?;
+        if (id != null && id.isNotEmpty) return id;
+      } catch (_) {}
     }
   } catch (_) {}
 
   try {
-    // ignore: avoid_dynamic_calls
     final emp = user.employment;
-    if (emp != null) {
-      dynamic w;
-      if (emp is Map) {
-        w = emp['workshop'];
-      } else {
-        // ignore: avoid_dynamic_calls
-        w = emp.workshop;
-      }
-
-      if (w != null) {
-        if (w is Map) {
-          return w['id']?.toString();
-        }
-        // ignore: avoid_dynamic_calls
-        return w.id?.toString();
-      }
+    final w = emp?.workshop ?? emp['workshop'];
+    if (w != null) {
+      try {
+        final id = (w.id ?? w['id']) as String?;
+        if (id != null && id.isNotEmpty) return id;
+      } catch (_) {}
     }
   } catch (_) {}
 

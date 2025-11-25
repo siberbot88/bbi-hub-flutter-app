@@ -50,7 +50,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
       foregroundColor: Colors.white,
       backgroundColor: Colors.transparent,
       surfaceTintColor: Colors.transparent,
-      shadowColor: Colors.black.withAlpha(64),
+      shadowColor: Colors.black.withOpacity(0.25),
       systemOverlayStyle: SystemUiOverlayStyle.light,
       titleSpacing: 0,
       title: const SizedBox.shrink(),
@@ -141,7 +141,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                             Text(
                               roleLabel,
                               style: TextStyle(
-                                color: Colors.white.withAlpha(217),
+                                color: Colors.white.withOpacity(0.85),
                                 fontSize: roleSize,
                               ),
                               maxLines: 1,
@@ -154,7 +154,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                         onTap: onAvatarTap,
                         child: CircleAvatar(
                           radius: 18,
-                          backgroundColor: Colors.white.withAlpha(230),
+                          backgroundColor: Colors.white.withOpacity(0.9),
                           backgroundImage: avatar,
                           child: avatar == null
                               ? const Icon(Icons.person, color: Colors.black)
@@ -180,7 +180,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                   Text(
                     'Yuk Kelola Operasional Hari ini 🔥',
                     style: TextStyle(
-                      color: Colors.white.withAlpha(235),
+                      color: Colors.white.withOpacity(0.92),
                       fontSize: subtitleSize,
                     ),
                     maxLines: 1,
@@ -272,12 +272,12 @@ class _StatsPill extends StatelessWidget {
       constraints: const BoxConstraints(minHeight: 92.0),
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
       decoration: BoxDecoration(
-        color: Colors.white.withAlpha(36),
+        color: Colors.white.withOpacity(0.14),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.white.withAlpha(56), width: 1),
+        border: Border.all(color: Colors.white.withOpacity(0.22), width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(46),
+            color: Colors.black.withOpacity(0.18),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -293,7 +293,7 @@ class _StatsPill extends StatelessWidget {
                 Text(
                   'Tanggal sekarang',
                   style: TextStyle(
-                    color: Colors.white.withAlpha(217),
+                    color: Colors.white.withOpacity(0.85),
                     fontSize: labelSize,
                   ),
                 ),
@@ -314,7 +314,7 @@ class _StatsPill extends StatelessWidget {
             width: 1,
             height: 44,
             margin: const EdgeInsets.symmetric(horizontal: 12),
-            color: Colors.white.withAlpha(64),
+            color: Colors.white.withOpacity(0.25),
           ),
           Expanded(
             child: Column(
@@ -324,7 +324,7 @@ class _StatsPill extends StatelessWidget {
                 Text(
                   'Tugas hari ini',
                   style: TextStyle(
-                    color: Colors.white.withAlpha(217),
+                    color: Colors.white.withOpacity(0.85),
                     fontSize: labelSize,
                   ),
                 ),
