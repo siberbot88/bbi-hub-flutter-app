@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
 import 'package:bengkel_online_flutter/feature/owner/providers/employee_provider.dart';
 import 'package:bengkel_online_flutter/core/models/employment.dart';
 import 'package:bengkel_online_flutter/feature/owner/screens/add_staff.dart';
@@ -386,7 +385,7 @@ class _StaffCard extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black12.withOpacity(0.1),
+            color: Colors.black12.withAlpha(26),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),

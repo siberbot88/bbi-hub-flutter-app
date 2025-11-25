@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:bengkel_online_flutter/core/models/user.dart'; // Pastikan path ini sesuai
-import 'package:bengkel_online_flutter/core/models/workshop.dart';
 
 void main() {
   const rawJson = '''

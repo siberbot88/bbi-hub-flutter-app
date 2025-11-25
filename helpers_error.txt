@@ -1,0 +1,5 @@
+Analyzing dashboard_helpers.dart...                             
+
+warning - The left operand can't be null, so the right operand is never executed - lib\feature\owner\widgets\dashboard\dashboard_helpers.dart:67:52 - dead_null_aware_expression
+
+1 issue found. (ran in 0.9s)

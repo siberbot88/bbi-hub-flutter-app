@@ -60,7 +60,7 @@ class User {
     }
 
     // Parse must_change_password dengan aman
-    bool _parseMustChange(dynamic v) {
+    bool parseMustChange(dynamic v) {
       if (v is bool) return v;
       if (v is num) return v == 1;
       if (v is String) {
@@ -79,7 +79,7 @@ class User {
       role: userRole,
       workshops: parsedWorkshops,
       employment: parsedEmployment,
-      mustChangePassword: _parseMustChange(
+      mustChangePassword: parseMustChange(
           json['must_change_password'] ?? json['mustChangePassword']),
     );
   }

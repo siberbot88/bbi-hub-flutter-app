@@ -58,7 +58,7 @@ class _InvoiceFormPageState extends State<InvoiceFormPage> {
             ),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              value: selectedJenis,
+              initialValue: selectedJenis,
               decoration: const InputDecoration(labelText: "Jenis Servis"),
               items: jenisOptions
                   .map((e) => DropdownMenuItem(value: e, child: Text(e)))

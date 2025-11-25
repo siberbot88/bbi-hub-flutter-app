@@ -8,7 +8,7 @@ class SmartAsset extends StatelessWidget {
   final BoxFit fit;
   final Widget Function(BuildContext, Object?, StackTrace?)? errorBuilder;
 
-   SmartAsset({
+   const SmartAsset({
     super.key,
     required this.path,
     this.width,

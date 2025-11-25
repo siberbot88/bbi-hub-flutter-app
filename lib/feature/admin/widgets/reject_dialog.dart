@@ -48,7 +48,7 @@ void showRejectDialog(BuildContext context) {
                       style: GoogleFonts.poppins(fontSize: 13)),
                   const SizedBox(height: 6),
                   DropdownButtonFormField<String>(
-                    value: selectedReason,
+                    initialValue: selectedReason,
                     items: reasons
                         .map((e) => DropdownMenuItem(
                               value: e,
