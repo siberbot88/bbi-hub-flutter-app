@@ -3,8 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'package:bengkel_online_flutter/core/models/service.dart';
-import 'package:bengkel_online_flutter/feature/owner/providers/service_provider.dart';
-import 'package:bengkel_online_flutter/feature/owner/screens/detailWork.dart';
+import 'package:bengkel_online_flutter/core/providers/service_provider.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/detail_work.dart';
 
 const Color _gradStart = Color(0xFF9B0D0D);
 const Color _gradEnd = Color(0xFFB70F0F);

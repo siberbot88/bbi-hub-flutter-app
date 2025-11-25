@@ -284,4 +284,40 @@ class ServiceModel {
     final n = mechanic?.name ?? '';
     return n.isEmpty ? '-' : n;
   }
+
+  // ===== Display Getters untuk UI (Type-safe) =====
+  
+  /// Display: customer name
+  String get displayCustomerName => customer?.name ?? '-';
+  
+  /// Display: vehicle plate number
+  String get displayVehiclePlate => vehicle?.plateNumber ?? '-';
+  
+  /// Display: vehicle brand
+  String get displayVehicleBrand => vehicle?.brand ?? '-';
+  
+  /// Display: vehicle model
+  String get displayVehicleModel => vehicle?.model ?? '-';
+  
+  /// Display: vehicle name  
+  String get displayVehicleName => vehicle?.name ?? displayVehicleModel;
+  
+  /// Display: workshop name
+  String get displayWorkshopName => workshopName ?? '-';
+  
+  /// Combined search string for efficient searching (lowercase)
+  String get searchKeywords {
+    final parts = <String>[
+      code,
+      name,
+      description ?? '',
+      customer?.name ?? '',
+      vehicle?.plateNumber ?? '',
+      vehicle?.brand ?? '',
+      vehicle?.model ?? '',
+      vehicle?.name ?? '',
+      workshopName ?? '',
+    ];
+    return parts.where((e) => e.isNotEmpty).join(' | ').toLowerCase();
+  }
 }

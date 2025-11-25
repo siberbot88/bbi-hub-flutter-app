@@ -8,35 +8,31 @@ import 'package:provider/provider.dart';
 import 'package:bengkel_online_flutter/core/screens/loading_gate.dart';
 import 'package:bengkel_online_flutter/core/screens/login.dart' as login_screen;
 import 'package:bengkel_online_flutter/core/screens/register.dart';
-import 'package:bengkel_online_flutter/core/screens/registerBengkel.dart';
-import 'package:bengkel_online_flutter/core/screens/registers/registerOwner.dart';
-import 'package:bengkel_online_flutter/core/screens/registeruser.dart';
+
+import 'package:bengkel_online_flutter/core/screens/registers/register.dart';
+
 import 'package:bengkel_online_flutter/core/screens/splash_screen.dart';
 import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
 
 // ADMIN
 import 'package:bengkel_online_flutter/feature/admin/screens/dashboard.dart';
 import 'package:bengkel_online_flutter/feature/admin/screens/homepage.dart';
-import 'package:bengkel_online_flutter/feature/admin/screens/profilpage.dart' as admin_profil;
+import 'package:bengkel_online_flutter/feature/admin/screens/profil_page.dart' as admin_profil;
 import 'package:bengkel_online_flutter/feature/admin/screens/service_page.dart' as admin;
 import 'package:bengkel_online_flutter/feature/admin/widgets/bottom_nav.dart';
 import 'package:bengkel_online_flutter/core/screens/registers/change_password.dart' as change_screen;
 
-// MECHANIC
-import 'package:bengkel_online_flutter/feature/mechanic/screens/homepageMechanic.dart';
-import 'package:bengkel_online_flutter/feature/mechanic/screens/profil_page.dart' as mechanic_profil;
-import 'package:bengkel_online_flutter/feature/mechanic/screens/service_pagemechanic.dart' as mechanic;
-import 'package:bengkel_online_flutter/feature/mechanic/widgets/bottom_navbar.dart';
+
 
 // OWNER
 import 'package:bengkel_online_flutter/feature/owner/providers/employee_provider.dart';
-import 'package:bengkel_online_flutter/feature/owner/providers/service_provider.dart';
-import 'package:bengkel_online_flutter/feature/owner/screens/homepageOwner.dart';
-import 'package:bengkel_online_flutter/feature/owner/screens/listWork.dart';
-import 'package:bengkel_online_flutter/feature/owner/screens/onBoarding.dart';
-import 'package:bengkel_online_flutter/feature/owner/screens/profilpage_owner.dart' as owner_profil;
-import 'package:bengkel_online_flutter/feature/owner/screens/reportPages.dart';
-import 'package:bengkel_online_flutter/feature/owner/screens/staffManagement.dart';
+import 'package:bengkel_online_flutter/core/providers/service_provider.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/homepage_owner.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/list_work.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/on_boarding.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/profil_page_owner.dart' as owner_profil;
+import 'package:bengkel_online_flutter/feature/owner/screens/report_pages.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/staff_management.dart';
 import 'package:bengkel_online_flutter/feature/owner/widgets/bottom_nav_owner.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -149,8 +145,8 @@ class _MyAppState extends State<MyApp> {
         "/home": (context) => const DashboardScreen(),
         "/changePassword": (context) => const change_screen.ubahPasswordPage(),
         "/list": (context) => const ListWorkPage(),
-        "/register/owner/bengkel": (context) => RegisterBengkelScreen(),
-        "/register/user": (context) => RegisterScreen(),
+
+
         "/dashboard": (context) => const DashboardPage(),
         "/register/owner": (context) => const RegisterFlowPage(),
         "/owner/profile": (context) => owner_profil.ProfilePageOwner(),
@@ -200,7 +196,7 @@ class RoleEntry extends StatelessWidget {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    if (mustChange && (role == 'mechanic' || role == 'admin')) {
+    if (mustChange && role == 'admin') {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.pushReplacementNamed(context, '/changePassword');
       });
@@ -253,28 +249,6 @@ class _MainPageState extends State<MainPage> {
           owner_profil.ProfilePageOwner(),
         ];
         bottomNavBar = CustomBottomNavBarOwner(
-          selectedIndex: _selectedIndex,
-          onTap: _onItemTapped,
-        );
-        break;
-
-      case "mechanic":
-        pages = [
-          HomePageMechanic(),
-          mechanic.ServicePageMechanic(),
-          mechanic_profil.ProfilePageMechanic(),
-        ];
-        bottomNavBar = CustomBottomNavBarMechanic(
-          selectedIndex: _selectedIndex,
-          onTap: _onItemTapped,
-        );
-        break;
-
-      case "admin":
-        pages = [
-          HomePage(),
-          admin.ServicePageAdmin(),
-          const DashboardPage(),
           admin_profil.ProfilePageAdmin(),
         ];
         bottomNavBar = CustomBottomNavBarAdmin(

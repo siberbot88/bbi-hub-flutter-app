@@ -3,10 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
-import 'package:bengkel_online_flutter/feature/owner/providers/service_provider.dart';
+import 'package:bengkel_online_flutter/core/providers/service_provider.dart';
 import 'package:bengkel_online_flutter/core/models/service.dart';
-import 'package:bengkel_online_flutter/feature/owner/screens/listWork.dart';
-import 'package:bengkel_online_flutter/feature/owner/screens/staffManagement.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/list_work.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/staff_management.dart';
 import 'package:bengkel_online_flutter/feature/owner/screens/reportPages.dart';
 
 const Color primaryRed = Color(0xFFB70F0F);

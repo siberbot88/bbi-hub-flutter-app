@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:bengkel_online_flutter/feature/owner/screens/listWork.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/list_work.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

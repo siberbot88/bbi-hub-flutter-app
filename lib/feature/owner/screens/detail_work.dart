@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:bengkel_online_flutter/feature/owner/providers/service_provider.dart';
+import 'package:bengkel_online_flutter/core/providers/service_provider.dart';
 import 'package:bengkel_online_flutter/core/models/service.dart';
 import 'package:bengkel_online_flutter/core/models/transaction_item.dart';
 import 'package:bengkel_online_flutter/core/models/vehicle.dart';
