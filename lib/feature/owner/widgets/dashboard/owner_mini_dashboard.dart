@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:bengkel_online_flutter/feature/owner/screens/homepage_owner.dart';
 import 'dashboard_helpers.dart';
 
 /// Mini dashboard widget with summary stats and range selector
@@ -21,6 +21,7 @@ class OwnerMiniDashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const primaryRed = Color(0xFFB70F0F);
     
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
