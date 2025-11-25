@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../widgets/bottom_nav.dart';
-import '../widgets/custom_header.dart';
-import 'service_page.dart'; // untuk navigasi ke Scheduled
+// untuk navigasi ke Scheduled
 import 'service_pending.dart' as pending;
 import 'service_progress.dart' as progress;
 import 'service_complete.dart' as complete;
-import 'package:flutter_svg/flutter_svg.dart';
 
 class ServiceLoggingPage extends StatefulWidget {
   const ServiceLoggingPage({super.key});
@@ -373,7 +370,7 @@ Widget _buildAvailableTimes() {
             ),
           ),
           const SizedBox(height: 12),
-          ...availableTimeSlots.map((slot) => _buildTimeSlotCard(slot)).toList(),
+          ...availableTimeSlots.map((slot) => _buildTimeSlotCard(slot)),
         ],
       ),
     ),
@@ -536,7 +533,7 @@ Widget _loggingContent() {
             ),
           )
         else
-          ...loggingFiltered.map((t) => taskLoggingCard(t)).toList(),
+          ...loggingFiltered.map((t) => taskLoggingCard(t)),
       ],
     ),
   );
@@ -547,8 +544,9 @@ Widget taskLoggingCard(Map<String, dynamic> task) {
   Color statusColor;
   final status = (task['status'] as String); // Tidak perlu toLowerCase() di sini
 
-  if (status == "Completed") statusColor = Colors.green;
-  else if (status == "In Progress") statusColor = Colors.orange;
+  if (status == "Completed") {
+    statusColor = Colors.green;
+  } else if (status == "In Progress") statusColor = Colors.orange;
   else if (status == "Pending") statusColor = Colors.grey.shade800;
   else statusColor = Colors.grey.shade800;
 

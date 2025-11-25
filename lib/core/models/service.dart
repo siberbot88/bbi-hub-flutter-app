@@ -103,14 +103,14 @@ class ServiceModel {
   });
 
   factory ServiceModel.fromJson(Map<String, dynamic> json) {
-    DateTime? _parseDT(dynamic v) {
+    DateTime? parseDT(dynamic v) {
       if (v == null) return null;
       if (v is DateTime) return v;
       if (v is String && v.isNotEmpty) return DateTime.tryParse(v);
       return null;
     }
 
-    String? _vehicleId() {
+    String? vehicleId() {
       if (json['vehicle_id'] != null) return json['vehicle_id'].toString();
       if (json['vehicleId'] != null) return json['vehicleId'].toString();
       final v = json['vehicle'];
@@ -119,7 +119,7 @@ class ServiceModel {
     }
 
     // workshop name dari relasi
-    String? _workshopName() {
+    String? workshopName() {
       final w = json['workshop'];
       if (w is Map &&
           w['name'] is String &&
@@ -130,7 +130,7 @@ class ServiceModel {
     }
 
     // mechanic dari relasi
-    MechanicRef? _mechanic() {
+    MechanicRef? mechanic() {
       final m = json['mechanic'];
       if (m is Map) {
         return MechanicRef.fromJson(Map<String, dynamic>.from(m));
@@ -149,18 +149,18 @@ class ServiceModel {
       price: json['price'] is num
           ? json['price']
           : num.tryParse('${json['price']}'),
-      scheduledDate: _parseDT(json['scheduled_date']),
-      estimatedTime: _parseDT(json['estimated_time']),
+      scheduledDate: parseDT(json['scheduled_date']),
+      estimatedTime: parseDT(json['estimated_time']),
       status: (json['status'] ?? '').toString(),
 
       /// status & waktu status
       acceptanceStatus: json['acceptance_status']?.toString(),
-      acceptedAt: _parseDT(json['accepted_at']),
-      completedAt: _parseDT(json['completed_at']),
+      acceptedAt: parseDT(json['accepted_at']),
+      completedAt: parseDT(json['completed_at']),
 
       customerUuid: json['customer_uuid']?.toString(),
       workshopUuid: json['workshop_uuid']?.toString(),
-      vehicleId: _vehicleId(),
+      vehicleId: vehicleId(),
 
       customer: (json['customer'] is Map)
           ? Customer.fromJson(
@@ -172,14 +172,14 @@ class ServiceModel {
         Map<String, dynamic>.from(json['vehicle'] as Map),
       )
           : null,
-      workshopName: _workshopName(),
-      mechanic: _mechanic(),
+      workshopName: workshopName(),
+      mechanic: mechanic(),
 
       items: itemsJson
           .whereType<Map>()
           .map(
             (e) => TransactionItem.fromJson(
-          Map<String, dynamic>.from(e as Map),
+          Map<String, dynamic>.from(e),
         ),
       )
           .toList(),
@@ -191,14 +191,14 @@ class ServiceModel {
 
       reason: json['reason']?.toString(),
       feedbackMechanic: json['feedback_mechanic']?.toString(),
-      createdAt: _parseDT(json['created_at']),
-      updatedAt: _parseDT(json['updated_at']),
+      createdAt: parseDT(json['created_at']),
+      updatedAt: parseDT(json['updated_at']),
     );
   }
 
   /// Serialization ringan (tanpa memanggil `toJson()` dari model lain).
   Map<String, dynamic> toJson({bool includeRelations = false}) {
-    Map<String, dynamic>? _customerJson() {
+    Map<String, dynamic>? customerJson() {
       if (!includeRelations || customer == null) return null;
       try {
         final c = customer as dynamic;
@@ -211,7 +211,7 @@ class ServiceModel {
       }
     }
 
-    Map<String, dynamic>? _vehicleJson() {
+    Map<String, dynamic>? vehicleJson() {
       if (!includeRelations || vehicle == null) return null;
       try {
         final v = vehicle as dynamic;
@@ -227,7 +227,7 @@ class ServiceModel {
       }
     }
 
-    List<Map<String, dynamic>>? _itemsJson() {
+    List<Map<String, dynamic>>? itemsJson() {
       if (!includeRelations || items == null) return null;
       final out = <Map<String, dynamic>>[];
       for (final it in items!) {
@@ -265,11 +265,11 @@ class ServiceModel {
       if (includeRelations && workshopName != null)
         'workshop': {'name': workshopName},
       if (mechanic != null) 'mechanic': mechanic!.toJson(),
-      if (includeRelations && _customerJson() != null)
-        'customer': _customerJson(),
-      if (includeRelations && _vehicleJson() != null)
-        'vehicle': _vehicleJson(),
-      if (includeRelations && _itemsJson() != null) 'items': _itemsJson(),
+      if (includeRelations && customerJson() != null)
+        'customer': customerJson(),
+      if (includeRelations && vehicleJson() != null)
+        'vehicle': vehicleJson(),
+      if (includeRelations && itemsJson() != null) 'items': itemsJson(),
       if (note != null) 'note': note,
       if (categoryName != null) 'category_service': categoryName,
       if (reason != null) 'reason': reason,
@@ -283,5 +283,41 @@ class ServiceModel {
   String get mechanicName {
     final n = mechanic?.name ?? '';
     return n.isEmpty ? '-' : n;
+  }
+
+  // ===== Display Getters untuk UI (Type-safe) =====
+  
+  /// Display: customer name
+  String get displayCustomerName => customer?.name ?? '-';
+  
+  /// Display: vehicle plate number
+  String get displayVehiclePlate => vehicle?.plateNumber ?? '-';
+  
+  /// Display: vehicle brand
+  String get displayVehicleBrand => vehicle?.brand ?? '-';
+  
+  /// Display: vehicle model
+  String get displayVehicleModel => vehicle?.model ?? '-';
+  
+  /// Display: vehicle name  
+  String get displayVehicleName => vehicle?.name ?? displayVehicleModel;
+  
+  /// Display: workshop name
+  String get displayWorkshopName => workshopName ?? '-';
+  
+  /// Combined search string for efficient searching (lowercase)
+  String get searchKeywords {
+    final parts = <String>[
+      code,
+      name,
+      description ?? '',
+      customer?.name ?? '',
+      vehicle?.plateNumber ?? '',
+      vehicle?.brand ?? '',
+      vehicle?.model ?? '',
+      vehicle?.name ?? '',
+      workshopName ?? '',
+    ];
+    return parts.where((e) => e.isNotEmpty).join(' | ').toLowerCase();
   }
 }

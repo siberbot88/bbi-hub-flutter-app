@@ -1,0 +1,5 @@
+Analyzing homepage_owner.dart...                                
+
+  error - A value of type 'Object?' can't be assigned to a variable of type 'SummaryRange' - lib\feature\owner\screens\homepage_owner.dart:145:59 - invalid_assignment
+
+1 issue found. (ran in 1.3s)

@@ -16,20 +16,20 @@ class TransactionItem {
   });
 
   factory TransactionItem.fromJson(Map<String, dynamic> j) {
-    num _num(dynamic v) {
+    num parseNum(dynamic v) {
       if (v is num) return v;
       if (v is String) return num.tryParse(v) ?? 0;
       return 0;
     }
 
-    int _int(dynamic v) {
+    int parseIntVal(dynamic v) {
       if (v is int) return v;
       if (v is double) return v.toInt();
       if (v is String) return int.tryParse(v) ?? 0;
       return 0;
     }
 
-    String? _serviceTypeName() {
+    String? serviceTypeName() {
       final st = j['service_type'];
       if (st is Map && st['name'] != null) {
         return st['name'].toString();
@@ -43,10 +43,10 @@ class TransactionItem {
     return TransactionItem(
       id: (j['id'] ?? '').toString(),
       name: j['name']?.toString(),
-      serviceTypeName: _serviceTypeName(),
-      price: _num(j['price']),
-      quantity: _int(j['quantity'] ?? j['qty']),
-      subtotal: _num(j['subtotal'] ?? j['total']),
+      serviceTypeName: serviceTypeName(),
+      price: parseNum(j['price']),
+      quantity: parseIntVal(j['quantity'] ?? j['qty']),
+      subtotal: parseNum(j['subtotal'] ?? j['total']),
     );
   }
 

@@ -30,7 +30,7 @@ class Vehicle {
   });
 
   factory Vehicle.fromJson(Map<String, dynamic> json) {
-    int? _toInt(dynamic v) {
+    int? toInt(dynamic v) {
       if (v is int) return v;
       if (v is double) return v.toInt();
       if (v is String && v.isNotEmpty) return int.tryParse(v);
@@ -49,7 +49,7 @@ class Vehicle {
       year: json['year']?.toString(),           // varchar -> String
       color: json['color']?.toString(),
       plateNumber: json['plate_number']?.toString(),
-      odometer: _toInt(json['odometer']),
+      odometer: toInt(json['odometer']),
     );
   }
 

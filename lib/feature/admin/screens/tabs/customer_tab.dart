@@ -225,8 +225,9 @@ class _CustomerTabState extends State<CustomerTab> {
                   ))
               .toList(),
           onChanged: (v) {
-            if (v != null)
+            if (v != null) {
               widget.onRangeChange(v); // Memanggil fungsi jika ada perubahan
+            }
           },
         ),
       ),

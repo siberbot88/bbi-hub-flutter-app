@@ -43,7 +43,7 @@ void showTechnicianSelectDialog(BuildContext context) {
 
                   // Dropdown teknisi
                   DropdownButtonFormField<String>(
-                    value: selectedTechnician,
+                    initialValue: selectedTechnician,
                     items: technicians
                         .map(
                           (e) => DropdownMenuItem(
