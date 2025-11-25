@@ -119,12 +119,12 @@ class CustomBottomNavBarAdmin extends StatelessWidget {
                                   bottom: 12,
                                   child: Text(
                                     entry['label']!,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
                                       color: active
                                           ? Colors.white
-                                          : Color(0xFF9A9A9A),
+                                          : const Color(0xFF9A9A9A),
                                     ),
                                   ),
                                 ),

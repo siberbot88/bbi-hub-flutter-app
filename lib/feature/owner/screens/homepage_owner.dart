@@ -16,7 +16,6 @@ const Color primaryRed = Color(0xFFB70F0F);
 const Color gradientRedStart = Color(0xFF9B0D0D);
 const Color gradientRedEnd = Color(0xFFB70F0F);
 
-enum SummaryRange { today, week, month }
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});

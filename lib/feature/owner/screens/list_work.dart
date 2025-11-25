@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
@@ -13,7 +14,7 @@ const Color _gradEnd = Color(0xFFB70F0F);
 const Color _danger = Color(0xFFDC2626);
 
 class ListWorkPage extends StatefulWidget {
-  const ListWorkPage({Key? key, this.workshopUuid}) : super(key: key);
+  const ListWorkPage({super.key, this.workshopUuid});
 
   final String? workshopUuid;
 

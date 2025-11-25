@@ -118,7 +118,7 @@ class _AddStaffRegisterPageState extends State<AddStaffRegisterPage>
 
   Widget _buildRoleDropdown() {
     return DropdownButtonFormField<String>(
-      value: _selectedRole,
+      initialValue: _selectedRole,
       onChanged: (v) => setState(() => _selectedRole = v ?? _selectedRole),
       items: const ['admin', 'mechanic']
           .map(
