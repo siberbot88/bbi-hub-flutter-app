@@ -4,71 +4,13 @@ import 'package:provider/provider.dart';
 
 import 'package:bengkel_online_flutter/core/models/service.dart';
 import 'package:bengkel_online_flutter/core/providers/service_provider.dart';
-import 'package:bengkel_online_flutter/feature/owner/screens/detail_work.dart';
+
+import '../widgets/work/work_card.dart';
+import '../widgets/work/work_helpers.dart';
 
 const Color _gradStart = Color(0xFF9B0D0D);
 const Color _gradEnd = Color(0xFFB70F0F);
 const Color _danger = Color(0xFFDC2626);
-
-enum WorkStatus { pending, process, done }
-
-class WorkItem {
-  final String id;
-  final String workOrder;
-  final String customer;
-  final String vehicle;
-  final String plate;
-  final String service;
-  final DateTime? schedule;
-  final String mechanic;
-  final num? price;
-  final WorkStatus status;
-
-  WorkItem({
-    required this.id,
-    required this.workOrder,
-    required this.customer,
-    required this.vehicle,
-    required this.plate,
-    required this.service,
-    required this.schedule,
-    required this.mechanic,
-    required this.price,
-    required this.status,
-  });
-}
-
-/// state filter lanjutan (jenis kendaraan, kategori, urutan)
-class _AdvancedFilter {
-  final String? vehicleType; // 'mobil' | 'motor'
-  final String? vehicleCategory; // 'matic', 'suv', dll (lowercase)
-  final String sort; // 'newest' | 'oldest' | 'none'
-
-  const _AdvancedFilter({
-    this.vehicleType,
-    this.vehicleCategory,
-    this.sort = 'none',
-  });
-
-  bool get isEmpty =>
-      (vehicleType == null || vehicleType!.isEmpty) &&
-          (vehicleCategory == null || vehicleCategory!.isEmpty) &&
-          (sort == 'none' || sort.isEmpty);
-
-  _AdvancedFilter copyWith({
-    String? vehicleType,
-    String? vehicleCategory,
-    String? sort,
-  }) {
-    return _AdvancedFilter(
-      vehicleType: vehicleType ?? this.vehicleType,
-      vehicleCategory: vehicleCategory ?? this.vehicleCategory,
-      sort: sort ?? this.sort,
-    );
-  }
-
-  static const empty = _AdvancedFilter();
-}
 
 class ListWorkPage extends StatefulWidget {
   const ListWorkPage({Key? key, this.workshopUuid}) : super(key: key);
@@ -82,7 +24,7 @@ class ListWorkPage extends StatefulWidget {
 class _ListWorkPageState extends State<ListWorkPage> {
   final TextEditingController _search = TextEditingController();
   WorkStatus _tabStatus = WorkStatus.pending;
-  _AdvancedFilter _advancedFilter = _AdvancedFilter.empty;
+  AdvancedFilter _advancedFilter = AdvancedFilter.empty;
 
   bool get _hasActiveFilter => !_advancedFilter.isEmpty;
 
@@ -114,8 +56,9 @@ class _ListWorkPageState extends State<ListWorkPage> {
       return parts.join(' ');
     })();
 
-    final plate =
-        s.vehicle?.plateNumber ?? tryOrNull(() => (s as dynamic).vehicle?.plate) ?? '-';
+    final plate = s.vehicle?.plateNumber ??
+        tryOrNull(() => (s as dynamic).vehicle?.plate) ??
+        '-';
 
     return WorkItem(
       id: s.id,
@@ -158,8 +101,8 @@ class _ListWorkPageState extends State<ListWorkPage> {
 
   DateTime _dateForSort(ServiceModel s) =>
       s.scheduledDate ??
-          s.createdAt ??
-          DateTime.fromMillisecondsSinceEpoch(0);
+      s.createdAt ??
+      DateTime.fromMillisecondsSinceEpoch(0);
 
   List<WorkItem> _filtered(List<ServiceModel> services) {
     Iterable<ServiceModel> filtered = services.where(_matchTab);
@@ -289,7 +232,7 @@ class _ListWorkPageState extends State<ListWorkPage> {
                   const SizedBox(height: 16),
                   const Text('Jenis Kendaraan',
                       style:
-                      TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                          TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
@@ -302,7 +245,7 @@ class _ListWorkPageState extends State<ListWorkPage> {
                   const SizedBox(height: 16),
                   const Text('Kategori Kendaraan',
                       style:
-                      TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                          TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
@@ -319,7 +262,7 @@ class _ListWorkPageState extends State<ListWorkPage> {
                   const SizedBox(height: 16),
                   const Text('Urutkan',
                       style:
-                      TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                          TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
@@ -335,7 +278,7 @@ class _ListWorkPageState extends State<ListWorkPage> {
                         child: OutlinedButton(
                           onPressed: () {
                             setState(() {
-                              _advancedFilter = _AdvancedFilter.empty;
+                              _advancedFilter = AdvancedFilter.empty;
                             });
                             Navigator.pop(ctx);
                           },
@@ -351,10 +294,10 @@ class _ListWorkPageState extends State<ListWorkPage> {
                           onPressed: () {
                             setState(() {
                               final typeValue =
-                              (tempType ?? '').isEmpty ? null : tempType;
+                                  (tempType ?? '').isEmpty ? null : tempType;
                               final catValue =
-                              (tempCat ?? '').isEmpty ? null : tempCat;
-                              _advancedFilter = _AdvancedFilter(
+                                  (tempCat ?? '').isEmpty ? null : tempCat;
+                              _advancedFilter = AdvancedFilter(
                                 vehicleType: typeValue,
                                 vehicleCategory: catValue,
                                 sort: tempSort,
@@ -463,7 +406,7 @@ class _ListWorkPageState extends State<ListWorkPage> {
                                 ),
                               ),
                               padding:
-                              const EdgeInsets.symmetric(horizontal: 18),
+                                  const EdgeInsets.symmetric(horizontal: 18),
                               child: Row(
                                 children: [
                                   const Icon(Icons.search, color: Colors.grey),
@@ -473,7 +416,7 @@ class _ListWorkPageState extends State<ListWorkPage> {
                                       controller: _search,
                                       decoration: const InputDecoration(
                                         hintText:
-                                        'Cari kendaraan, customer, atau plat',
+                                            'Cari kendaraan, customer, atau plat',
                                         border: InputBorder.none,
                                       ),
                                       onChanged: (_) => setState(() {}),
@@ -505,28 +448,28 @@ class _ListWorkPageState extends State<ListWorkPage> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                _StatusChip(
+                                WorkStatusChip(
                                   label: 'Pending',
                                   icon: Icons.error_outline,
                                   selected: _tabStatus == WorkStatus.pending,
                                   onTap: () => setState(
-                                          () => _tabStatus = WorkStatus.pending),
+                                      () => _tabStatus = WorkStatus.pending),
                                 ),
                                 const SizedBox(width: 16),
-                                _StatusChip(
+                                WorkStatusChip(
                                   label: 'Process',
                                   icon: Icons.schedule_rounded,
                                   selected: _tabStatus == WorkStatus.process,
                                   onTap: () => setState(
-                                          () => _tabStatus = WorkStatus.process),
+                                      () => _tabStatus = WorkStatus.process),
                                 ),
                                 const SizedBox(width: 16),
-                                _StatusChip(
+                                WorkStatusChip(
                                   label: 'Selesai',
                                   icon: Icons.verified_rounded,
                                   selected: _tabStatus == WorkStatus.done,
                                   onTap: () => setState(
-                                          () => _tabStatus = WorkStatus.done),
+                                      () => _tabStatus = WorkStatus.done),
                                 ),
                               ],
                             ),
@@ -559,26 +502,26 @@ class _ListWorkPageState extends State<ListWorkPage> {
                   ),
                 )
               else if (list.isEmpty)
-                  const SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Center(
-                      child: Text(
-                        'Belum ada pekerjaan',
-                        style: TextStyle(color: Colors.white70),
-                      ),
-                    ),
-                  )
-                else
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-                    sliver: SliverList.separated(
-                      itemCount: list.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 14),
-                      itemBuilder: (context, i) {
-                        return _AnimatedWorkCard(item: list[i]);
-                      },
+                const SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: Text(
+                      'Belum ada pekerjaan',
+                      style: TextStyle(color: Colors.white70),
                     ),
                   ),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                  sliver: SliverList.separated(
+                    itemCount: list.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 14),
+                    itemBuilder: (context, i) {
+                      return WorkCard(item: list[i]);
+                    },
+                  ),
+                ),
 
               SliverToBoxAdapter(
                 child: Padding(
@@ -589,9 +532,9 @@ class _ListWorkPageState extends State<ListWorkPage> {
                       ElevatedButton(
                         onPressed: prov.currentPage > 1 && !prov.loading
                             ? () => prov.goToPage(
-                          prov.currentPage - 1,
-                          workshopUuid: widget.workshopUuid,
-                        )
+                                  prov.currentPage - 1,
+                                  workshopUuid: widget.workshopUuid,
+                                )
                             : null,
                         child: const Text('Prev'),
                       ),
@@ -601,12 +544,12 @@ class _ListWorkPageState extends State<ListWorkPage> {
                       const SizedBox(width: 16),
                       ElevatedButton(
                         onPressed:
-                        prov.currentPage < prov.totalPages && !prov.loading
-                            ? () => prov.goToPage(
-                          prov.currentPage + 1,
-                          workshopUuid: widget.workshopUuid,
-                        )
-                            : null,
+                            prov.currentPage < prov.totalPages && !prov.loading
+                                ? () => prov.goToPage(
+                                      prov.currentPage + 1,
+                                      workshopUuid: widget.workshopUuid,
+                                    )
+                                : null,
                         child: const Text('Next'),
                       ),
                     ],
@@ -622,307 +565,5 @@ class _ListWorkPageState extends State<ListWorkPage> {
         ],
       ),
     );
-  }
-}
-
-/* ---------- Widgets kecil ---------- */
-
-class _StatusChip extends StatelessWidget {
-  const _StatusChip({
-    required this.label,
-    required this.icon,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final IconData icon;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final bg = selected ? _danger : const Color(0xFFE9ECEF);
-    final fg = selected ? Colors.white : const Color(0xFF9CA3AF);
-
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(28),
-          boxShadow:
-          selected ? [const BoxShadow(color: Color(0x33000000), blurRadius: 8)] : null,
-        ),
-        child: Row(
-          children: [
-            Icon(icon, size: 18, color: fg),
-            const SizedBox(width: 8),
-            Text(label, style: TextStyle(color: fg, fontWeight: FontWeight.w700)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _AnimatedWorkCard extends StatefulWidget {
-  final WorkItem item;
-  const _AnimatedWorkCard({required this.item});
-
-  @override
-  State<_AnimatedWorkCard> createState() => _AnimatedWorkCardState();
-}
-
-class _AnimatedWorkCardState extends State<_AnimatedWorkCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animCtrl;
-  late Animation<double> _fade;
-
-  @override
-  void initState() {
-    super.initState();
-    _animCtrl =
-        AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
-    _fade = CurvedAnimation(parent: _animCtrl, curve: Curves.easeIn);
-    _animCtrl.forward();
-  }
-
-  @override
-  void dispose() {
-    _animCtrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final item = widget.item;
-    final price = item.price == null ? 'RP. -' : 'RP. ${_rupiah(item.price!)}';
-
-    return FadeTransition(
-      opacity: _fade,
-      child: Material(
-        color: Colors.white,
-        elevation: 0,
-        borderRadius: BorderRadius.circular(22),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(22),
-          onTap: () {
-            if (item.id.isEmpty) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('ID service tidak tersedia')),
-              );
-              return;
-            }
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => DetailWorkPage(serviceId: item.id)),
-            );
-          },
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(22),
-              boxShadow: const [
-                BoxShadow(color: Color(0x22000000), blurRadius: 18, offset: Offset(0, 10)),
-              ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 12, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          item.workOrder,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: .2,
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () {},
-                        icon: const Icon(Icons.more_vert, color: Colors.black54),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      const Icon(Icons.person_2_outlined,
-                          size: 18, color: Colors.black45),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          item.customer,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: Colors.black54,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF3F4F6),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.directions_car, color: Colors.black54),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(item.vehicle,
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.w700, fontSize: 16)),
-                              const SizedBox(height: 2),
-                              Text(item.plate,
-                                  style: const TextStyle(
-                                      color: Colors.black54, fontSize: 13)),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(item.service,
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 16),
-                  const Divider(height: 1),
-                  const SizedBox(height: 12),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Icon(Icons.event_outlined,
-                          size: 18, color: Colors.black45),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          _dateTime(item.schedule),
-                          style: const TextStyle(
-                              color: Colors.black54, fontSize: 14),
-                        ),
-                      ),
-                      Text(
-                        price,
-                        style: const TextStyle(
-                          color: Color(0xFF7A0F0F),
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(Icons.groups_2_outlined,
-                          size: 18, color: Colors.black45),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          item.mechanic,
-                          style: const TextStyle(
-                              color: Colors.black45, fontSize: 14),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => DetailWorkPage(serviceId: item.id),
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _danger,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: const Text(
-                        'Lihat Detail',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/* ---------- Helpers ---------- */
-
-String _dateTime(DateTime? dt) {
-  if (dt == null) return '-';
-  const bulan = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'Mei',
-    'Jun',
-    'Jul',
-    'Agu',
-    'Sep',
-    'Okt',
-    'Nov',
-    'Des'
-  ];
-  final tgl = '${dt.day} ${bulan[dt.month - 1]} ${dt.year}';
-  final hh = dt.hour.toString().padLeft(2, '0');
-  final mm = dt.minute.toString().padLeft(2, '0');
-  return '$tgl - $hh:$mm';
-}
-
-String _rupiah(num nominal) {
-  final s = nominal.toInt().toString();
-  final buf = StringBuffer();
-  for (int i = 0; i < s.length; i++) {
-    final rev = s.length - i;
-    buf.write(s[i]);
-    if (rev > 1 && rev % 3 == 1) buf.write('.');
-  }
-  return buf.toString();
-}
-
-T? tryOrNull<T>(T Function() f) {
-  try {
-    return f();
-  } catch (_) {
-    return null;
   }
 }
