@@ -517,7 +517,7 @@ class _ListWorkPageState extends State<ListWorkPage> {
                   sliver: SliverList.separated(
                     itemCount: list.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 14),
-                    itemBuilder: (context, i) {
+                    itemBuilder: (_, i) {
                       return WorkCard(item: list[i]);
                     },
                   ),
