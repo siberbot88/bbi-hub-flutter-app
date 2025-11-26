@@ -1,19 +1,12 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:bengkel_online_flutter/core/theme/app_colors.dart';
-import 'package:bengkel_online_flutter/core/theme/app_text_styles.dart';
-import 'package:bengkel_online_flutter/core/theme/app_radius.dart';
-import 'package:bengkel_online_flutter/core/theme/app_spacing.dart';
-import 'package:bengkel_online_flutter/core/widgets/custom_alert.dart';
-import 'package:bengkel_online_flutter/core/models/workshop.dart';
-import 'package:bengkel_online_flutter/core/services/api_service.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/theme/app_radius.dart';
+import '../../../../core/theme/app_spacing.dart';
 
 class EditProfilePage extends StatefulWidget {
-  final Workshop workshop;
-
-  const EditProfilePage({super.key, required this.workshop});
+  const EditProfilePage({super.key});
 
   @override
   State<EditProfilePage> createState() => _EditProfilePageState();
@@ -21,129 +14,42 @@ class EditProfilePage extends StatefulWidget {
 
 class _EditProfilePageState extends State<EditProfilePage> {
   final _formKey = GlobalKey<FormState>();
-  final _apiService = ApiService();
+  final _emailC = TextEditingController(text: "");
+  final _usernameC = TextEditingController(text: "");
+  final _fullNameC = TextEditingController(text: "");
 
-  late TextEditingController _nameC;
-  late TextEditingController _openingTimeC;
-  late TextEditingController _closingTimeC;
-  late TextEditingController _operationalDaysC;
-  late TextEditingController _informationC;
-  
-  bool _isActive = false;
-  File? _pickedImage;
-  bool _isLoading = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _nameC = TextEditingController(text: widget.workshop.name);
-    _openingTimeC = TextEditingController(text: widget.workshop.openingTime);
-    _closingTimeC = TextEditingController(text: widget.workshop.closingTime);
-    _operationalDaysC = TextEditingController(text: widget.workshop.operationalDays);
-    _informationC = TextEditingController(text: widget.workshop.description ?? '');
-    _isActive = widget.workshop.isActive;
-  }
+  ImageProvider? _pickedImage;
 
   @override
   void dispose() {
-    _nameC.dispose();
-    _openingTimeC.dispose();
-    _closingTimeC.dispose();
-    _operationalDaysC.dispose();
-    _informationC.dispose();
+    _emailC.dispose();
+    _usernameC.dispose();
+    _fullNameC.dispose();
     super.dispose();
   }
 
-  Future<void> _pickImage() async {
-    try {
-      final picker = ImagePicker();
-      final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-      if (pickedFile != null) {
-        setState(() {
-          _pickedImage = File(pickedFile.path);
-        });
-      }
-    } catch (e) {
-      debugPrint('Error picking image: $e');
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal mengambil gambar: $e')),
-      );
-    }
+  // Placeholder pemilihan gambar (tanpa dependency).
+  void _pickImageMock() {
+    // Demo: pakai gambar mockup yang kamu punya
+    setState(() {
+      _pickedImage = const AssetImage("assets/image/profil_image.png");
+      // kalau mau benar2 pilih dari gallery/camera, tinggal ganti
+      // dengan image_picker / file_picker.
+    });
   }
 
-  Future<void> _selectTime(BuildContext context, TextEditingController controller) async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppColors.primaryRed,
-              onPrimary: Colors.white,
-              onSurface: AppColors.textPrimary,
-            ),
-            textButtonTheme: TextButtonThemeData(
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.primaryRed,
-              ),
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (picked != null) {
-      // Format ke HH:mm:ss
-      final hour = picked.hour.toString().padLeft(2, '0');
-      final minute = picked.minute.toString().padLeft(2, '0');
-      setState(() {
-        controller.text = "$hour:$minute:00";
-      });
-    }
-  }
-
-  Future<void> _save() async {
+  void _save() {
     if (!_formKey.currentState!.validate()) return;
-
-    setState(() => _isLoading = true);
-
-    try {
-      await _apiService.updateWorkshop(
-        id: widget.workshop.id,
-        name: _nameC.text,
-        photo: _pickedImage,
-        openingTime: _openingTimeC.text,
-        closingTime: _closingTimeC.text,
-        operationalDays: _operationalDaysC.text,
-        isActive: _isActive,
-        information: _informationC.text,
-      );
-
-      if (!mounted) return;
-
-      CustomAlert.show(
-        context,
-        title: "Berhasil",
-        message: "Profil workshop berhasil diperbarui",
-        type: AlertType.success,
-      );
-      
-      Navigator.pop(context, true); 
-
-    } catch (e) {
-      if (!mounted) return;
-      CustomAlert.show(
-        context,
-        title: "Gagal",
-        message: e.toString().replaceAll('Exception: ', ''),
-        type: AlertType.error,
-      );
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Profil disimpan", style: AppTextStyles.bodyMedium(color: Colors.white)),
+        backgroundColor: AppColors.success,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusMD),
+        margin: AppSpacing.paddingMD,
+      ),
+    );
+    Navigator.pop(context);
   }
 
   @override
@@ -155,7 +61,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         elevation: 0,
         centerTitle: true,
         title: Text(
-          "Edit Profil Workshop",
+          "Edit Profil",
           style: AppTextStyles.heading4(color: Colors.white),
         ),
         leading: IconButton(
@@ -194,70 +100,22 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 child: Column(
                   children: [
                     _LabeledField(
-                      label: "Nama Workshop",
-                      controller: _nameC,
-                      prefixIcon: Icons.store_rounded,
+                      label: "Email",
+                      controller: _emailC,
+                      keyboardType: TextInputType.emailAddress,
+                      prefixIcon: Icons.email_outlined,
                     ),
                     AppSpacing.verticalSpaceLG,
-                    
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _LabeledField(
-                            label: "Jam Buka",
-                            controller: _openingTimeC,
-                            prefixIcon: Icons.access_time_rounded,
-                            readOnly: true,
-                            onTap: () => _selectTime(context, _openingTimeC),
-                          ),
-                        ),
-                        AppSpacing.horizontalSpaceMD,
-                        Expanded(
-                          child: _LabeledField(
-                            label: "Jam Tutup",
-                            controller: _closingTimeC,
-                            prefixIcon: Icons.access_time_filled_rounded,
-                            readOnly: true,
-                            onTap: () => _selectTime(context, _closingTimeC),
-                          ),
-                        ),
-                      ],
-                    ),
-                    AppSpacing.verticalSpaceLG,
-
                     _LabeledField(
-                      label: "Hari Operasional",
-                      controller: _operationalDaysC,
-                      prefixIcon: Icons.calendar_today_rounded,
-                      hintText: "Contoh: Senin - Jumat",
+                      label: "Username",
+                      controller: _usernameC,
+                      prefixIcon: Icons.person_outline,
                     ),
                     AppSpacing.verticalSpaceLG,
-
                     _LabeledField(
-                      label: "Informasi / Deskripsi",
-                      controller: _informationC,
-                      prefixIcon: Icons.info_outline_rounded,
-                      maxLines: 3,
-                    ),
-                    AppSpacing.verticalSpaceLG,
-
-                    // Switch Status Aktif
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      activeTrackColor: AppColors.primaryRed,
-                      activeThumbColor: Colors.white,
-                      title: Text(
-                        "Status Aktif",
-                        style: AppTextStyles.label(color: AppColors.textPrimary),
-                      ),
-                      subtitle: Text(
-                        _isActive ? "Workshop sedang buka" : "Workshop sedang tutup",
-                        style: AppTextStyles.bodySmall(color: AppColors.textSecondary),
-                      ),
-                      value: _isActive,
-                      onChanged: (val) {
-                        setState(() => _isActive = val);
-                      },
+                      label: "Nama Lengkap",
+                      controller: _fullNameC,
+                      prefixIcon: Icons.badge_outlined,
                     ),
                   ],
                 ),
@@ -267,7 +125,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: _isLoading ? null : _save,
+                  onPressed: _save,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryRed,
                     foregroundColor: Colors.white,
@@ -277,19 +135,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     elevation: 4,
                     shadowColor: AppColors.primaryRed.withAlpha(100),
                   ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : Text(
-                          "SIMPAN PERUBAHAN",
-                          style: AppTextStyles.button(),
-                        ),
+                  child: Text(
+                    "SIMPAN PERUBAHAN",
+                    style: AppTextStyles.button(),
+                  ),
                 ),
               ),
             ],
@@ -304,7 +153,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       child: Stack(
         children: [
           GestureDetector(
-            onTap: _pickImage,
+            onTap: _pickImageMock,
             child: Container(
               width: 120,
               height: 120,
@@ -320,19 +169,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   ),
                 ],
                 image: _pickedImage != null
-                    ? DecorationImage(
-                        image: FileImage(_pickedImage!),
-                        fit: BoxFit.cover,
-                      )
-                    : (widget.workshop.photo != null
-                        ? DecorationImage(
-                            image: NetworkImage(widget.workshop.photo!),
-                            fit: BoxFit.cover,
-                          )
-                        : null),
+                    ? DecorationImage(image: _pickedImage!, fit: BoxFit.cover)
+                    : null,
               ),
-              child: (_pickedImage == null && widget.workshop.photo == null)
-                  ? const Icon(Icons.store_rounded, size: 60, color: Colors.grey)
+              child: _pickedImage == null
+                  ? const Icon(Icons.person_rounded, size: 60, color: Colors.grey)
                   : null,
             ),
           ),
@@ -340,7 +181,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             bottom: 0,
             right: 0,
             child: GestureDetector(
-              onTap: _pickImage,
+              onTap: _pickImageMock,
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
@@ -368,20 +209,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
 class _LabeledField extends StatelessWidget {
   final String label;
   final TextEditingController controller;
+  final TextInputType? keyboardType;
   final IconData? prefixIcon;
-  final bool readOnly;
-  final VoidCallback? onTap;
-  final int maxLines;
-  final String? hintText;
 
   const _LabeledField({
     required this.label,
     required this.controller,
+    this.keyboardType,
     this.prefixIcon,
-    this.readOnly = false,
-    this.onTap,
-    this.maxLines = 1,
-    this.hintText,
   });
 
   @override
@@ -393,9 +228,7 @@ class _LabeledField extends StatelessWidget {
         AppSpacing.verticalSpaceXS,
         TextFormField(
           controller: controller,
-          readOnly: readOnly,
-          onTap: onTap,
-          maxLines: maxLines,
+          keyboardType: keyboardType,
           validator: (v) => (v == null || v.isEmpty) ? "Tidak boleh kosong" : null,
           decoration: InputDecoration(
             prefixIcon: prefixIcon != null
@@ -403,7 +236,7 @@ class _LabeledField extends StatelessWidget {
                 : null,
             filled: true,
             fillColor: AppColors.backgroundLight,
-            hintText: hintText ?? "Masukkan $label",
+            hintText: "Masukkan $label",
             hintStyle: AppTextStyles.bodyMedium(color: AppColors.textHint),
             contentPadding: AppSpacing.paddingMD,
             enabledBorder: OutlineInputBorder(
