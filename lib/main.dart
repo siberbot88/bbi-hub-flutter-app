@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:bengkel_online_flutter/feature/admin/screens/homepage.dart';
+import 'package:bengkel_online_flutter/feature/admin/screens/service_page.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import 'package:app_links/app_links.dart';
@@ -250,7 +252,9 @@ class _MainPageState extends State<MainPage> {
 
       case "admin":
         pages = [
-          const DashboardScreen(),
+          const HomePage(),
+          const ServicePageAdmin(),
+          const DashboardPage(),
           const admin_profil.ProfilePageAdmin(),
         ];
         bottomNavBar = CustomBottomNavBarAdmin(

@@ -105,7 +105,7 @@ class _AddVoucherPageState extends State<AddVoucherPage> {
                   height: 150,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    border: Border.all(color: _primaryColor.withAlpha(128)),
+                    border: Border.all(color: _primaryColor.withOpacity(0.5)),
                     borderRadius: BorderRadius.circular(12),
                     color: Colors.red.shade50,
                   ),
@@ -161,7 +161,7 @@ class _AddVoucherPageState extends State<AddVoucherPage> {
         prefixIcon: Icon(icon, color: _primaryColor, size: 20),
         contentPadding: const EdgeInsets.symmetric(vertical: 14),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.grey)),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: _primaryColor.withAlpha(128))),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: _primaryColor.withOpacity(0.5))),
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: _primaryColor, width: 1.5)),
       ),
     );
@@ -178,7 +178,7 @@ class _AddVoucherPageState extends State<AddVoucherPage> {
         hintText: hint,
         prefixIcon: Icon(Icons.calendar_today, size: 18, color: _primaryColor),
         contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 10),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: _primaryColor.withAlpha(128))),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: _primaryColor.withOpacity(0.5))),
       ),
     );
   }
