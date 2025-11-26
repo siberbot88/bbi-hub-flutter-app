@@ -140,7 +140,7 @@ class _MyAppState extends State<MyApp> {
         "/main": (context) => const RoleEntry(),
 
         "/home": (context) => const DashboardScreen(),
-        "/changePassword": (context) => const change_screen.ubahPasswordPage(),
+        "/changePassword": (context) => const change_screen.UbahPasswordPage(),
         "/list": (context) => const ListWorkPage(),
 
         "/dashboard": (context) => const DashboardPage(),
