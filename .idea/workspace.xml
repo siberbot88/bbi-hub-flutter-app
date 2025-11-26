@@ -6,39 +6,16 @@
   <component name="ChangeListManager">
     <list default="true" id="0f1fd287-7e8a-4e9a-beb2-7c2c21e8966b" name="Changes" comment="refactor(owner): Redesign report and staff management screens&#10;&#10;This commit refactors the &quot;Laporan&quot; (Report) and &quot;Manajemen Karyawan&quot; (Staff Management) screens with a focus on UI consistency, code cleanup, and improved navigation.&#10;&#10;### Key Changes:&#10;&#10;*   **Report Screen (`reportPages.dart`):**&#10;    *   **UI Overhaul**: The entire screen has been redesigned for a cleaner, more modern look with better spacing and component structure. The code has been significantly refactored for readability.&#10;    *   **Navigation**: The hardcoded back button has been replaced with a standard `SliverAppBar` leading action that only appears if navigation is possible (i.e., `Navigator.canPop()`).&#10;    *   **Code Cleanup**: Removed the unused `main()` function and streamlined widget implementations.&#10;&#10;*   **Staff Management Screen (`staffManagement.dart`):**&#10;    *   **Header Redesign**: The screen now uses a `SliverAppBar` similar to the report page for a consistent look and feel, removing the custom back button logic. The header content is now centered and simplified.&#10;    *   **UI Polish**: The &quot;Quick Actions&quot; card has rounded corners, and overall padding and spacing have been adjusted for a better layout.&#10;    *   **Code Cleanup**: Removed commented-out code and dead logic related to fetching `workshopUuid` from the auth provider.&#10;&#10;*   **`CustomHeader` Widget Removal:**&#10;    *   The reusable `CustomHeader` widget (`custom_header.dart`) has been deleted, as its functionality is now directly and more flexibly implemented within the screens using `SliverAppBar`.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/analysis.txt" beforeDir="false" afterPath="$PROJECT_DIR$/analysis.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/analysis_output.txt" beforeDir="false" afterPath="$PROJECT_DIR$/analysis_output.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/json_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/json_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/core/models/service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/core/models/service.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/core/models/transaction_item.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/core/models/transaction_item.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/core/models/user.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/core/models/user.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/core/models/vehicle.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/core/models/vehicle.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/core/router/role_gate.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/core/router/role_gate.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/feature/admin/screens/homepage.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/admin/screens/homepage.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/feature/admin/screens/invoice_form.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/admin/screens/invoice_form.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/feature/admin/screens/profil_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/admin/screens/profil_page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/feature/admin/screens/service_complete.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/admin/screens/service_complete.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/feature/admin/screens/invoice_payment.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/admin/screens/invoice_payment.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/feature/admin/screens/service_logging.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/admin/screens/service_logging.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/feature/admin/screens/service_progress.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/admin/screens/service_progress.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/feature/admin/screens/tabs/customer_tab.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/admin/screens/tabs/customer_tab.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/feature/admin/screens/service_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/admin/screens/service_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/feature/admin/screens/voucher_addpage.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/admin/screens/voucher_addpage.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/feature/admin/screens/voucher_editpage.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/admin/screens/voucher_editpage.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/feature/admin/screens/voucher_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/admin/screens/voucher_page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/feature/admin/widgets/assign_dialog.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/admin/widgets/assign_dialog.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/feature/admin/widgets/bottom_nav.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/admin/widgets/bottom_nav.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/feature/admin/widgets/reject_dialog.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/admin/widgets/reject_dialog.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/feature/admin/widgets/smartasset.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/admin/widgets/smartasset.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/feature/admin/screens/voucher_previewpage.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/admin/screens/voucher_previewpage.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/feature/owner/screens/add_staff.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/owner/screens/add_staff.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/feature/owner/screens/detail_work.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/owner/screens/detail_work.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/feature/owner/screens/homepage_owner.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/owner/screens/homepage_owner.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/feature/owner/screens/list_staff.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/owner/screens/list_staff.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/feature/owner/screens/list_work.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/owner/screens/list_work.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/feature/owner/screens/profil_page_owner.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/owner/screens/profil_page_owner.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/feature/owner/screens/report_pages.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/owner/screens/report_pages.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/feature/owner/screens/staff_management.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/owner/screens/staff_management.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/feature/owner/screens/tabs/customer_tab.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/owner/screens/tabs/customer_tab.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/feature/owner/widgets/dashboard/dashboard_helpers.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/owner/widgets/dashboard/dashboard_helpers.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/feature/owner/widgets/dashboard/owner_job_card.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/owner/widgets/dashboard/owner_job_card.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/feature/owner/widgets/dashboard/owner_mini_dashboard.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/owner/widgets/dashboard/owner_mini_dashboard.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/feature/owner/widgets/report/report_charts.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/owner/widgets/report/report_charts.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/main.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -59,7 +36,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="main" />
+        <entry key="$PROJECT_DIR$" value="refactor/priority-1-complete" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -195,7 +172,15 @@
       <option name="project" value="LOCAL" />
       <updated>1763712906986</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="refactor(owner): Redesign report and staff management screens&#10;&#10;This commit refactors the &quot;Laporan&quot; (Report) and &quot;Manajemen Karyawan&quot; (Staff Management) screens with a focus on UI consistency, code cleanup, and improved navigation.&#10;&#10;### Key Changes:&#10;&#10;*   **Report Screen (`reportPages.dart`):**&#10;    *   **UI Overhaul**: The entire screen has been redesigned for a cleaner, more modern look with better spacing and component structure. The code has been significantly refactored for readability.&#10;    *   **Navigation**: The hardcoded back button has been replaced with a standard `SliverAppBar` leading action that only appears if navigation is possible (i.e., `Navigator.canPop()`).&#10;    *   **Code Cleanup**: Removed the unused `main()` function and streamlined widget implementations.&#10;&#10;*   **Staff Management Screen (`staffManagement.dart`):**&#10;    *   **Header Redesign**: The screen now uses a `SliverAppBar` similar to the report page for a consistent look and feel, removing the custom back button logic. The header content is now centered and simplified.&#10;    *   **UI Polish**: The &quot;Quick Actions&quot; card has rounded corners, and overall padding and spacing have been adjusted for a better layout.&#10;    *   **Code Cleanup**: Removed commented-out code and dead logic related to fetching `workshopUuid` from the auth provider.&#10;&#10;*   **`CustomHeader` Widget Removal:**&#10;    *   The reusable `CustomHeader` widget (`custom_header.dart`) has been deleted, as its functionality is now directly and more flexibly implemented within the screens using `SliverAppBar`.">
+      <option name="closed" value="true" />
+      <created>1764084974559</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1764084974559</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">

@@ -3,6 +3,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../widgets/report/report_app_bar_header.dart';
 import '../widgets/report/report_charts.dart';
 import '../widgets/report/report_data.dart';
 import '../widgets/report/report_health_tile.dart';
@@ -55,68 +56,9 @@ class _ReportPageState extends State<ReportPage> {
             elevation: 0,
             expandedHeight: 230,
             flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [kRedStart, kRedEnd],
-                  ),
-                ),
-                child: SafeArea(
-                  bottom: false,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Laporan',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          'Dashboard Analitik',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 14,
-                          ),
-                        ),
-                        const SizedBox(height: 18),
-                        Row(
-                          children: [
-                            ReportRangeChip(
-                              text: 'Harian',
-                              selected: _range == TimeRange.daily,
-                              onTap: () =>
-                                  setState(() => _range = TimeRange.daily),
-                            ),
-                            const SizedBox(width: 12),
-                            ReportRangeChip(
-                              text: 'Mingguan',
-                              selected: _range == TimeRange.weekly,
-                              onTap: () =>
-                                  setState(() => _range = TimeRange.weekly),
-                            ),
-                            const SizedBox(width: 12),
-                            ReportRangeChip(
-                              text: 'Bulanan',
-                              selected: _range == TimeRange.monthly,
-                              highlight: true,
-                              onTap: () =>
-                                  setState(() => _range = TimeRange.monthly),
-                            ),
-                          ],
-                        ),
-                        const Spacer(),
-                      ],
-                    ),
-                  ),
-                ),
+              background: ReportAppBarHeader(
+                selectedRange: _range,
+                onRangeChanged: (range) => setState(() => _range = range),
               ),
             ),
           ),
@@ -174,7 +116,8 @@ class _ReportPageState extends State<ReportPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const DummyDetail(title: 'Detail Occupancy'),
+                              builder: (_) =>
+                                  const DummyDetail(title: 'Detail Occupancy'),
                             ),
                           );
                         },
@@ -188,7 +131,8 @@ class _ReportPageState extends State<ReportPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const DummyDetail(title: 'Detail Rating'),
+                              builder: (_) =>
+                                  const DummyDetail(title: 'Detail Rating'),
                             ),
                           );
                         },
@@ -441,8 +385,6 @@ class _ReportPageState extends State<ReportPage> {
 /* ============================================================
    DUMMY DETAIL PAGES
    ============================================================ */
-
-
 
 class DummyDetail extends StatelessWidget {
   const DummyDetail({required this.title, super.key});

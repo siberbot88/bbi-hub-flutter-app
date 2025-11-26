@@ -1,12 +1,15 @@
-  import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
 import 'package:bengkel_online_flutter/core/services/api_service.dart';
 import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
 import 'package:bengkel_online_flutter/feature/owner/providers/employee_provider.dart';
 import 'package:bengkel_online_flutter/core/models/employment.dart';
+
+import '../widgets/staff/staff_form_fields.dart';
+import '../widgets/staff/staff_info_header.dart';
+import '../widgets/staff/staff_success_screen.dart';
 
 const _primary = Color(0xFFD72B1C);
 
@@ -20,7 +23,6 @@ class _AddStaffRegisterPageState extends State<AddStaffRegisterPage>
     with SingleTickerProviderStateMixin {
   final ApiService _apiService = ApiService();
 
-  // Controller password sudah dihapus, ini sudah benar
   final TextEditingController fullnameController = TextEditingController();
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
@@ -38,8 +40,8 @@ class _AddStaffRegisterPageState extends State<AddStaffRegisterPage>
   @override
   void initState() {
     super.initState();
-    _successCtrl =
-        AnimationController(vsync: this, duration: const Duration(milliseconds: 800));
+    _successCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 800));
     _successScale = TweenSequence<double>([
       TweenSequenceItem(
         tween: Tween(begin: .9, end: 1.1)
@@ -47,8 +49,8 @@ class _AddStaffRegisterPageState extends State<AddStaffRegisterPage>
         weight: 50,
       ),
       TweenSequenceItem(
-        tween: Tween(begin: 1.1, end: 1.0)
-            .chain(CurveTween(curve: Curves.easeIn)),
+        tween:
+            Tween(begin: 1.1, end: 1.0).chain(CurveTween(curve: Curves.easeIn)),
         weight: 50,
       ),
     ]).animate(_successCtrl);
@@ -65,109 +67,6 @@ class _AddStaffRegisterPageState extends State<AddStaffRegisterPage>
     super.dispose();
   }
 
-  /* ---------- Helpers UI ---------- */
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    required String iconPath,
-    int maxline = 1,
-    TextInputType? keyboardType,
-  }) {
-    // Logika password (obscureText, suffixIcon) sudah dihapus, ini benar
-    return TextField(
-      controller: controller,
-      maxLines: maxline,
-      keyboardType: keyboardType,
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: GoogleFonts.poppins(
-          color: Colors.red,
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-        ),
-        hintText: hint,
-        hintStyle: GoogleFonts.poppins(color: Colors.grey),
-        prefixIcon: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: SvgPicture.asset(
-            iconPath,
-            width: 20,
-            height: 20,
-            colorFilter:
-            const ColorFilter.mode(Colors.red, BlendMode.srcIn),
-          ),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: _primary, width: 1.5),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: _primary, width: 2),
-        ),
-        filled: true,
-        fillColor: const Color(0x66FFFFFF),
-        contentPadding:
-        const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-      ),
-      style: GoogleFonts.poppins(color: Colors.black, fontSize: 12),
-    );
-  }
-
-  Widget _buildRoleDropdown() {
-    return DropdownButtonFormField<String>(
-      initialValue: _selectedRole,
-      onChanged: (v) => setState(() => _selectedRole = v ?? _selectedRole),
-      items: const ['admin', 'mechanic']
-          .map(
-            (v) => DropdownMenuItem<String>(
-          value: v,
-          child: Text(
-            v == 'admin' ? 'Admin (Kasir/Akuntan)' : 'Mekanik',
-            style: GoogleFonts.poppins(fontSize: 12),
-          ),
-        ),
-      )
-          .toList(),
-      decoration: InputDecoration(
-        labelText: "Role Karyawan",
-        labelStyle: GoogleFonts.poppins(
-          color: Colors.red,
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-        ),
-        prefixIcon: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: SvgPicture.asset(
-            "assets/svg/user.svg",
-            width: 20,
-            height: 20,
-            colorFilter:
-            const ColorFilter.mode(Colors.red, BlendMode.srcIn),
-          ),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: _primary, width: 1.5),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: _primary, width: 2),
-        ),
-        filled: true,
-        fillColor: const Color(0x66FFFFFF),
-        contentPadding:
-        const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-      ),
-    );
-  }
-
-  // Helper _generatePassword() DIHAPUS, karena backend yang akan membuatnya
-
-  /* ---------- Submit ---------- */
-
   Future<void> _submit() async {
     FocusScope.of(context).unfocus();
     setState(() {
@@ -175,7 +74,6 @@ class _AddStaffRegisterPageState extends State<AddStaffRegisterPage>
       _errorMessage = null;
     });
 
-    // Validasi simpel (sudah benar, tanpa password)
     if (fullnameController.text.trim().isEmpty ||
         usernameController.text.trim().isEmpty ||
         emailController.text.trim().isEmpty) {
@@ -189,26 +87,22 @@ class _AddStaffRegisterPageState extends State<AddStaffRegisterPage>
     final auth = context.read<AuthProvider>();
     final workshops = auth.user?.workshops;
     final String? workshopUuid =
-    (workshops != null && workshops.isNotEmpty) ? workshops.first.id : null;
+        (workshops != null && workshops.isNotEmpty) ? workshops.first.id : null;
 
     if (workshopUuid == null) {
       setState(() {
         _errorMessage =
-        "Gagal mendapatkan data workshop Anda. Silakan coba lagi.";
+            "Gagal mendapatkan data workshop Anda. Silakan coba lagi.";
         _saving = false;
       });
       return;
     }
 
     try {
-      // Password tidak lagi di-generate atau dikirim dari Flutter
-
       final Employment emp = await _apiService.createEmployee(
         name: fullnameController.text.trim(),
         username: usernameController.text.trim(),
         email: emailController.text.trim(),
-        // password: (dihapus)
-        // passwordConfirmation: (dihapus)
         role: _selectedRole,
         workshopUuid: workshopUuid,
         specialist: specialistController.text.trim().isEmpty
@@ -235,8 +129,7 @@ class _AddStaffRegisterPageState extends State<AddStaffRegisterPage>
       if (!mounted) return;
       setState(() {
         _saving = false;
-        _errorMessage =
-            e.toString().replaceFirst("Exception: ", "");
+        _errorMessage = e.toString().replaceFirst("Exception: ", "");
       });
     }
   }
@@ -255,8 +148,7 @@ class _AddStaffRegisterPageState extends State<AddStaffRegisterPage>
         ),
         title: const Text(
           'Daftar Akun Staff',
-          style:
-          TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
@@ -264,7 +156,9 @@ class _AddStaffRegisterPageState extends State<AddStaffRegisterPage>
         duration: const Duration(milliseconds: 400),
         switchInCurve: Curves.easeOutCubic,
         switchOutCurve: Curves.easeInCubic,
-        child: _isSuccess ? _buildSuccess() : _buildForm(bottomInset),
+        child: _isSuccess
+            ? StaffSuccessScreen(scaleAnimation: _successScale)
+            : _buildForm(bottomInset),
       ),
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(24, 10, 24, 24),
@@ -280,30 +174,29 @@ class _AddStaffRegisterPageState extends State<AddStaffRegisterPage>
                 borderRadius: BorderRadius.circular(32),
               ),
               elevation: 2,
-              shadowColor: _primary.withOpacity(.35),
+              shadowColor: _primary.withAlpha(89), // 0.35 * 255
             ),
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 250),
               child: _saving
                   ? const SizedBox(
-                key: ValueKey('prg'),
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.6,
-                  valueColor:
-                  AlwaysStoppedAnimation(Colors.white),
-                ),
-              )
+                      key: ValueKey('prg'),
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.6,
+                        valueColor: AlwaysStoppedAnimation(Colors.white),
+                      ),
+                    )
                   : Text(
-                _isSuccess ? 'Lanjutkan' : 'Simpan',
-                key: ValueKey(_isSuccess ? 'lanjut' : 'simpan'),
-                style: GoogleFonts.poppins(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 16,
-                ),
-              ),
+                      _isSuccess ? 'Lanjutkan' : 'Simpan',
+                      key: ValueKey(_isSuccess ? 'lanjut' : 'simpan'),
+                      style: GoogleFonts.poppins(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                      ),
+                    ),
             ),
           ),
         ),
@@ -315,108 +208,52 @@ class _AddStaffRegisterPageState extends State<AddStaffRegisterPage>
     return SingleChildScrollView(
       key: const ValueKey('form'),
       physics: const BouncingScrollPhysics(),
-      padding:
-      EdgeInsets.fromLTRB(20, 14, 20, 20 + bottomInset),
+      padding: EdgeInsets.fromLTRB(20, 14, 20, 20 + bottomInset),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(.08),
-                  blurRadius: 22,
-                  offset: const Offset(0, 0),
-                )
-              ],
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: const Color(0x33D72B1C),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.person,
-                    color: _primary,
-                    size: 30,
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment:
-                    CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Isi Data Diri',
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Buatlah akun admin & mekanikmu. '
-                            'Username & password akan dikirim ke email staff.',
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          color: Colors.black54,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
+          const StaffInfoHeader(),
           const SizedBox(height: 24),
-          _buildTextField(
+          StaffTextField(
             controller: fullnameController,
             label: "Nama Lengkap",
             hint: "Masukkan nama lengkap staff",
             iconPath: "assets/svg/user.svg",
           ),
           const SizedBox(height: 22),
-          _buildTextField(
+          StaffTextField(
             controller: usernameController,
             label: "Username",
             hint: "Masukkan username staff",
             iconPath: "assets/svg/user.svg",
           ),
           const SizedBox(height: 22),
-          _buildTextField(
+          StaffTextField(
             controller: emailController,
             label: "Email",
             hint: "Masukkan email staff",
             iconPath: "assets/svg/email.svg",
             keyboardType: TextInputType.emailAddress,
           ),
-
-          // Field password & konfirmasi password sudah dihapus, ini benar
-
           const SizedBox(height: 22),
-          _buildRoleDropdown(),
+          StaffRoleDropdown(
+            selectedRole: _selectedRole,
+            onChanged: (v) => setState(() => _selectedRole = v),
+          ),
           const SizedBox(height: 22),
-          _buildTextField(
+          StaffTextField(
             controller: specialistController,
             label: "Spesialis",
             hint: "Masukkan bidang spesial staff (opsional)",
             iconPath: "assets/svg/user.svg",
           ),
           const SizedBox(height: 22),
-          _buildTextField(
+          StaffTextField(
             controller: jobdeskController,
             label: "Jobdesk",
             hint: "Masukkan detail jobdesk",
             iconPath: "assets/svg/laporan_tebal.svg",
-            maxline: 3,
+            maxLines: 3,
           ),
           if (_errorMessage != null)
             Padding(
@@ -430,87 +267,6 @@ class _AddStaffRegisterPageState extends State<AddStaffRegisterPage>
                 ),
               ),
             ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSuccess() {
-    // Tampilan sukses ini sudah benar dan relevan
-    return SingleChildScrollView(
-      key: const ValueKey('success'),
-      physics: const BouncingScrollPhysics(),
-      child: Column(
-        children: [
-          const SizedBox(height: 160),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Text(
-              "Selamat, Staff Anda telah resmi terdaftar di aplikasi.",
-              textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF232323),
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            height: 300,
-            width: double.infinity,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Positioned.fill(
-                  child: SvgPicture.asset(
-                    'assets/svg/bg-successreg.svg',
-                    fit: BoxFit.fitWidth,
-                  ),
-                ),
-                AnimatedBuilder(
-                  animation: _successScale,
-                  builder: (context, child) =>
-                      Transform.scale(
-                        scale: _successScale.value,
-                        child: child,
-                      ),
-                  child: Image.asset(
-                    'assets/image/succes-car.png',
-                    height: 250,
-                    fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => Container(
-                      width: 160,
-                      height: 160,
-                      decoration: BoxDecoration(
-                        color: Colors.green.shade50,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.verified_rounded,
-                        color: Colors.green,
-                        size: 96,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 28),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Text(
-              "Kredensial login staff (username & password) "
-                  "telah dikirim ke email yang terdaftar.",
-              textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                color: Colors.black54,
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
         ],
       ),
     );
