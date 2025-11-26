@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
@@ -8,10 +7,12 @@ import 'package:bengkel_online_flutter/core/providers/service_provider.dart';
 
 import '../widgets/work/work_card.dart';
 import '../widgets/work/work_helpers.dart';
+import '../widgets/work/work_filter_sheet.dart';
+import '../widgets/work/work_search_bar.dart';
+import '../widgets/work/work_pagination.dart';
 
 const Color _gradStart = Color(0xFF9B0D0D);
 const Color _gradEnd = Color(0xFFB70F0F);
-const Color _danger = Color(0xFFDC2626);
 
 class ListWorkPage extends StatefulWidget {
   const ListWorkPage({super.key, this.workshopUuid});
@@ -108,7 +109,6 @@ class _ListWorkPageState extends State<ListWorkPage> {
   List<WorkItem> _filtered(List<ServiceModel> services) {
     Iterable<ServiceModel> filtered = services.where(_matchTab);
 
-    // filter jenis kendaraan
     if (_advancedFilter.vehicleType != null &&
         _advancedFilter.vehicleType!.isNotEmpty) {
       final want = _advancedFilter.vehicleType!.toLowerCase();
@@ -118,7 +118,6 @@ class _ListWorkPageState extends State<ListWorkPage> {
       });
     }
 
-    // filter kategori kendaraan
     if (_advancedFilter.vehicleCategory != null &&
         _advancedFilter.vehicleCategory!.isNotEmpty) {
       final want = _advancedFilter.vehicleCategory!.toLowerCase();
@@ -130,7 +129,6 @@ class _ListWorkPageState extends State<ListWorkPage> {
 
     final list = filtered.toList();
 
-    // sort
     if (_advancedFilter.sort == 'newest') {
       list.sort((a, b) => _dateForSort(b).compareTo(_dateForSort(a)));
     } else if (_advancedFilter.sort == 'oldest') {
@@ -155,10 +153,6 @@ class _ListWorkPageState extends State<ListWorkPage> {
   }
 
   void _openFilterSheet() {
-    String? tempType = _advancedFilter.vehicleType;
-    String? tempCat = _advancedFilter.vehicleCategory;
-    String tempSort = _advancedFilter.sort;
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -166,157 +160,12 @@ class _ListWorkPageState extends State<ListWorkPage> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (ctx) {
-        final bottom = MediaQuery.of(ctx).padding.bottom;
-        return StatefulBuilder(
-          builder: (ctx, setModalState) {
-            Widget buildTypeChip(String label, String value) {
-              final sel = tempType == value;
-              return ChoiceChip(
-                label: Text(label),
-                selected: sel,
-                onSelected: (v) {
-                  setModalState(() {
-                    tempType = v ? value : null;
-                    if (tempType == null) tempCat = null;
-                  });
-                },
-              );
-            }
-
-            Widget buildCatChip(String label, String value) {
-              final sel = tempCat == value;
-              return ChoiceChip(
-                label: Text(label),
-                selected: sel,
-                onSelected: (v) {
-                  setModalState(() {
-                    tempCat = v ? value : null;
-                  });
-                },
-              );
-            }
-
-            Widget buildSortChip(String label, String value) {
-              final sel = tempSort == value;
-              return ChoiceChip(
-                label: Text(label),
-                selected: sel,
-                onSelected: (v) {
-                  setModalState(() {
-                    tempSort = v ? value : 'none';
-                  });
-                },
-              );
-            }
-
-            return Padding(
-              padding: EdgeInsets.fromLTRB(16, 12, 16, 16 + bottom),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 4,
-                      margin: const EdgeInsets.only(bottom: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade300,
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                    ),
-                  ),
-                  const Text(
-                    'Filter Pekerjaan',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text('Jenis Kendaraan',
-                      style:
-                          TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: [
-                      buildTypeChip('Semua', ''),
-                      buildTypeChip('Mobil', 'mobil'),
-                      buildTypeChip('Motor', 'motor'),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  const Text('Kategori Kendaraan',
-                      style:
-                          TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: [
-                      buildCatChip('Matic', 'matic'),
-                      buildCatChip('Sport', 'sport'),
-                      buildCatChip('Bebek', 'bebek'),
-                      buildCatChip('SUV', 'suv'),
-                      buildCatChip('MPV', 'mpv'),
-                      buildCatChip('Hatchback', 'hatchback'),
-                      buildCatChip('Sedan', 'sedan'),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  const Text('Urutkan',
-                      style:
-                          TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: [
-                      buildSortChip('Terbaru', 'newest'),
-                      buildSortChip('Terlama', 'oldest'),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () {
-                            setState(() {
-                              _advancedFilter = AdvancedFilter.empty;
-                            });
-                            Navigator.pop(ctx);
-                          },
-                          child: const Text('Reset'),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _danger,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              final typeValue =
-                                  (tempType ?? '').isEmpty ? null : tempType;
-                              final catValue =
-                                  (tempCat ?? '').isEmpty ? null : tempCat;
-                              _advancedFilter = AdvancedFilter(
-                                vehicleType: typeValue,
-                                vehicleCategory: catValue,
-                                sort: tempSort,
-                              );
-                            });
-                            Navigator.pop(ctx);
-                          },
-                          child: const Text(
-                            'Terapkan',
-                            style: TextStyle(fontWeight: FontWeight.w700),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            );
+        return WorkFilterSheet(
+          currentFilter: _advancedFilter,
+          onApply: (filter) {
+            setState(() {
+              _advancedFilter = filter;
+            });
           },
         );
       },
@@ -392,58 +241,15 @@ class _ListWorkPageState extends State<ListWorkPage> {
                             const SizedBox(height: 4),
                             const Text(
                               'Daftar Pekerjaan',
-                              style: TextStyle(
-                                  color: Colors.white70, fontSize: 14),
+                              style:
+                                  TextStyle(color: Colors.white70, fontSize: 14),
                             ),
                             const SizedBox(height: 18),
-                            Container(
-                              height: 56,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFF0F1F5),
-                                borderRadius: BorderRadius.only(
-                                  topLeft: Radius.circular(50),
-                                  bottomLeft: Radius.circular(50),
-                                  bottomRight: Radius.circular(30),
-                                ),
-                              ),
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 18),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.search, color: Colors.grey),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: TextField(
-                                      controller: _search,
-                                      decoration: const InputDecoration(
-                                        hintText:
-                                            'Cari kendaraan, customer, atau plat',
-                                        border: InputBorder.none,
-                                      ),
-                                      onChanged: (_) => setState(() {}),
-                                    ),
-                                  ),
-                                  InkWell(
-                                    onTap: _openFilterSheet,
-                                    borderRadius: BorderRadius.circular(24),
-                                    child: Container(
-                                      padding: const EdgeInsets.all(6),
-                                      decoration: BoxDecoration(
-                                        color: _hasActiveFilter
-                                            ? _danger
-                                            : Colors.transparent,
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Icon(
-                                        Icons.tune,
-                                        color: _hasActiveFilter
-                                            ? Colors.white
-                                            : Colors.grey,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                            WorkSearchBar(
+                              controller: _search,
+                              onFilterTap: _openFilterSheet,
+                              hasActiveFilter: _hasActiveFilter,
+                              onChanged: (_) => setState(() {}),
                             ),
                             const SizedBox(height: 14),
                             Row(
@@ -453,24 +259,24 @@ class _ListWorkPageState extends State<ListWorkPage> {
                                   label: 'Pending',
                                   icon: Icons.error_outline,
                                   selected: _tabStatus == WorkStatus.pending,
-                                  onTap: () => setState(
-                                      () => _tabStatus = WorkStatus.pending),
+                                  onTap: () =>
+                                      setState(() => _tabStatus = WorkStatus.pending),
                                 ),
                                 const SizedBox(width: 16),
                                 WorkStatusChip(
                                   label: 'Process',
                                   icon: Icons.schedule_rounded,
                                   selected: _tabStatus == WorkStatus.process,
-                                  onTap: () => setState(
-                                      () => _tabStatus = WorkStatus.process),
+                                  onTap: () =>
+                                      setState(() => _tabStatus = WorkStatus.process),
                                 ),
                                 const SizedBox(width: 16),
                                 WorkStatusChip(
                                   label: 'Selesai',
                                   icon: Icons.verified_rounded,
                                   selected: _tabStatus == WorkStatus.done,
-                                  onTap: () => setState(
-                                      () => _tabStatus = WorkStatus.done),
+                                  onTap: () =>
+                                      setState(() => _tabStatus = WorkStatus.done),
                                 ),
                               ],
                             ),
@@ -525,35 +331,17 @@ class _ListWorkPageState extends State<ListWorkPage> {
                 ),
 
               SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ElevatedButton(
-                        onPressed: prov.currentPage > 1 && !prov.loading
-                            ? () => prov.goToPage(
-                                  prov.currentPage - 1,
-                                  workshopUuid: widget.workshopUuid,
-                                )
-                            : null,
-                        child: const Text('Prev'),
-                      ),
-                      const SizedBox(width: 16),
-                      Text('Page ${prov.currentPage} of ${prov.totalPages}',
-                          style: const TextStyle(color: Colors.white)),
-                      const SizedBox(width: 16),
-                      ElevatedButton(
-                        onPressed:
-                            prov.currentPage < prov.totalPages && !prov.loading
-                                ? () => prov.goToPage(
-                                      prov.currentPage + 1,
-                                      workshopUuid: widget.workshopUuid,
-                                    )
-                                : null,
-                        child: const Text('Next'),
-                      ),
-                    ],
+                child: WorkPagination(
+                  currentPage: prov.currentPage,
+                  totalPages: prov.totalPages,
+                  loading: prov.loading,
+                  onPrev: () => prov.goToPage(
+                    prov.currentPage - 1,
+                    workshopUuid: widget.workshopUuid,
+                  ),
+                  onNext: () => prov.goToPage(
+                    prov.currentPage + 1,
+                    workshopUuid: widget.workshopUuid,
                   ),
                 ),
               ),

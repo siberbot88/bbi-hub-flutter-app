@@ -169,7 +169,7 @@ class _LoginPageState extends State<LoginPage> {
                         borderRadius: BorderRadius.circular(28)),
                     elevation: 8,
                     shadowColor:
-                    const Color.fromARGB(255, 215, 43, 28).withOpacity(0.6),
+                    const Color.fromARGB(255, 215, 43, 28).withAlpha(153),
                   ),
                   onPressed: _isLoading ? null : () async {
                     FocusScope.of(context).unfocus();
@@ -330,7 +330,7 @@ class _LoginPageState extends State<LoginPage> {
               color: Color.fromARGB(255, 215, 43, 28), width: 2),
         ),
         filled: true,
-        fillColor: const Color.fromARGB(222, 255, 255, 255).withOpacity(0.4),
+        fillColor: const Color.fromARGB(222, 255, 255, 255).withAlpha(102),
       ),
       style: GoogleFonts.poppins(color: Colors.black),
     );

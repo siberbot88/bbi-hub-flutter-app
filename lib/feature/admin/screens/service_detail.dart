@@ -53,7 +53,7 @@ class ServiceDetailPage extends StatelessWidget {
                           borderRadius: BorderRadius.circular(14),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.06),
+                              color: Colors.black.withAlpha(15),
                               blurRadius: 8,
                               offset: const Offset(0, 4),
                             ),
@@ -238,7 +238,7 @@ class ServiceDetailPage extends StatelessWidget {
                                             horizontal: 10, vertical: 6),
                                         decoration: BoxDecoration(
                                           color: Colors.grey.shade200
-                                              .withOpacity(0.6),
+                                              .withAlpha(153),
                                           borderRadius:
                                               BorderRadius.circular(20),
                                         ),

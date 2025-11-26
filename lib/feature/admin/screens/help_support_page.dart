@@ -277,7 +277,7 @@ class _FaqCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(18),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
+                color: Colors.black.withAlpha(10),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),

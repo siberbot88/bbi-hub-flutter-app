@@ -53,7 +53,7 @@ bottomNavigationBar: SafeArea(
             borderRadius: BorderRadius.circular(30),
           ),
           elevation: 4,
-          shadowColor: Colors.black.withOpacity(0.15),
+          shadowColor: Colors.black.withAlpha(38),
         ),
         icon: SvgPicture.asset(
           'assets/icons/assign.svg', // 🔹 Ikon SVG lokal
@@ -84,7 +84,7 @@ bottomNavigationBar: SafeArea(
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withAlpha(13),
                 blurRadius: 6,
                 offset: const Offset(0, 3),
               ),
@@ -174,7 +174,7 @@ bottomNavigationBar: SafeArea(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                   decoration: BoxDecoration(
-                    color: mainColor.withOpacity(0.15),
+                    color: mainColor.withAlpha(38),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -200,7 +200,7 @@ bottomNavigationBar: SafeArea(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                   decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(0.15),
+                    color: Colors.orange.withAlpha(38),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -239,7 +239,7 @@ bottomNavigationBar: SafeArea(
                 decoration: BoxDecoration(
                   border: Border.all(color: mainColor, width: 1),
                   borderRadius: BorderRadius.circular(8),
-                  color: mainColor.withOpacity(0.05),
+                  color: mainColor.withAlpha(13),
                 ),
                 child: Text(
                   task['desc'] ?? "Penggantian bantalan rem lengkap dan kalibrasi sistem untuk unit excavator",
