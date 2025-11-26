@@ -50,8 +50,8 @@ class AppColors {
   static const Color divider = Color(0xFFBDBDBD);
   
   // ===== Shadows =====
-  static Color shadow = Colors.black.withOpacity(0.08);
-  static Color cardShadow = Colors.black.withOpacity(0.1);
+  static Color shadow = Colors.black.withAlpha(20);
+  static Color cardShadow = Colors.black.withAlpha(26);
   
   // ===== Gradients =====
   static const LinearGradient primaryGradient = LinearGradient(
