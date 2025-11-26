@@ -12,7 +12,7 @@ class ServiceDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);
-    final textScale = mq.textScaleFactor.clamp(0.9, 1.15);
+    final textScale = mq.textScaler.scale(1.0).clamp(0.9, 1.15);
     double s(double size) => (size * textScale);
 
     Widget divider() => Divider(

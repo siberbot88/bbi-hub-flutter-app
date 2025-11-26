@@ -323,8 +323,12 @@ class _DashboardPageState extends State<DashboardPage> {
 
   // ---------- HELPER ICON ----------
   Widget _buildIcon(String path, {Color? color, double size = 24}) {
+    final colorFilter = color != null 
+        ? ColorFilter.mode(color, BlendMode.srcIn) 
+        : null;
+    
     if (path.endsWith('.svg')) {
-      return SvgPicture.asset(path, width: size, height: size, color: color);
+      return SvgPicture.asset(path, width: size, height: size, colorFilter: colorFilter);
     } else {
       return Image.asset(path, width: size, height: size, color: color);
     }
