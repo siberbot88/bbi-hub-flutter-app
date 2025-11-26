@@ -44,6 +44,7 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _loadRememberedEmail() async {
     final remembered = await _storage.read(key: 'remember_email');
+    if (!context.mounted) return;
     if (remembered != null && remembered.isNotEmpty) {
       setState(() {
         emailController.text = remembered;
@@ -191,21 +192,26 @@ class _LoginPageState extends State<LoginPage> {
                       // Simpan / hapus email remembered
                       await _persistRemember(rememberMe, email);
 
+                      if (!context.mounted) return;
+
                       if (success) {
                         // Jika server wajibkan ganti password → arahkan ke halaman ubah password
                         if (auth.mustChangePassword) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Silakan ganti password Anda terlebih dahulu')),
                           );
+                          if (!context.mounted) return;
                           Navigator.pushNamedAndRemoveUntil(context, '/changePassword', (_) => false);
                         } else {
                           Navigator.pushNamedAndRemoveUntil(context, '/main', (_) => false);
                         }
                       }
                     } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
-                      );
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+                        );
+                      }
                     } finally {
                       if (mounted) setState(() => _isLoading = false);
                     }
