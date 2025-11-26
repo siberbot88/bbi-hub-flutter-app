@@ -207,9 +207,11 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
       // refresh profil agar workshop tampil di AuthProvider.user
       await authProvider.checkLoginStatus();
 
+      if (!mounted) return;
       setState(() => _isLoading = false);
       _goStep(3);
     } catch (e) {
+      if (!mounted) return;
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: ${e.toString().replaceFirst("Exception: ", "")}'), backgroundColor: Colors.red),
@@ -346,7 +348,12 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
         hintStyle: GoogleFonts.poppins(color: Colors.grey),
         prefixIcon: Padding(
           padding: const EdgeInsets.all(12.0),
-          child: SvgPicture.asset(iconPath, width: 20, height: 20, color: Colors.red),
+          child: SvgPicture.asset(
+            iconPath,
+            width: 20,
+            height: 20,
+            colorFilter: const ColorFilter.mode(Colors.red, BlendMode.srcIn),
+          ),
         ),
         suffixIcon: isPassword
             ? IconButton(
