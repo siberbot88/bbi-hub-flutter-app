@@ -2,10 +2,13 @@ import 'package:bengkel_online_flutter/core/models/voucher.dart';
 import 'package:bengkel_online_flutter/core/services/api_service.dart';
 import 'package:bengkel_online_flutter/feature/owner/screens/voucher_editpage.dart';
 import 'package:bengkel_online_flutter/feature/owner/screens/voucher_addpage.dart';
-import 'package:bengkel_online_flutter/feature/owner/widgets/custom_header.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/date_symbol_data_local.dart'; // ✅ Pastikan import intl
+import 'package:flutter/services.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/theme/app_radius.dart';
+import '../../../../core/theme/app_spacing.dart';
 
 class VoucherPage extends StatefulWidget {
   final bool showSuccess;
@@ -16,19 +19,15 @@ class VoucherPage extends StatefulWidget {
   State<VoucherPage> createState() => _VoucherPageState();
 }
 
-class _VoucherPageState extends State<VoucherPage> {
+class _VoucherPageState extends State<VoucherPage> with SingleTickerProviderStateMixin {
   final ApiService _apiService = ApiService();
   late Future<List<Voucher>> _vouchersFuture;
-
-  final Color _primaryColor = const Color(0xFFDC2626);
-  final Color _backgroundColor = Colors.white;
-  final TextStyle _fontStyle = GoogleFonts.poppins(fontSize: 12);
+  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-
-    // ✅ Inisialisasi format tanggal (untuk jaga-jaga jika main.dart belum reload)
+    _tabController = TabController(length: 2, vsync: this);
     initializeDateFormatting('id_ID', null).then((_) {
       _loadData();
     });
@@ -37,14 +36,21 @@ class _VoucherPageState extends State<VoucherPage> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Voucher berhasil disimpan 🎉", style: GoogleFonts.poppins(color: Colors.white)),
-            backgroundColor: Colors.green[600],
+            content: Text("Voucher berhasil disimpan 🎉", style: AppTextStyles.bodyMedium(color: Colors.white)),
+            backgroundColor: AppColors.success,
             behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.all(20),
+            shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusMD),
+            margin: AppSpacing.paddingMD,
           ),
         );
       });
     }
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   void _loadData() {
@@ -57,15 +63,27 @@ class _VoucherPageState extends State<VoucherPage> {
     try {
       await _apiService.deleteVoucher(id);
       if (!mounted) return;
-      Navigator.pop(context);
+      Navigator.pop(context); // Close dialog
       _loadData();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Voucher berhasil dihapus", style: GoogleFonts.poppins()), backgroundColor: Colors.green),
+        SnackBar(
+          content: Text("Voucher berhasil dihapus", style: AppTextStyles.bodyMedium(color: Colors.white)),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusMD),
+          margin: AppSpacing.paddingMD,
+        ),
       );
     } catch (e) {
-      Navigator.pop(context);
+      Navigator.pop(context); // Close dialog
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Gagal menghapus: $e"), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text("Gagal menghapus: $e", style: AppTextStyles.bodyMedium(color: Colors.white)),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusMD),
+          margin: AppSpacing.paddingMD,
+        ),
       );
     }
   }
@@ -74,18 +92,21 @@ class _VoucherPageState extends State<VoucherPage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: Text("Hapus Voucher?", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16)),
-        content: Text("Tindakan ini tidak dapat dibatalkan.", style: GoogleFonts.poppins(fontSize: 13)),
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusLG),
+        title: Text("Hapus Voucher?", style: AppTextStyles.heading4()),
+        content: Text("Tindakan ini tidak dapat dibatalkan.", style: AppTextStyles.bodyMedium()),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text("Batal", style: GoogleFonts.poppins(color: Colors.grey)),
+            child: Text("Batal", style: AppTextStyles.buttonSmall(color: AppColors.textSecondary)),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: _primaryColor),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusMD),
+            ),
             onPressed: () => _handleDelete(id),
-            child: Text("Hapus", style: GoogleFonts.poppins(color: Colors.white)),
+            child: Text("Hapus", style: AppTextStyles.buttonSmall(color: Colors.white)),
           ),
         ],
       ),
@@ -95,63 +116,110 @@ class _VoucherPageState extends State<VoucherPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _backgroundColor,
-
-      // ✅ CUSTOM HEADER DENGAN LOGIKA NAVIGASI
-      appBar: CustomHeader(
-        title: "Voucher",
-        onBack: () {
-          // Hapus semua route di stack, buka /main, dan kirim argument 3 (Profile)
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/main',
-                (route) => false,
-            arguments: 3, // 3 adalah index tab Profile pada Owner
-          );
+      backgroundColor: AppColors.backgroundLight,
+      body: NestedScrollView(
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            SliverAppBar(
+              expandedHeight: 120.0,
+              floating: false,
+              pinned: true,
+              backgroundColor: AppColors.primaryRed,
+              elevation: 0,
+              systemOverlayStyle: SystemUiOverlayStyle.light,
+              leading: IconButton(
+                icon: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withAlpha(51),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: Colors.white),
+                ),
+                onPressed: () {
+                  Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    '/main',
+                    (route) => false,
+                    arguments: 3,
+                  );
+                },
+              ),
+              flexibleSpace: FlexibleSpaceBar(
+                titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
+                centerTitle: false,
+                title: Text(
+                  'Kelola Voucher',
+                  style: AppTextStyles.heading3(color: Colors.white),
+                ),
+                background: Container(
+                  decoration: const BoxDecoration(
+                    gradient: AppColors.primaryGradient,
+                  ),
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        right: -20,
+                        top: -20,
+                        child: Icon(
+                          Icons.confirmation_number_rounded,
+                          size: 150,
+                          color: Colors.white.withAlpha(25),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            SliverPersistentHeader(
+              delegate: _SliverAppBarDelegate(
+                TabBar(
+                  controller: _tabController,
+                  labelColor: AppColors.primaryRed,
+                  unselectedLabelColor: AppColors.textSecondary,
+                  indicatorColor: AppColors.primaryRed,
+                  indicatorWeight: 3,
+                  labelStyle: AppTextStyles.heading5(),
+                  unselectedLabelStyle: AppTextStyles.heading5(),
+                  tabs: const [
+                    Tab(text: "Aktif"),
+                    Tab(text: "Kadaluarsa"),
+                  ],
+                ),
+              ),
+              pinned: true,
+            ),
+          ];
         },
-      ),
-
-      body: RefreshIndicator(
-        color: _primaryColor,
-        onRefresh: () async => _loadData(),
-        child: FutureBuilder<List<Voucher>>(
+        body: FutureBuilder<List<Voucher>>(
           future: _vouchersFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(child: CircularProgressIndicator(color: _primaryColor));
+              return const Center(child: CircularProgressIndicator(color: AppColors.primaryRed));
             }
             if (snapshot.hasError) {
-              return Center(child: Text("Gagal memuat data", style: _fontStyle));
+              return Center(child: Text("Gagal memuat data", style: AppTextStyles.bodyMedium()));
             }
 
             final allVouchers = snapshot.data ?? [];
             final activeVouchers = allVouchers.where((v) => !v.isExpired && v.isActive).toList();
             final expiredVouchers = allVouchers.where((v) => v.isExpired).toList();
 
-            return ListView(
-              padding: const EdgeInsets.all(16),
+            return TabBarView(
+              controller: _tabController,
               children: [
-                _buildSectionHeader("Voucher Aktif"),
-                if (activeVouchers.isEmpty)
-                  _buildEmptyState("Belum ada voucher aktif"),
-                ...activeVouchers.map((v) => _buildVoucherCard(voucher: v, isExpired: false)),
-
-                const SizedBox(height: 24),
-
-                _buildSectionHeader("Voucher Kadaluarsa"),
-                if (expiredVouchers.isEmpty)
-                  _buildEmptyState("Tidak ada voucher kadaluarsa"),
-                ...expiredVouchers.map((v) => _buildVoucherCard(voucher: v, isExpired: true)),
-
-                const SizedBox(height: 80),
+                _buildVoucherList(activeVouchers, isExpired: false),
+                _buildVoucherList(expiredVouchers, isExpired: true),
               ],
             );
           },
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: _primaryColor,
+        backgroundColor: AppColors.primaryRed,
         shape: const CircleBorder(),
+        elevation: 4,
         onPressed: () {
           Navigator.push(context, MaterialPageRoute(builder: (_) => const AddVoucherPage()));
         },
@@ -160,95 +228,160 @@ class _VoucherPageState extends State<VoucherPage> {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Text(
-        title,
-        style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black87),
-      ),
-    );
-  }
+  Widget _buildVoucherList(List<Voucher> vouchers, {required bool isExpired}) {
+    if (vouchers.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              isExpired ? Icons.history_toggle_off_rounded : Icons.confirmation_number_outlined,
+              size: 64,
+              color: Colors.grey.shade300,
+            ),
+            AppSpacing.verticalSpaceMD,
+            Text(
+              isExpired ? "Tidak ada voucher kadaluarsa" : "Belum ada voucher aktif",
+              style: AppTextStyles.bodyMedium(color: AppColors.textSecondary),
+            ),
+          ],
+        ),
+      );
+    }
 
-  Widget _buildEmptyState(String message) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Center(child: Text(message, style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey, fontStyle: FontStyle.italic))),
+    return ListView.builder(
+      padding: AppSpacing.screenPadding,
+      itemCount: vouchers.length,
+      itemBuilder: (context, index) {
+        return _buildVoucherCard(voucher: vouchers[index], isExpired: isExpired);
+      },
     );
   }
 
   Widget _buildVoucherCard({required Voucher voucher, required bool isExpired}) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [BoxShadow(color: Colors.grey.shade100, blurRadius: 4, offset: const Offset(0, 2))],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: isExpired ? Colors.grey.shade300 : _primaryColor,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.confirmation_number_outlined, color: Colors.white, size: 20),
+        borderRadius: AppRadius.radiusLG,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadow,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  voucher.title,
-                  style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600),
-                  maxLines: 1, overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  isExpired ? "Kadaluarsa ${voucher.formattedUntilDate}" : "Berlaku sampai ${voucher.formattedUntilDate}",
-                  style: GoogleFonts.poppins(fontSize: 12, color: isExpired ? Colors.red : Colors.grey.shade600),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  "Slot: ${voucher.quota} • Min Belanja: Rp ${voucher.minTransaction.toStringAsFixed(0)}",
-                  style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey.shade500),
-                ),
-              ],
-            ),
-          ),
-          if (!isExpired)
-            Row(
-              children: [
-                _buildActionButton(Icons.delete_outline, Colors.red, () => _confirmDelete(voucher.id)),
-                const SizedBox(width: 4),
-                _buildActionButton(Icons.edit_outlined, Colors.orange, () async {
-                  final bool? result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => VoucherEditPage(voucher: voucher)),
-                  );
-                  if (result == true) {
-                    _loadData();
-                  }
-                }),
-              ],
-            )
         ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: AppRadius.radiusLG,
+        child: InkWell(
+          borderRadius: AppRadius.radiusLG,
+          onTap: isExpired ? null : () async {
+             final bool? result = await Navigator.push(
+               context,
+               MaterialPageRoute(builder: (_) => VoucherEditPage(voucher: voucher)),
+             );
+             if (result == true) {
+               _loadData();
+             }
+          },
+          child: Padding(
+            padding: AppSpacing.paddingLG,
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isExpired ? Colors.grey.shade100 : AppColors.primaryRed.withAlpha(26),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.confirmation_number_rounded,
+                    color: isExpired ? Colors.grey : AppColors.primaryRed,
+                    size: 24,
+                  ),
+                ),
+                AppSpacing.horizontalSpaceMD,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        voucher.title,
+                        style: AppTextStyles.heading5(
+                          color: isExpired ? AppColors.textSecondary : AppColors.textPrimary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        isExpired
+                            ? "Kadaluarsa ${voucher.formattedUntilDate}"
+                            : "Berlaku sampai ${voucher.formattedUntilDate}",
+                        style: AppTextStyles.caption(
+                          color: isExpired ? AppColors.error : AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "Slot: ${voucher.quota} • Min: Rp ${voucher.minTransaction.toStringAsFixed(0)}",
+                        style: AppTextStyles.caption(color: AppColors.textHint),
+                      ),
+                    ],
+                  ),
+                ),
+                if (!isExpired)
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit_rounded, color: AppColors.accentOrange, size: 20),
+                        onPressed: () async {
+                          final bool? result = await Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => VoucherEditPage(voucher: voucher)),
+                          );
+                          if (result == true) {
+                            _loadData();
+                          }
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete_rounded, color: AppColors.error, size: 20),
+                        onPressed: () => _confirmDelete(voucher.id),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
+}
 
-  Widget _buildActionButton(IconData icon, Color color, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Icon(icon, color: color, size: 22),
-      ),
+class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
+  final TabBar _tabBar;
+
+  _SliverAppBarDelegate(this._tabBar);
+
+  @override
+  double get minExtent => _tabBar.preferredSize.height;
+  @override
+  double get maxExtent => _tabBar.preferredSize.height;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(
+      color: Colors.white,
+      child: _tabBar,
     );
+  }
+
+  @override
+  bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
+    return false;
   }
 }

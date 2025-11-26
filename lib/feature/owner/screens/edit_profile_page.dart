@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../widgets/custom_header.dart';
+import 'package:flutter/services.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/theme/app_radius.dart';
+import '../../../../core/theme/app_spacing.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -25,137 +28,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    const redDark = Color(0xFF9B0D0D);
-    const red = Color(0xFFDC2626);
-
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: const CustomHeader(
-        title: "Edit Profil", // ⬅️ hanya ganti title sesuai permintaan
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                _LabeledField(
-                  label: "Email",
-                  controller: _emailC,
-                  keyboardType: TextInputType.emailAddress,
-                  prefixIcon: Icons.email_outlined,
-                ),
-                const SizedBox(height: 14),
-                _LabeledField(
-                  label: "Username",
-                  controller: _usernameC,
-                  prefixIcon: Icons.person_outline,
-                ),
-                const SizedBox(height: 14),
-                _LabeledField(
-                  label: "Nama Lengkap",
-                  controller: _fullNameC,
-                  prefixIcon: Icons.badge_outlined,
-                ),
-                const SizedBox(height: 18),
-
-                // Upload foto
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    "Upload Foto Anda",
-                    style: GoogleFonts.poppins(
-                      fontSize: 13,
-                      color: Colors.grey[800],
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-
-                GestureDetector(
-                  onTap:
-                      _pickImageMock, // ganti dengan image picker jika diperlukan
-                  child: Container(
-                    height: 170,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.red.shade200,
-                        width: 1.2,
-                        // (mockup menampilkan border titik2; untuk simple pakai solid)
-                      ),
-                    ),
-                    child: _pickedImage == null
-                        ? Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.cloud_upload_outlined,
-                                  size: 44, color: redDark),
-                              const SizedBox(height: 10),
-                              Text(
-                                "Click to upload or drag & drop",
-                                style: GoogleFonts.poppins(
-                                    fontSize: 12, color: Colors.grey[700]),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                "PNG, JPG up to 10MB",
-                                style: GoogleFonts.poppins(
-                                    fontSize: 12, color: Colors.grey[600]),
-                              ),
-                            ],
-                          )
-                        : ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: Image(
-                              image: _pickedImage!,
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              height: double.infinity,
-                            ),
-                          ),
-                  ),
-                ),
-
-                const SizedBox(height: 28),
-
-                // Tombol simpan
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _save,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: red,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      elevation: 1.5,
-                    ),
-                    child: Text(
-                      "SIMPAN",
-                      style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.4,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   // Placeholder pemilihan gambar (tanpa dependency).
   void _pickImageMock() {
     // Demo: pakai gambar mockup yang kamu punya
@@ -170,12 +42,167 @@ class _EditProfilePageState extends State<EditProfilePage> {
     if (!_formKey.currentState!.validate()) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text("Profil disimpan",
-            style: GoogleFonts.poppins(color: Colors.white)),
-        backgroundColor: const Color(0xFFDC2626),
+        content: Text("Profil disimpan", style: AppTextStyles.bodyMedium(color: Colors.white)),
+        backgroundColor: AppColors.success,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusMD),
+        margin: AppSpacing.paddingMD,
       ),
     );
     Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.backgroundLight,
+      appBar: AppBar(
+        backgroundColor: AppColors.primaryRed,
+        elevation: 0,
+        centerTitle: true,
+        title: Text(
+          "Edit Profil",
+          style: AppTextStyles.heading4(color: Colors.white),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+          onPressed: () => Navigator.pop(context),
+        ),
+        systemOverlayStyle: SystemUiOverlayStyle.light,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: AppColors.primaryGradient,
+          ),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: AppSpacing.screenPadding,
+        physics: const BouncingScrollPhysics(),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              _buildImagePicker(),
+              AppSpacing.verticalSpaceXL,
+              Container(
+                padding: AppSpacing.paddingLG,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: AppRadius.radiusXL,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.shadow,
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    _LabeledField(
+                      label: "Email",
+                      controller: _emailC,
+                      keyboardType: TextInputType.emailAddress,
+                      prefixIcon: Icons.email_outlined,
+                    ),
+                    AppSpacing.verticalSpaceLG,
+                    _LabeledField(
+                      label: "Username",
+                      controller: _usernameC,
+                      prefixIcon: Icons.person_outline,
+                    ),
+                    AppSpacing.verticalSpaceLG,
+                    _LabeledField(
+                      label: "Nama Lengkap",
+                      controller: _fullNameC,
+                      prefixIcon: Icons.badge_outlined,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 40),
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: _save,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryRed,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: AppRadius.radiusXL,
+                    ),
+                    elevation: 4,
+                    shadowColor: AppColors.primaryRed.withAlpha(100),
+                  ),
+                  child: Text(
+                    "SIMPAN PERUBAHAN",
+                    style: AppTextStyles.button(),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImagePicker() {
+    return Center(
+      child: Stack(
+        children: [
+          GestureDetector(
+            onTap: _pickImageMock,
+            child: Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.primaryRed, width: 3),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.shadow,
+                    blurRadius: 10,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+                image: _pickedImage != null
+                    ? DecorationImage(image: _pickedImage!, fit: BoxFit.cover)
+                    : null,
+              ),
+              child: _pickedImage == null
+                  ? const Icon(Icons.person_rounded, size: 60, color: Colors.grey)
+                  : null,
+            ),
+          ),
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: GestureDetector(
+              onTap: _pickImageMock,
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryRed,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.shadow,
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 20),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -197,39 +224,39 @@ class _LabeledField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: GoogleFonts.poppins(
-                fontSize: 13,
-                color: Colors.grey[800],
-                fontWeight: FontWeight.w500)),
-        const SizedBox(height: 6),
+        Text(label, style: AppTextStyles.label(color: AppColors.textSecondary)),
+        AppSpacing.verticalSpaceXS,
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
-          validator: (v) =>
-              (v == null || v.isEmpty) ? "Tidak boleh kosong" : null,
+          validator: (v) => (v == null || v.isEmpty) ? "Tidak boleh kosong" : null,
           decoration: InputDecoration(
             prefixIcon: prefixIcon != null
-                ? Icon(prefixIcon, color: const Color(0xFF9B0D0D))
+                ? Icon(prefixIcon, color: AppColors.primaryRed)
                 : null,
             filled: true,
-            fillColor: Colors.white,
-            hintText: label,
-            hintStyle:
-                GoogleFonts.poppins(fontSize: 14, color: Colors.grey[500]),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            fillColor: AppColors.backgroundLight,
+            hintText: "Masukkan $label",
+            hintStyle: AppTextStyles.bodyMedium(color: AppColors.textHint),
+            contentPadding: AppSpacing.paddingMD,
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade300, width: 1.2),
+              borderRadius: AppRadius.radiusMD,
+              borderSide: const BorderSide(color: Colors.transparent),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide:
-                  const BorderSide(color: Color(0xFFDC2626), width: 1.5),
+              borderRadius: AppRadius.radiusMD,
+              borderSide: const BorderSide(color: AppColors.primaryRed, width: 1.5),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: AppRadius.radiusMD,
+              borderSide: const BorderSide(color: AppColors.error, width: 1.5),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: AppRadius.radiusMD,
+              borderSide: const BorderSide(color: AppColors.error, width: 1.5),
             ),
           ),
-          style: GoogleFonts.poppins(fontSize: 14),
+          style: AppTextStyles.bodyMedium(),
         ),
       ],
     );
