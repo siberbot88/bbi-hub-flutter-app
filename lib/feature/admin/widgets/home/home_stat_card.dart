@@ -41,7 +41,7 @@ class HomeStatCard extends StatelessWidget {
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withAlpha(10),
             blurRadius: 5,
             offset: const Offset(0, 2),
           ),
