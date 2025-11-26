@@ -98,7 +98,7 @@ class _CustomerTabState extends State<CustomerTab> {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.06),
+                  color: Colors.black.withAlpha(15),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -200,7 +200,7 @@ class _CustomerTabState extends State<CustomerTab> {
         borderRadius: BorderRadius.circular(24), // Membuat bentuk pill
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.10),
+            color: Colors.black.withAlpha(26),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -243,7 +243,7 @@ class _CustomerTabState extends State<CustomerTab> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withAlpha(20),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -277,7 +277,7 @@ class _CustomerTabState extends State<CustomerTab> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withAlpha(20),
               blurRadius: 10,
               offset: const Offset(0, 4))
         ],

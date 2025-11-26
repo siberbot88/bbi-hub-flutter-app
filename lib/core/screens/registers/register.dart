@@ -265,7 +265,7 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
       height: 50,
       child: Stack(
         children: [
-          Positioned(top: 20, left: segment / 2, right: segment / 2, child: Container(height: 2, color: Colors.red.withOpacity(0.3))),
+          Positioned(top: 20, left: segment / 2, right: segment / 2, child: Container(height: 2, color: Colors.red.withAlpha(77))),
           Positioned(
             top: 20,
             left: segment / 2,
@@ -282,7 +282,7 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                 height: 24,
                 decoration: BoxDecoration(
                   color: (i <= _currentStep) ? Colors.red : Colors.white,
-                  border: Border.all(color: (i <= _currentStep) ? Colors.red : Colors.red.withOpacity(0.5)),
+                  border: Border.all(color: (i <= _currentStep) ? Colors.red : Colors.red.withAlpha(128)),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
@@ -385,7 +385,7 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), offset: const Offset(0, 0), blurRadius: 22)],
+        boxShadow: [BoxShadow(color: Colors.black.withAlpha(20), offset: const Offset(0, 0), blurRadius: 22)],
       ),
       child: child,
     );
@@ -748,7 +748,7 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                 child: Container(
                   height: 150,
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.red.withOpacity(0.5)),
+                    border: Border.all(color: Colors.red.withAlpha(128)),
                     borderRadius: BorderRadius.circular(12),
                     color: Colors.grey.shade50,
                   ),
@@ -932,7 +932,7 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
-                  disabledBackgroundColor: Colors.red.withOpacity(0.5),
+                  disabledBackgroundColor: Colors.red.withAlpha(128),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
                   elevation: _isLoading ? 0 : 2,
                 ),

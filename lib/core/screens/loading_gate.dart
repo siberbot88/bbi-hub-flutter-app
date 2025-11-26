@@ -72,9 +72,9 @@ class _LoadingGateState extends State<LoadingGate> with SingleTickerProviderStat
                     width: 84,
                     height: 84,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(.15),
+                      color: Colors.white.withAlpha(38),
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white.withOpacity(.45)),
+                      border: Border.all(color: Colors.white.withAlpha(115)),
                     ),
                     alignment: Alignment.center,
                     child: const Text(

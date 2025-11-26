@@ -116,7 +116,7 @@ class TechnicianTab extends StatelessWidget {
         borderRadius: BorderRadius.circular(24), // Bentuk pill
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.10),
+            color: Colors.black.withAlpha(26),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -157,7 +157,7 @@ class TechnicianTab extends StatelessWidget {
         borderRadius: BorderRadius.circular(_cardRadius),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withAlpha(20),
             blurRadius: 10,
             offset: const Offset(0, 4),
           )

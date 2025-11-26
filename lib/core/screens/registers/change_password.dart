@@ -105,7 +105,7 @@ class _ChangePasswordPageState extends State<ubahPasswordPage> {
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: primaryRed.withOpacity(0.5), width: 1.5),
+        borderSide: BorderSide(color: primaryRed.withAlpha(128), width: 1.5),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -147,7 +147,7 @@ class _ChangePasswordPageState extends State<ubahPasswordPage> {
               // 2. Ornamen / Header Visual
               CircleAvatar(
                 radius: 40,
-                backgroundColor: primaryRed.withOpacity(0.1),
+                backgroundColor: primaryRed.withAlpha(26),
                 child: Icon(
                   Icons.lock_reset_rounded,
                   color: primaryRed,
@@ -268,7 +268,7 @@ class _ChangePasswordPageState extends State<ubahPasswordPage> {
                   borderRadius: BorderRadius.circular(12), // Sesuaikan radius
                 ),
                 elevation: 4,
-                shadowColor: primaryRed.withOpacity(0.4),
+                shadowColor: primaryRed.withAlpha(102),
               ),
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),
