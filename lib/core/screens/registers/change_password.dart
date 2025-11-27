@@ -7,14 +7,14 @@ import 'package:provider/provider.dart';
 import 'package:bengkel_online_flutter/core/services/api_service.dart';
 import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
 
-class ubahPasswordPage extends StatefulWidget {
-  const ubahPasswordPage({super.key});
+class UbahPasswordPage extends StatefulWidget {
+  const UbahPasswordPage({super.key});
 
   @override
-  State<ubahPasswordPage> createState() => _ChangePasswordPageState();
+  State<UbahPasswordPage> createState() => _ChangePasswordPageState();
 }
 
-class _ChangePasswordPageState extends State<ubahPasswordPage> {
+class _ChangePasswordPageState extends State<UbahPasswordPage> {
   // --- Logika State (Semua sudah ada) ---
   final ApiService _apiService = ApiService();
   bool _saving = false;
@@ -48,23 +48,19 @@ class _ChangePasswordPageState extends State<ubahPasswordPage> {
         confirmPassword: confirmController.text,
       );
 
-      if (mounted) {
-        context.read<AuthProvider>().clearMustChangePassword();
-      }
+      if (!mounted) return;
+      context.read<AuthProvider>().clearMustChangePassword();
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text("Password berhasil diubah. Masuk ke Dashboard..."),
-            backgroundColor: Colors.green.shade700,
-          ),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text("Password berhasil diubah. Masuk ke Dashboard..."),
+          backgroundColor: Colors.green.shade700,
+        ),
+      );
 
-      if (mounted) {
-        await Future.delayed(const Duration(milliseconds: 500));
-        Navigator.of(context).pushReplacementNamed('/main');
-      }
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (!mounted) return;
+      Navigator.of(context).pushReplacementNamed('/main');
     } catch (e) {
       if (mounted) {
         setState(() {

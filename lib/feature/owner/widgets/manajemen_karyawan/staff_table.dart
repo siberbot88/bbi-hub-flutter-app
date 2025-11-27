@@ -16,36 +16,26 @@ class StaffTable extends StatelessWidget {
   });
 
   final List<Employment> rows;
-
   final ScrollController headerController;
   final ScrollController bodyHController;
   final ScrollController bodyVController;
-
   final Future<void> Function(Employment, bool) onToggleActive;
   final Future<void> Function(Employment) onEdit;
   final Future<void> Function(Employment) onDelete;
 
-  static const double wAvatar = 64; // kolom foto
-  static const double wName = 220;
-  static const double wPos = 180;
-  static const double wEmail = 240;
-  static const double wStatus = 140;
-  static const double wActions = 120;
-
-  static const double rowHeight = 64;
-
-  static double get totalWidth => wAvatar + wName + wPos + wEmail + wStatus + wActions;
-
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final isSmall = width < 900;
+
     return Material(
       elevation: 6,
       shadowColor: Colors.black12,
-      borderRadius: BorderRadius.circular(10), // radius kecil
+      borderRadius: BorderRadius.circular(10),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(10), // radius kecil
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: const Color(0xFFE6EAF0)),
         ),
         child: Column(
@@ -56,62 +46,45 @@ class StaffTable extends StatelessWidget {
               child: Container(
                 color: const Color(0xFFF9FAFB),
                 padding: const EdgeInsets.symmetric(vertical: 10),
-                child: SingleChildScrollView(
-                  controller: headerController,
-                  scrollDirection: Axis.horizontal,
-                  physics: const BouncingScrollPhysics(),
-                  child: SizedBox(
-                    width: max(totalWidth, MediaQuery.of(context).size.width - 32),
-                    child: Row(
-                      children: [
-                        // Icon saja agar tidak overflow (hilangin tulisan Photo)
-                        _headerCell(
-                          width: wAvatar,
-                          child: const Icon(Icons.person, size: 18, color: Color(0xFF475467)),
-                        ),
-                        _headerCell(width: wName, label: 'NAME'),
-                        _headerCell(width: wPos, label: 'Position'),
-                        _headerCell(width: wEmail, label: 'E-Mail'),
-                        _headerCell(width: wStatus, label: 'Status'),
-                        _headerCell(width: wActions, label: ''),
-                      ],
+                child: Row(
+                  children: [
+                    const SizedBox(width: 16),
+                    const SizedBox(
+                      width: 40,
+                      child: Icon(Icons.person, size: 18, color: Color(0xFF475467)),
                     ),
-                  ),
+                    Expanded(flex: 3, child: _headerText('NAME')),
+                    if (!isSmall) ...[
+                      Expanded(flex: 2, child: _headerText('Position')),
+                      Expanded(flex: 3, child: _headerText('E-Mail')),
+                    ],
+                    Expanded(flex: 2, child: _headerText('Status')),
+                    const SizedBox(width: 100, child: Text('')), // Actions
+                    const SizedBox(width: 16),
+                  ],
                 ),
               ),
             ),
             const Divider(height: 1),
 
-            // Body (dibikin lebih tinggi)
+            // Body
             SizedBox(
               height: min(680.0, MediaQuery.of(context).size.height * 0.72),
-              child: Scrollbar(
+              child: ListView.separated(
                 controller: bodyVController,
-                radius: const Radius.circular(10),
-                thickness: 6,
-                child: SingleChildScrollView(
-                  controller: bodyHController,
-                  scrollDirection: Axis.horizontal,
-                  physics: const BouncingScrollPhysics(),
-                  child: SizedBox(
-                    width: max(totalWidth, MediaQuery.of(context).size.width - 32),
-                    child: ListView.separated(
-                      controller: bodyVController,
-                      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-                      itemBuilder: (context, i) {
-                        final e = rows[i];
-                        return StaffRow(
-                          data: e,
-                          onToggleActive: (v) => onToggleActive(e, v),
-                          onEdit: () => onEdit(e),
-                          onDelete: () => onDelete(e),
-                        );
-                      },
-                      separatorBuilder: (_, __) => const Divider(height: 1),
-                      itemCount: rows.length,
-                    ),
-                  ),
-                ),
+                physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                itemBuilder: (context, i) {
+                  final e = rows[i];
+                  return StaffRow(
+                    data: e,
+                    isSmall: isSmall,
+                    onToggleActive: (v) => onToggleActive(e, v),
+                    onEdit: () => onEdit(e),
+                    onDelete: () => onDelete(e),
+                  );
+                },
+                separatorBuilder: (_, __) => const Divider(height: 1),
+                itemCount: rows.length,
               ),
             ),
           ],
@@ -120,20 +93,16 @@ class StaffTable extends StatelessWidget {
     );
   }
 
-  Widget _headerCell({required double width, String? label, Widget? child}) {
-    const style = TextStyle(
-      fontSize: 12,
-      color: Color(0xFF475467),
-      fontWeight: FontWeight.w700,
-      letterSpacing: 0.2,
-    );
-    return SizedBox(
-      width: width,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Align(
-          alignment: Alignment.centerLeft,
-          child: child ?? Text(label ?? '', style: style),
+  Widget _headerText(String label) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 12,
+          color: Color(0xFF475467),
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.2,
         ),
       ),
     );
@@ -144,144 +113,152 @@ class StaffRow extends StatelessWidget {
   const StaffRow({
     super.key,
     required this.data,
+    required this.isSmall,
     required this.onToggleActive,
     required this.onEdit,
     required this.onDelete,
   });
 
   final Employment data;
+  final bool isSmall;
   final ValueChanged<bool> onToggleActive;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
-
-  static const double wAvatar = StaffTable.wAvatar;
-  static const double wName = StaffTable.wName;
-  static const double wPos = StaffTable.wPos;
-  static const double wEmail = StaffTable.wEmail;
-  static const double wStatus = StaffTable.wStatus;
-  static const double wActions = StaffTable.wActions;
 
   @override
   Widget build(BuildContext context) {
     final ts = Theme.of(context).textTheme;
 
     return SizedBox(
-      height: StaffTable.rowHeight,
+      height: 72, // Slightly taller for better touch targets
       child: Row(
         children: [
+          const SizedBox(width: 16),
           // AVATAR
           SizedBox(
-            width: wAvatar,
+            width: 40,
+            child: CircleAvatar(
+              radius: 18,
+              backgroundColor: staffAvatarBg(data.name),
+              child: Text(
+                staffInitials(data.name),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ),
+          
+          // NAME
+          Expanded(
+            flex: 3,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: CircleAvatar(
-                radius: 18,
-                backgroundColor: staffAvatarBg(data.name),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    data.name.isEmpty ? '-' : data.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: ts.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  if (isSmall) // Show role below name on small screens
+                    Text(
+                      data.role,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: ts.bodySmall?.copyWith(color: Colors.grey),
+                    ),
+                ],
+              ),
+            ),
+          ),
+
+          if (!isSmall) ...[
+            // POSITION
+            Expanded(
+              flex: 2,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: Text(
-                  staffInitials(data.name),
-                  style: const TextStyle(
-                    color: Colors.white,
+                  data.role.isEmpty ? '-' : data.role,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: ts.bodyMedium?.copyWith(
+                    color: const Color(0xFF344054),
                     fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
             ),
-          ),
-          // NAME (tanpa kotak ungu)
-          SizedBox(
-            width: wName,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(color: const Color(0xFFE6EAF0)),
-                  borderRadius: BorderRadius.circular(8), // lebih kotak
-                ),
+            // EMAIL
+            Expanded(
+              flex: 3,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: Text(
-                  data.name.isEmpty ? '-' : data.name,
+                  data.email.isEmpty ? '-' : data.email,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: ts.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                  style: ts.bodyMedium?.copyWith(color: const Color(0xFF344054)),
                 ),
               ),
             ),
-          ),
-          // POSITION
-          SizedBox(
-            width: wPos,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                data.role.isEmpty ? '-' : data.role,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: ts.bodyMedium?.copyWith(
-                  color: const Color(0xFF344054),
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ),
-          // EMAIL
-          SizedBox(
-            width: wEmail,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                data.email.isEmpty ? '-' : data.email,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: ts.bodyMedium?.copyWith(color: const Color(0xFF344054)),
-              ),
-            ),
-          ),
+          ],
+
           // STATUS
-          SizedBox(
-            width: wStatus,
+          Expanded(
+            flex: 2,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: StaffStatusPill(active: data.isActive),
-                    ),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: isSmall 
+                ? StaffStatusPill(active: data.isActive) // Just pill on small
+                : Row(
+                    children: [
+                      StaffStatusPill(active: data.isActive),
+                      const SizedBox(width: 8),
+                      Transform.scale(
+                        scale: 0.8,
+                        child: Switch.adaptive(
+                          value: data.isActive,
+                          onChanged: onToggleActive,
+                          activeTrackColor: const Color(0xFF16A34A),
+                        ),
+                      ),
+                    ],
                   ),
-                  Switch.adaptive(
-                    value: data.isActive,
-                    onChanged: onToggleActive,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    activeTrackColor: const Color(0xFF16A34A),
-                  ),
-                ],
-              ),
             ),
           ),
+
           // ACTIONS
           SizedBox(
-            width: wActions,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  IconButton(
-                    tooltip: 'Edit',
-                    icon: const Icon(Icons.edit_outlined),
-                    onPressed: onEdit,
-                  ),
-                  IconButton(
-                    tooltip: 'Delete',
-                    icon: const Icon(Icons.delete_outline),
-                    onPressed: onDelete,
-                  ),
-                ],
-              ),
+            width: 100,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                IconButton(
+                  tooltip: 'Edit',
+                  icon: const Icon(Icons.edit_outlined, size: 20),
+                  onPressed: onEdit,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+                const SizedBox(width: 16),
+                IconButton(
+                  tooltip: 'Delete',
+                  icon: const Icon(Icons.delete_outline, size: 20),
+                  onPressed: onDelete,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
             ),
           ),
+          const SizedBox(width: 16),
         ],
       ),
     );

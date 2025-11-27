@@ -12,7 +12,6 @@ class TechnicianTab extends StatelessWidget {
     required this.onRangeChange,
   });
 
-  static const _redDark = Color(0xFF9B0D0D);
   static const _cardRadius = 16.0;
 
   @override

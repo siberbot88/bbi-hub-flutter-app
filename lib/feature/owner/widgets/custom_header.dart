@@ -8,13 +8,15 @@ class CustomHeader extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onBack;
   final bool showBack; // flag untuk tampilkan tombol back
   final double roundedBottomRadius;
+  final List<Widget>? actions;
 
   const CustomHeader(
       {super.key,
       required this.title,
       this.onBack,
       this.showBack = true,
-      this.roundedBottomRadius = 28});
+      this.roundedBottomRadius = 28,
+      this.actions});
 
   @override
   Widget build(BuildContext context) {
@@ -54,6 +56,7 @@ class CustomHeader extends StatelessWidget implements PreferredSizeWidget {
                 onPressed: onBack ?? () => Navigator.pop(context),
               )
             : null,
+        actions: actions,
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(

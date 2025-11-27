@@ -22,6 +22,20 @@ class _UbahBahasaPageState extends State<UbahBahasaPage> {
     "Français",
   ];
 
+  void _selectLanguage(String lang) {
+    setState(() => _selectedLanguage = lang);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          "Bahasa diubah ke $lang",
+          style: GoogleFonts.poppins(color: Colors.white),
+        ),
+        backgroundColor: const Color(0xFFDC2626),
+        duration: const Duration(seconds: 1),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     const red = Color(0xFFDC2626);
@@ -29,7 +43,7 @@ class _UbahBahasaPageState extends State<UbahBahasaPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: const CustomHeader(
-        title: "Ubah Bahasa", // ⬅️ hanya ganti title sesuai permintaan
+        title: "Ubah Bahasa",
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10),
@@ -37,30 +51,22 @@ class _UbahBahasaPageState extends State<UbahBahasaPage> {
           itemCount: languages.length,
           itemBuilder: (context, index) {
             final lang = languages[index];
-            return RadioListTile<String>(
-              value: lang,
-              groupValue: _selectedLanguage,
-              activeColor: red,
+            final isSelected = _selectedLanguage == lang;
+            
+            return ListTile(
+              onTap: () => _selectLanguage(lang),
+              leading: Icon(
+                isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                color: isSelected ? red : Colors.grey,
+              ),
               title: Text(
                 lang,
                 style: GoogleFonts.poppins(
                   fontSize: 15,
                   color: Colors.black87,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                 ),
               ),
-              onChanged: (val) {
-                setState(() => _selectedLanguage = val!);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      "Bahasa diubah ke $val",
-                      style: GoogleFonts.poppins(color: Colors.white),
-                    ),
-                    backgroundColor: red,
-                    duration: const Duration(seconds: 1),
-                  ),
-                );
-              },
             );
           },
         ),

@@ -29,23 +29,38 @@ class Voucher {
 
   factory Voucher.fromJson(Map<String, dynamic> json) {
     return Voucher(
-      id: json['id'],
-      workshopUuid: json['workshop_uuid'],
-      codeVoucher: json['code_voucher'],
-      title: json['title'],
-      // Handle dynamic types from JSON (int/double/string)
-      discountValue: double.parse(json['discount_value'].toString()),
-      quota: int.parse(json['quota'].toString()),
-      minTransaction: double.parse(json['min_transaction'].toString()),
-      validFrom: DateTime.parse(json['valid_from']),
-      validUntil: DateTime.parse(json['valid_until']),
+      id: json['id']?.toString() ?? '',
+      workshopUuid: json['workshop_uuid']?.toString() ?? '',
+      codeVoucher: json['code_voucher']?.toString() ?? '',
+      title: json['title']?.toString() ?? '',
+      discountValue: double.tryParse(json['discount_value'].toString()) ?? 0.0,
+      quota: int.tryParse(json['quota'].toString()) ?? 0,
+      minTransaction: double.tryParse(json['min_transaction'].toString()) ?? 0.0,
+      validFrom: json['valid_from'] != null ? DateTime.parse(json['valid_from']) : DateTime.now(),
+      validUntil: json['valid_until'] != null ? DateTime.parse(json['valid_until']) : DateTime.now(),
       isActive: json['is_active'] == 1 || json['is_active'] == true,
       imageUrl: json['image_url'],
     );
   }
 
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'workshop_uuid': workshopUuid,
+      'code_voucher': codeVoucher,
+      'title': title,
+      'discount_value': discountValue,
+      'quota': quota,
+      'min_transaction': minTransaction,
+      'valid_from': validFrom.toIso8601String(),
+      'valid_until': validUntil.toIso8601String(),
+      'is_active': isActive,
+      'image_url': imageUrl,
+    };
+  }
+
   String get formattedValidDate {
-    final formatter = DateFormat('d MMMM yyyy', 'id_ID'); // Pastikan initializeDateFormatting sudah dipanggil di main.dart
+    final formatter = DateFormat('d MMMM yyyy', 'id_ID');
     return "${formatter.format(validFrom)} - ${formatter.format(validUntil)}";
   }
 

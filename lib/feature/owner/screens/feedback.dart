@@ -1,6 +1,7 @@
-// 📄 lib/feature/admin/screens/feedback_page.dart
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+
+import 'package:bengkel_online_flutter/core/theme/app_colors.dart';
+import 'package:bengkel_online_flutter/core/theme/app_text_styles.dart';
 import '../widgets/custom_header.dart';
 
 class FeedbackPage extends StatefulWidget {
@@ -10,11 +11,11 @@ class FeedbackPage extends StatefulWidget {
   State<FeedbackPage> createState() => _FeedbackPageState();
 }
 
-class _FeedbackPageState extends State<FeedbackPage> {
-  static const _redDark = Color(0xFF9B0D0D);
-  static const _bg = Color(0xFFF4F4F6);
-
+class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderStateMixin {
   String _selectedFilter = 'semua'; // semua | 5 | 4 | 3 | 2 | 1
+
+  // Animation Controller for manual staggered animation
+  late final AnimationController _animController;
 
   final _reviews = <_Review>[
     _Review(
@@ -23,8 +24,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
       ago: '1 hari lalu',
       stars: 5,
       service: 'Ganti Oli & Tune Up',
-      text:
-          'Pelayanan sangat memuaskan! Mekanik ramah dan profesional. Harga juga transparan, dijelaskan detail sebelum pengerjaan. Pasti balik lagi!',
+      text: 'Pelayanan sangat memuaskan! Mekanik ramah dan profesional. Harga juga transparan, dijelaskan detail sebelum pengerjaan. Pasti balik lagi!',
     ),
     _Review(
       initials: 'SN',
@@ -32,8 +32,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
       ago: '2 hari lalu',
       stars: 5,
       service: 'Service Berkala',
-      text:
-          'Bengkel terbaik yang pernah saya kunjungi. Ruang tunggu nyaman, wifi kenceng, dan pengerjaan cepat. Recommended!',
+      text: 'Bengkel terbaik yang pernah saya kunjungi. Ruang tunggu nyaman, wifi kenceng, dan pengerjaan cepat. Recommended!',
     ),
     _Review(
       initials: 'AW',
@@ -41,8 +40,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
       ago: '1 minggu lalu',
       stars: 4,
       service: 'Perbaikan AC Mobil',
-      text:
-          'Overall bagus, AC mobil jadi dingin lagi. Cuma agak lama nunggu karena ramai. Tapi hasil kerjanya oke.',
+      text: 'Overall bagus, AC mobil jadi dingin lagi. Cuma agak lama nunggu karena ramai. Tapi hasil kerjanya oke.',
     ),
     _Review(
       initials: 'DL',
@@ -50,8 +48,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
       ago: '1 minggu lalu',
       stars: 5,
       service: 'Ganti Ban & Balancing',
-      text:
-          'Cepat dan rapi! Mekaniknya juga kasih saran untuk perawatan ban. Tempatnya bersih dan nyaman.',
+      text: 'Cepat dan rapi! Mekaniknya juga kasih saran untuk perawatan ban. Tempatnya bersih dan nyaman.',
     ),
     _Review(
       initials: 'RH',
@@ -59,10 +56,24 @@ class _FeedbackPageState extends State<FeedbackPage> {
       ago: '2 minggu lalu',
       stars: 5,
       service: 'Servis Rem',
-      text:
-          'Bagus, rem mobil jadi pakem lagi. Harga standar, sesuai dengan kualitas pekerjaan.',
+      text: 'Bagus, rem mobil jadi pakem lagi. Harga standar, sesuai dengan kualitas pekerjaan.',
     ),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,26 +82,60 @@ class _FeedbackPageState extends State<FeedbackPage> {
         : _reviews.where((r) => r.stars.toString() == _selectedFilter).toList();
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: AppColors.backgroundLight,
       appBar: const CustomHeader(
         title: 'Rating & Ulasan',
         showBack: true,
         roundedBottomRadius: 28,
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-        children: [
-          _searchBar(),
-          const SizedBox(height: 14),
-          _ratingSummaryCard(),
-          const SizedBox(height: 12),
-          _filterChips(),
-          const SizedBox(height: 12),
-          ...filtered
-              .map((r) => _reviewCard(r))
-              .expand((w) => [w, const SizedBox(height: 12)]),
-          _seeMore(),
-        ],
+      body: AnimatedBuilder(
+        animation: _animController,
+        builder: (context, child) {
+          return ListView(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+            physics: const BouncingScrollPhysics(),
+            children: [
+              _buildAnimatedItem(0, _searchBar()),
+              const SizedBox(height: 16),
+              _buildAnimatedItem(1, _ratingSummaryCard()),
+              const SizedBox(height: 16),
+              _buildAnimatedItem(2, _filterChips()),
+              const SizedBox(height: 16),
+              ...List.generate(filtered.length, (index) {
+                return Column(
+                  children: [
+                    _buildAnimatedItem(3 + index, _reviewCard(filtered[index])),
+                    const SizedBox(height: 12),
+                  ],
+                );
+              }),
+              _buildAnimatedItem(3 + filtered.length, _seeMore()),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildAnimatedItem(int index, Widget child) {
+    final delay = index * 0.1;
+    final animation = CurvedAnimation(
+      parent: _animController,
+      curve: Interval(
+        (delay).clamp(0.0, 1.0),
+        (delay + 0.4).clamp(0.0, 1.0),
+        curve: Curves.easeOutCubic,
+      ),
+    );
+
+    return FadeTransition(
+      opacity: animation,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 0.2),
+          end: Offset.zero,
+        ).animate(animation),
+        child: child,
       ),
     );
   }
@@ -98,26 +143,26 @@ class _FeedbackPageState extends State<FeedbackPage> {
   // ---------- SEARCH ----------
   Widget _searchBar() {
     return Container(
-      height: 44,
+      height: 48,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(13),
-            blurRadius: 10,
+            color: AppColors.shadow,
+            blurRadius: 12,
             offset: const Offset(0, 4),
           )
         ],
       ),
       child: TextField(
-        style: GoogleFonts.poppins(fontSize: 13),
+        style: AppTextStyles.bodyMedium(),
         decoration: InputDecoration(
-          hintText: 'Cari ulasan...',
-          hintStyle: GoogleFonts.poppins(color: Colors.black38, fontSize: 13),
-          prefixIcon: const Icon(Icons.search, color: Colors.black38),
+          hintText: 'Cari ulasan pelanggan...',
+          hintStyle: AppTextStyles.bodyMedium(color: AppColors.textHint),
+          prefixIcon: const Icon(Icons.search, color: AppColors.textSecondary),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.only(top: 12),
+          contentPadding: const EdgeInsets.symmetric(vertical: 14),
         ),
       ),
     );
@@ -131,35 +176,31 @@ class _FeedbackPageState extends State<FeedbackPage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(20),
-            blurRadius: 10,
+            color: AppColors.shadow,
+            blurRadius: 16,
             offset: const Offset(0, 4),
           )
         ],
       ),
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+      padding: const EdgeInsets.all(20),
       child: Column(
         children: [
           Row(
             children: [
-              // kiri: angka besar + bintang + total ulasan
+              // Left: Big Number
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('4.8',
-                        style: GoogleFonts.poppins(
-                            fontSize: 34, fontWeight: FontWeight.w700)),
+                    Text('4.8', style: AppTextStyles.heading1(color: AppColors.textPrimary).copyWith(fontSize: 42)),
                     const SizedBox(height: 4),
-                    _starsRow(5, size: 18),
-                    const SizedBox(height: 4),
-                    Text('247 Ulasan',
-                        style: GoogleFonts.poppins(
-                            fontSize: 12, color: Colors.black54)),
+                    _starsRow(5, size: 20),
+                    const SizedBox(height: 8),
+                    Text('247 Ulasan', style: AppTextStyles.bodySmall()),
                   ],
                 ),
               ),
-              // kanan: progress bar 5/4/3
+              // Right: Progress Bars
               SizedBox(
                 width: 160,
                 child: Column(
@@ -174,18 +215,20 @@ class _FeedbackPageState extends State<FeedbackPage> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          // badges
+          const SizedBox(height: 20),
+          // Badges
           Row(
             children: [
               _statBadge(
                 icon: Icons.thumb_up_alt_rounded,
                 label: '96% Kepuasan',
+                color: AppColors.success,
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               _statBadge(
-                icon: Icons.calendar_month_rounded,
+                icon: Icons.trending_up_rounded,
                 label: '4.9 Bulan ini',
+                color: AppColors.primaryRed,
               ),
             ],
           ),
@@ -194,32 +237,25 @@ class _FeedbackPageState extends State<FeedbackPage> {
     );
   }
 
-  Widget _statBadge({required IconData icon, required String label}) {
+  Widget _statBadge({required IconData icon, required String label, required Color color}) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
         decoration: BoxDecoration(
-          color: const Color(0xFFF4C7C7),
-          borderRadius: BorderRadius.circular(10),
+          color: color.withAlpha(25),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 20,
-              height: 20,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, size: 14, color: _redDark),
-            ),
+            Icon(icon, size: 16, color: color),
             const SizedBox(width: 8),
-            Expanded(
-              child: Text(label,
-                  style: GoogleFonts.poppins(
-                      fontSize: 12.5,
-                      color: _redDark,
-                      fontWeight: FontWeight.w600)),
+            Flexible(
+              child: Text(
+                label,
+                style: AppTextStyles.label(color: color).copyWith(fontWeight: FontWeight.w700),
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ],
         ),
@@ -232,6 +268,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
     final filters = ['semua', '5', '4', '3', '2', '1'];
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
       child: Row(children: filters.map((f) => _chip(f)).toList()),
     );
   }
@@ -240,46 +277,44 @@ class _FeedbackPageState extends State<FeedbackPage> {
     final isAll = value == 'semua';
     final selected = _selectedFilter == value;
 
-    final Color bg;
-    final Color border;
-    final Color textColor;
-
-    if (isAll) {
-      bg = selected ? const Color(0xFFFFA63A) : const Color(0xFFFFE1BD);
-      border = Colors.transparent;
-      textColor = selected ? Colors.white : const Color(0xFF9B6A2E);
-    } else {
-      bg = Colors.white;
-      border = selected ? const Color(0xFF999999) : const Color(0xFFDDDDDD);
-      textColor = Colors.black87;
-    }
+    final Color bg = selected ? AppColors.primaryRed : Colors.white;
+    final Color border = selected ? AppColors.primaryRed : AppColors.border;
+    final Color textColor = selected ? Colors.white : AppColors.textSecondary;
 
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: GestureDetector(
         onTap: () => setState(() => _selectedFilter = value),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
             color: bg,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(24),
             border: Border.all(color: border),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: AppColors.primaryRed.withAlpha(80),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    )
+                  ]
+                : [],
           ),
           child: Row(
             children: [
-              if (isAll) ...const [
-                Icon(Icons.filter_alt, size: 16, color: Colors.orange),
-                SizedBox(width: 6),
-              ] else ...const [
-                Icon(Icons.star,
-                    size: 16, color: Color.fromARGB(255, 248, 248, 247)),
-                SizedBox(width: 6),
+              if (isAll) ...[
+                Icon(Icons.filter_list_rounded, size: 16, color: textColor),
+                const SizedBox(width: 6),
+              ] else ...[
+                Icon(Icons.star_rounded, size: 16, color: selected ? Colors.white : AppColors.warning),
+                const SizedBox(width: 6),
               ],
-              Text(isAll ? 'semua' : value,
-                  style: GoogleFonts.poppins(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
-                      color: textColor)),
+              Text(
+                isAll ? 'Semua' : value,
+                style: AppTextStyles.label(color: textColor),
+              ),
             ],
           ),
         ),
@@ -295,66 +330,56 @@ class _FeedbackPageState extends State<FeedbackPage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withAlpha(20),
-              blurRadius: 10,
-              offset: const Offset(0, 4))
+            color: AppColors.shadow,
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          )
         ],
       ),
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      padding: const EdgeInsets.all(16),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _initialsAvatar(r.initials),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Nama + waktu
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Expanded(
-                          child: Text(r.name,
-                              style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w700, fontSize: 13.5)),
-                        ),
-                        Text(r.ago,
-                            style: GoogleFonts.poppins(
-                                fontSize: 12, color: Colors.black45)),
+                        Text(r.name, style: AppTextStyles.heading5()),
+                        Text(r.ago, style: AppTextStyles.caption()),
                       ],
                     ),
                     const SizedBox(height: 4),
-                    _starsRow(r.stars),
-                    const SizedBox(height: 8),
-                    _serviceTag(r.service),
-                    const SizedBox(height: 10),
-                    Text(r.text,
-                        style: GoogleFonts.poppins(
-                            fontSize: 13, color: Colors.black87)),
+                    _starsRow(r.stars, size: 14),
                   ],
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
+          _serviceTag(r.service),
+          const SizedBox(height: 12),
+          Text(r.text, style: AppTextStyles.bodyMedium(color: AppColors.textSecondary)),
+          const SizedBox(height: 16),
+          Divider(color: AppColors.divider.withAlpha(50), height: 1),
+          const SizedBox(height: 12),
           Align(
-            alignment: Alignment.centerLeft,
-            child: ElevatedButton(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
               onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFFA63A),
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18)),
+              icon: const Icon(Icons.reply_rounded, size: 18),
+              label: const Text("Balas Ulasan"),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.primaryRed,
+                textStyle: AppTextStyles.buttonSmall(),
               ),
-              child: Text('Balas',
-                  style: GoogleFonts.poppins(
-                      fontSize: 13, fontWeight: FontWeight.w600)),
             ),
           ),
         ],
@@ -364,20 +389,28 @@ class _FeedbackPageState extends State<FeedbackPage> {
 
   Widget _initialsAvatar(String initials) {
     return Container(
-      width: 40,
-      height: 40,
-      decoration: const BoxDecoration(
+      width: 48,
+      height: 48,
+      decoration: BoxDecoration(
         shape: BoxShape.circle,
-        gradient: LinearGradient(
-          colors: [Color(0xFF64B5F6), Color(0xFF42A5F5)],
+        gradient: const LinearGradient(
+          colors: [Color(0xFF64B5F6), Color(0xFF1976D2)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blue.withAlpha(60),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       alignment: Alignment.center,
-      child: Text(initials,
-          style: GoogleFonts.poppins(
-              color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12)),
+      child: Text(
+        initials,
+        style: AppTextStyles.heading4(color: Colors.white),
+      ),
     );
   }
 
@@ -386,9 +419,9 @@ class _FeedbackPageState extends State<FeedbackPage> {
       children: List.generate(
         5,
         (i) => Icon(
-          i < count ? Icons.star : Icons.star_border,
+          i < count ? Icons.star_rounded : Icons.star_outline_rounded,
           size: size,
-          color: const Color(0xFFFFB300),
+          color: AppColors.warning,
         ),
       ),
     );
@@ -398,27 +431,26 @@ class _FeedbackPageState extends State<FeedbackPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: const Color(0xFFEDEDED),
-        borderRadius: BorderRadius.circular(20),
+        color: AppColors.backgroundLight,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border),
       ),
-      child: Text(label,
-          style: GoogleFonts.poppins(
-              fontSize: 12.5,
-              color: Colors.black54,
-              fontWeight: FontWeight.w500)),
+      child: Text(
+        label,
+        style: AppTextStyles.caption(color: AppColors.textSecondary).copyWith(fontWeight: FontWeight.w600),
+      ),
     );
   }
 
   Widget _seeMore() {
     return Padding(
-      padding: const EdgeInsets.only(top: 4),
+      padding: const EdgeInsets.only(top: 8),
       child: Center(
-        child: Text(
-          'Lihat lebih banyak lagi',
-          style: GoogleFonts.poppins(
-            fontSize: 13.5,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
+        child: TextButton(
+          onPressed: () {},
+          child: Text(
+            'Lihat lebih banyak lagi',
+            style: AppTextStyles.link(color: AppColors.textPrimary),
           ),
         ),
       ),
@@ -441,30 +473,28 @@ class _RatingBarRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        const Icon(Icons.star, size: 16, color: Color(0xFFFFB300)),
+        Text(label, style: AppTextStyles.label().copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(width: 4),
-        Text(label,
-            style: GoogleFonts.poppins(
-                fontSize: 12.5, fontWeight: FontWeight.w600)),
+        const Icon(Icons.star_rounded, size: 14, color: AppColors.warning),
         const SizedBox(width: 8),
         Expanded(
           child: Stack(
             alignment: Alignment.centerLeft,
             children: [
               Container(
-                height: 8,
+                height: 6,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE6E6E6),
-                  borderRadius: BorderRadius.circular(20),
+                  color: AppColors.backgroundLight,
+                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
               FractionallySizedBox(
                 widthFactor: percent.clamp(0.0, 1.0),
                 child: Container(
-                  height: 8,
+                  height: 6,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFB300),
-                    borderRadius: BorderRadius.circular(20),
+                    color: AppColors.warning,
+                    borderRadius: BorderRadius.circular(10),
                   ),
                 ),
               ),
@@ -472,8 +502,14 @@ class _RatingBarRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        Text('$count',
-            style: GoogleFonts.poppins(fontSize: 12, color: Colors.black54)),
+        SizedBox(
+          width: 24,
+          child: Text(
+            '$count',
+            style: AppTextStyles.caption(),
+            textAlign: TextAlign.end,
+          ),
+        ),
       ],
     );
   }

@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 class Workshop {
   final String id;
   final String userUuid;
@@ -99,10 +101,10 @@ class Workshop {
       );
     } catch (e) {
       // Jika terjadi error saat parsing, print errornya
-      print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-      print('FATAL ERROR parsing Workshop JSON: $e');
-      print('Problematic Workshop JSON: $json');
-      print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+      if (kDebugMode) {
+        debugPrint('FATAL ERROR parsing Workshop JSON: $e');
+        debugPrint('Problematic Workshop JSON: $json');
+      }
       // Lemparkan error agar `User.fromJson` bisa menangkapnya
       throw Exception('Failed to parse Workshop: $e');
     }
@@ -135,4 +137,3 @@ class Workshop {
     };
   }
 }
-

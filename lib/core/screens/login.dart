@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
+import 'package:bengkel_online_flutter/core/widgets/custom_alert.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -44,6 +45,7 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _loadRememberedEmail() async {
     final remembered = await _storage.read(key: 'remember_email');
+    if (!context.mounted) return;
     if (remembered != null && remembered.isNotEmpty) {
       setState(() {
         emailController.text = remembered;
@@ -177,8 +179,11 @@ class _LoginPageState extends State<LoginPage> {
                     final password = passwordController.text.trim();
 
                     if (email.isEmpty || password.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Email dan password tidak boleh kosong')),
+                      CustomAlert.show(
+                        context,
+                        title: "Peringatan",
+                        message: "Email dan password tidak boleh kosong",
+                        type: AlertType.warning,
                       );
                       return;
                     }
@@ -191,21 +196,32 @@ class _LoginPageState extends State<LoginPage> {
                       // Simpan / hapus email remembered
                       await _persistRemember(rememberMe, email);
 
+                      if (!context.mounted) return;
+
                       if (success) {
                         // Jika server wajibkan ganti password → arahkan ke halaman ubah password
                         if (auth.mustChangePassword) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Silakan ganti password Anda terlebih dahulu')),
+                          CustomAlert.show(
+                            context,
+                            title: "Perhatian",
+                            message: "Silakan ganti password Anda terlebih dahulu",
+                            type: AlertType.warning,
                           );
+                          if (!context.mounted) return;
                           Navigator.pushNamedAndRemoveUntil(context, '/changePassword', (_) => false);
                         } else {
                           Navigator.pushNamedAndRemoveUntil(context, '/main', (_) => false);
                         }
                       }
                     } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
-                      );
+                      if (context.mounted) {
+                        CustomAlert.show(
+                          context,
+                          title: "Login Gagal",
+                          message: e.toString().replaceFirst('Exception: ', ''),
+                          type: AlertType.error,
+                        );
+                      }
                     } finally {
                       if (mounted) setState(() => _isLoading = false);
                     }

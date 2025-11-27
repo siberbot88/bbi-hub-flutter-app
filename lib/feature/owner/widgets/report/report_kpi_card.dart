@@ -18,12 +18,13 @@ class ReportKpiCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final w = (MediaQuery.of(context).size.width - 16 * 2 - 14) / 2;
     final radius = BorderRadius.circular(20);
 
-    return SizedBox(
-      width: w,
-      child: Material(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SizedBox(
+          width: constraints.maxWidth,
+          child: Material(
         color: Colors.transparent,
         borderRadius: radius,
         child: InkWell(
@@ -131,6 +132,8 @@ class ReportKpiCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+      },
     );
   }
 }

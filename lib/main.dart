@@ -31,6 +31,8 @@ import 'package:bengkel_online_flutter/feature/owner/screens/profil_page_owner.d
 import 'package:bengkel_online_flutter/feature/owner/screens/report_pages.dart';
 import 'package:bengkel_online_flutter/feature/owner/screens/staff_management.dart';
 import 'package:bengkel_online_flutter/feature/owner/widgets/bottom_nav_owner.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/voucher_page.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/list_voucher_page.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -135,17 +137,17 @@ class _MyAppState extends State<MyApp> {
         "/onboarding": (context) => const OnboardingScreen(),
         "/login": (context) => const login_screen.LoginPage(),
         "/gate": (context) => const LoadingGate(),
-
-        // ✅ RoleEntry akan menangani parameter index navbar
         "/main": (context) => const RoleEntry(),
 
         "/home": (context) => const DashboardScreen(),
-        "/changePassword": (context) => const change_screen.ubahPasswordPage(),
+        "/changePassword": (context) => const change_screen.UbahPasswordPage(),
         "/list": (context) => const ListWorkPage(),
 
         "/dashboard": (context) => const DashboardPage(),
         "/register/owner": (context) => const RegisterFlowPage(),
         "/owner/profile": (context) => owner_profil.ProfilePageOwner(),
+        "/voucher": (context) => const VoucherPage(),
+        "/voucher/list": (context) => const ListVoucherPage(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/list') {

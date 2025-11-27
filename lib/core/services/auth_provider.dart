@@ -148,7 +148,7 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  /// Dipanggil dari ubahPasswordPage setelah API sukses
+  /// Dipanggil dari UbahPasswordPage setelah API sukses
   void clearMustChangePassword() {
     _mustChangePassword = false;
     notifyListeners();
