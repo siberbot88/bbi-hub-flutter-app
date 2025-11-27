@@ -60,7 +60,7 @@ class ProfilePageOwner extends StatelessWidget {
           final width = constraints.maxWidth;
 
           return SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
+            physics: const ClampingScrollPhysics(),
             child: Column(
               children: [
                 ProfileHeader(
