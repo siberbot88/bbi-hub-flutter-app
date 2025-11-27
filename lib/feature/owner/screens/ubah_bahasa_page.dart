@@ -4,6 +4,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/custom_alert.dart';
 
 class UbahBahasaPage extends StatefulWidget {
   const UbahBahasaPage({super.key});
@@ -44,18 +45,11 @@ class _UbahBahasaPageState extends State<UbahBahasaPage> with SingleTickerProvid
 
   void _selectLanguage(String lang) {
     setState(() => _selectedLanguage = lang);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          "Bahasa diubah ke $lang",
-          style: AppTextStyles.bodyMedium(color: Colors.white),
-        ),
-        backgroundColor: AppColors.success,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusMD),
-        margin: AppSpacing.paddingMD,
-        duration: const Duration(seconds: 1),
-      ),
+    CustomAlert.show(
+      context,
+      title: "Berhasil",
+      message: "Bahasa diubah ke $lang",
+      type: AlertType.success,
     );
   }
 

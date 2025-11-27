@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
+import 'package:bengkel_online_flutter/core/widgets/custom_alert.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -178,8 +179,11 @@ class _LoginPageState extends State<LoginPage> {
                     final password = passwordController.text.trim();
 
                     if (email.isEmpty || password.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Email dan password tidak boleh kosong')),
+                      CustomAlert.show(
+                        context,
+                        title: "Peringatan",
+                        message: "Email dan password tidak boleh kosong",
+                        type: AlertType.warning,
                       );
                       return;
                     }
@@ -197,8 +201,11 @@ class _LoginPageState extends State<LoginPage> {
                       if (success) {
                         // Jika server wajibkan ganti password → arahkan ke halaman ubah password
                         if (auth.mustChangePassword) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Silakan ganti password Anda terlebih dahulu')),
+                          CustomAlert.show(
+                            context,
+                            title: "Perhatian",
+                            message: "Silakan ganti password Anda terlebih dahulu",
+                            type: AlertType.warning,
                           );
                           if (!context.mounted) return;
                           Navigator.pushNamedAndRemoveUntil(context, '/changePassword', (_) => false);
@@ -208,8 +215,11 @@ class _LoginPageState extends State<LoginPage> {
                       }
                     } catch (e) {
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+                        CustomAlert.show(
+                          context,
+                          title: "Login Gagal",
+                          message: e.toString().replaceFirst('Exception: ', ''),
+                          type: AlertType.error,
                         );
                       }
                     } finally {
