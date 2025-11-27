@@ -333,8 +333,6 @@ class StaffRow extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                ],
-              ),
             ),
 
           // Status
@@ -405,6 +403,7 @@ class StaffRow extends StatelessWidget {
               ],
             ),
           ),
+          const SizedBox(width: 16),
         ],
       ),
     );
