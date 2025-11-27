@@ -37,6 +37,7 @@ class _ReportPageState extends State<ReportPage> {
   Widget build(BuildContext context) {
     final d = _data.forRange(_range);
     final canPop = Navigator.of(context).canPop();
+    final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -152,7 +153,7 @@ class _ReportPageState extends State<ReportPage> {
                         ),
                         const SizedBox(height: 8),
                         SizedBox(
-                          height: 220,
+                          height: screenHeight * 0.25,
                           child: LineChart(
                             ReportCharts.lineChartData(
                               labels: d.labels,
@@ -195,7 +196,7 @@ class _ReportPageState extends State<ReportPage> {
                               const ReportPanelHeader(title: 'Jenis Service'),
                               const SizedBox(height: 8),
                               SizedBox(
-                                height: 180,
+                                height: screenHeight * 0.22,
                                 child: PieChart(
                                   ReportCharts.donutData(d.serviceBreakdown),
                                   swapAnimationDuration:
@@ -246,7 +247,7 @@ class _ReportPageState extends State<ReportPage> {
                               ),
                               const SizedBox(height: 8),
                               SizedBox(
-                                height: 180,
+                                height: screenHeight * 0.22,
                                 child: BarChart(
                                   ReportCharts.barsData(
                                     values: d.avgQueueBars,
@@ -285,7 +286,7 @@ class _ReportPageState extends State<ReportPage> {
                         ),
                         const SizedBox(height: 8),
                         SizedBox(
-                          height: 220,
+                          height: screenHeight * 0.25,
                           child: BarChart(
                             ReportCharts.barsData(
                               values: d.peakHourBars,
@@ -301,52 +302,84 @@ class _ReportPageState extends State<ReportPage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Operational health
-                  ReportPanel(
-                    background: const Color(0xFFFFF1F2),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Kesehatan Operasional',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
+                  // Operational health - using redesigned ReportHealthTile
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF7C3AED), Color(0xFF9333EA)],
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.health_and_safety_rounded,
+                              color: Colors.white,
+                              size: 24,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 12,
-                          runSpacing: 12,
-                          children: [
-                            ReportHealthTile(
-                              title: 'Rata-rata antrian',
-                              value: '${d.avgQueue} mobil',
-                              tag: 'Normal',
-                              tagColor: const Color(0xFF22C55E),
+                          const SizedBox(width: 12),
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Kesehatan Operasional',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w800,
+                                    color: Color(0xFF1A1A1A),
+                                  ),
+                                ),
+                                SizedBox(height: 2),
+                                Text(
+                                  'Status performa bengkel saat ini',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Color(0xFF666666),
+                                  ),
+                                ),
+                              ],
                             ),
-                            ReportHealthTile(
-                              title: 'Occupancy Bengkel',
-                              value: '${d.occupancy}%',
-                              tag: 'Tinggi',
-                              tagColor: kDanger,
-                            ),
-                            ReportHealthTile(
-                              title: 'Peak Hours',
-                              value: d.peakRange,
-                              tag: 'Optimal',
-                              tagColor: const Color(0xFF3B82F6),
-                            ),
-                            ReportHealthTile(
-                              title: 'Efisiensi',
-                              value: '${d.efficiency}%',
-                              tag: 'Baik',
-                              tagColor: const Color(0xFF22C55E),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children: [
+                          ReportHealthTile(
+                            title: 'Rata-rata antrian',
+                            value: '${d.avgQueue} mobil',
+                            tag: 'Normal',
+                            tagColor: const Color(0xFF22C55E),
+                          ),
+                          ReportHealthTile(
+                            title: 'Occupancy Bengkel',
+                            value: '${d.occupancy}%',
+                            tag: 'Tinggi',
+                            tagColor: kDanger,
+                          ),
+                          ReportHealthTile(
+                            title: 'Peak Hours',
+                            value: d.peakRange,
+                            tag: 'Optimal',
+                            tagColor: const Color(0xFF3B82F6),
+                          ),
+                          ReportHealthTile(
+                            title: 'Efisiensi',
+                            value: '${d.efficiency}%',
+                            tag: 'Baik',
+                            tagColor: const Color(0xFF22C55E),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 18),
 
