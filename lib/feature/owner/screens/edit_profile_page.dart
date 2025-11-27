@@ -4,6 +4,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/custom_alert.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -40,14 +41,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   void _save() {
     if (!_formKey.currentState!.validate()) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Profil disimpan", style: AppTextStyles.bodyMedium(color: Colors.white)),
-        backgroundColor: AppColors.success,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusMD),
-        margin: AppSpacing.paddingMD,
-      ),
+    CustomAlert.show(
+      context,
+      title: "Berhasil",
+      message: "Profil disimpan",
+      type: AlertType.success,
     );
     Navigator.pop(context);
   }

@@ -1,15 +1,19 @@
 import 'package:bengkel_online_flutter/core/services/api_service.dart';
 import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
+import 'package:bengkel_online_flutter/core/widgets/custom_alert.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'dart:math' as math;
 
+// Helper untuk menampilkan halaman RegisterFlowPage
 void main() {
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => AuthProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+      ],
       child: const MyApp(),
     ),
   );
@@ -84,8 +88,6 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
   final TextEditingController operationalDaysController = TextEditingController();
 
   int _currentStep = 0;
-  bool _step0IsValid = false;
-  bool _step1IsValid = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
@@ -113,8 +115,6 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
 
   void _onNext() {
     if (_formKeys[_currentStep].currentState?.validate() ?? false) {
-      if (_currentStep == 0) _step0IsValid = true;
-      if (_currentStep == 1) _step1IsValid = true;
       _goStep(_currentStep + 1);
     }
   }
@@ -151,15 +151,21 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
     FocusScope.of(context).unfocus();
 
     if (!(_formKeys[2].currentState?.validate() ?? false)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Harap lengkapi data dokumen.'), backgroundColor: Colors.orange),
+      CustomAlert.show(
+        context,
+        title: "Perhatian",
+        message: "Harap lengkapi data dokumen.",
+        type: AlertType.warning,
       );
       return;
     }
 
     if (passwordController.text != confirmPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password dan konfirmasi tidak cocok!'), backgroundColor: Colors.red),
+      CustomAlert.show(
+        context,
+        title: "Perhatian",
+        message: "Password dan konfirmasi tidak cocok!",
+        type: AlertType.warning,
       );
       _goStep(0);
       return;
@@ -213,8 +219,11 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.toString().replaceFirst("Exception: ", "")}'), backgroundColor: Colors.red),
+      CustomAlert.show(
+        context,
+        title: "Registrasi Gagal",
+        message: e.toString().replaceFirst("Exception: ", ""),
+        type: AlertType.error,
       );
       if (!authProvider.isLoggedIn) {
         _goStep(0);
@@ -259,7 +268,6 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
     final s = v.trim().toLowerCase();
     return (s.startsWith('http://') || s.startsWith('https://')) ? null : 'Format $name tidak valid (http/https).';
   }
-  String? _validateOptional(String? v, String name) => null;
 
   Widget _buildProgressBar(double width) {
     final segment = width / 3;
@@ -418,85 +426,39 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
     final content = _buildFormCard(
       cardWidth: cardWidth,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-        child: Form(
-          key: _formKeys[0],
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 41,
-                    height: 41,
-                    decoration: BoxDecoration(color: const Color.fromRGBO(220, 38, 38, 0.21), borderRadius: BorderRadius.circular(10)),
-                    child: const Icon(Icons.person, color: Colors.red, size: 28),
-                  ),
-                  const SizedBox(width: 14),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text("Isi Data Diri", style: TextStyle(fontSize: 14, color: Colors.black)),
-                        SizedBox(height: 4),
-                        Text("Buatlah akun pertamamu...", style: TextStyle(fontSize: 12, color: Colors.black54)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              _buildTextField(
-                controller: fullnameController,
-                label: "Nama Lengkap",
-                hint: "Masukkan nama lengkap kamu",
-                iconPath: "assets/svg/user.svg",
-                textCapitalization: TextCapitalization.words,
-                validator: (v) => _validateNotEmpty(v, 'Nama Lengkap'),
-              ),
-              const SizedBox(height: 22),
-              _buildTextField(
-                controller: usernameController,
-                label: "Username",
-                hint: "Masukkan username",
-                iconPath: "assets/svg/user.svg",
-                keyboardType: TextInputType.visiblePassword,
-                validator: (v) => _validateNotEmpty(v, 'Username'),
-              ),
-              const SizedBox(height: 22),
-              _buildTextField(
-                controller: emailController,
-                label: "Email",
-                hint: "Masukkan email kamu",
-                iconPath: "assets/svg/email.svg",
-                keyboardType: TextInputType.emailAddress,
-                validator: _validateEmail,
-              ),
-              const SizedBox(height: 22),
-              _buildTextField(
-                controller: passwordController,
-                label: "Password",
-                hint: "Minimal 8 karakter",
-                iconPath: "assets/svg/key.svg",
-                isPassword: true,
-                obscureState: _obscurePassword,
-                onToggleObscure: () => setState(() => _obscurePassword = !_obscurePassword),
-                validator: _validatePassword,
-              ),
-              const SizedBox(height: 22),
-              _buildTextField(
-                controller: confirmPasswordController,
-                label: "Verifikasi Password",
-                hint: "Ulangi password kamu",
-                iconPath: "assets/svg/key.svg",
-                isPassword: true,
-                obscureState: _obscureConfirmPassword,
-                onToggleObscure: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
-                validator: _validateConfirmPassword,
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          children: [
+            Text("Informasi Pemilik", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
+            const SizedBox(height: 20),
+            _buildTextField(controller: fullnameController, label: "Nama Lengkap", hint: "Contoh: Budi Santoso", iconPath: "assets/icons/profile.svg", validator: (v) => _validateNotEmpty(v, "Nama")),
+            const SizedBox(height: 16),
+            _buildTextField(controller: usernameController, label: "Username", hint: "Contoh: budi123", iconPath: "assets/icons/profile.svg", validator: (v) => _validateNotEmpty(v, "Username")),
+            const SizedBox(height: 16),
+            _buildTextField(controller: emailController, label: "Email", hint: "budi@example.com", iconPath: "assets/icons/email.svg", keyboardType: TextInputType.emailAddress, validator: _validateEmail),
+            const SizedBox(height: 16),
+            _buildTextField(
+              controller: passwordController,
+              label: "Password",
+              hint: "Minimal 8 karakter",
+              iconPath: "assets/icons/password.svg",
+              isPassword: true,
+              obscureState: _obscurePassword,
+              onToggleObscure: () => setState(() => _obscurePassword = !_obscurePassword),
+              validator: _validatePassword,
+            ),
+            const SizedBox(height: 16),
+            _buildTextField(
+              controller: confirmPasswordController,
+              label: "Konfirmasi Password",
+              hint: "Ulangi password",
+              iconPath: "assets/icons/password.svg",
+              isPassword: true,
+              obscureState: _obscureConfirmPassword,
+              onToggleObscure: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+              validator: _validateConfirmPassword,
+            ),
+          ],
         ),
       ),
     );
@@ -507,188 +469,51 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
     final content = _buildFormCard(
       cardWidth: cardWidth,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-        child: Form(
-          key: _formKeys[1],
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 41,
-                    height: 41,
-                    decoration: BoxDecoration(color: const Color.fromRGBO(220, 38, 38, 0.21), borderRadius: BorderRadius.circular(10)),
-                    child: const Icon(Icons.store, color: Colors.red, size: 28),
-                  ),
-                  const SizedBox(width: 14),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text("Isi Data Bengkel", style: TextStyle(fontSize: 14, color: Colors.black)),
-                        SizedBox(height: 4),
-                        Text("Daftarkan bengkelmu sekarang...", style: TextStyle(fontSize: 12, color: Colors.black54)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              _buildTextField(
-                controller: workshopController,
-                label: "Nama bengkel",
-                hint: "Masukkan Nama bengkel",
-                iconPath: "assets/svg/workshop.svg",
-                textCapitalization: TextCapitalization.words,
-                validator: (v) => _validateNotEmpty(v, 'Nama bengkel'),
-              ),
-              const SizedBox(height: 22),
-              _buildTextField(
-                controller: addressController,
-                label: "Alamat Lengkap Bengkel",
-                hint: "Contoh: Jl. Merdeka No. 17",
-                iconPath: "assets/svg/address.svg",
-                textCapitalization: TextCapitalization.sentences,
-                maxline: 2,
-                validator: (v) => _validateNotEmpty(v, 'Alamat'),
-              ),
-              const SizedBox(height: 22),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildTextField(
-                      controller: cityController,
-                      label: "Kota",
-                      hint: "Masukkan kota",
-                      iconPath: "assets/svg/address.svg",
-                      textCapitalization: TextCapitalization.words,
-                      validator: (v) => _validateNotEmpty(v, 'Kota'),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildTextField(
-                      controller: provinceController,
-                      label: "Provinsi",
-                      hint: "Contoh: Jawa Barat",
-                      iconPath: "assets/svg/address.svg",
-                      textCapitalization: TextCapitalization.words,
-                      validator: (v) => _validateNotEmpty(v, 'Provinsi'),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 22),
-              _buildTextField(
-                controller: postalCodeController,
-                label: "Kode Pos",
-                hint: "Contoh: 40123",
-                iconPath: "assets/svg/address.svg",
-                keyboardType: TextInputType.number,
-                validator: (v) => _validateNotEmpty(v, 'Kode Pos'),
-              ),
-              const SizedBox(height: 22),
-              _buildTextField(
-                controller: phoneController,
-                label: "Telepon Bengkel",
-                hint: "Contoh: 081234567890",
-                iconPath: "assets/svg/phone.svg",
-                keyboardType: TextInputType.phone,
-                validator: (v) => _validateNotEmpty(v, 'Telepon'),
-              ),
-              const SizedBox(height: 22),
-              _buildTextField(
-                controller: wemailController,
-                label: "Email Bengkel (Opsional)",
-                hint: "Contoh: info@bengkeljaya.com",
-                iconPath: "assets/svg/email.svg",
-                keyboardType: TextInputType.emailAddress,
-                validator: _validateEmailOptional,
-              ),
-              const SizedBox(height: 22),
-              _buildTextField(
-                controller: urlController,
-                label: "URL Google Maps",
-                hint: "Salin dari Google Maps",
-                iconPath: "assets/svg/url.svg",
-                keyboardType: TextInputType.url,
-                validator: (v) => _validateUrl(v, 'URL Google Maps'),
-              ),
-              const SizedBox(height: 22),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildTextField(
-                      controller: latitudeController,
-                      label: "Latitude",
-                      hint: "Contoh: -6.9175",
-                      iconPath: "assets/svg/url.svg",
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
-                      validator: (v) => _validateNumber(v, 'Latitude'),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildTextField(
-                      controller: longitudeController,
-                      label: "Longitude",
-                      hint: "Contoh: 107.6191",
-                      iconPath: "assets/svg/url.svg",
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
-                      validator: (v) => _validateNumber(v, 'Longitude'),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 22),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildTextField(
-                      controller: openingTimeController,
-                      label: "Jam Buka",
-                      hint: "HH:MM (Contoh: 08:00)",
-                      iconPath: "assets/svg/user.svg",
-                      keyboardType: TextInputType.datetime,
-                      validator: (v) => _validateTimeFormat(v, 'Jam Buka'),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildTextField(
-                      controller: closingTimeController,
-                      label: "Jam Tutup",
-                      hint: "HH:MM (Contoh: 17:00)",
-                      iconPath: "assets/svg/user.svg",
-                      keyboardType: TextInputType.datetime,
-                      validator: (v) => _validateTimeFormat(v, 'Jam Tutup'),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 22),
-              _buildTextField(
-                controller: operationalDaysController,
-                label: "Hari Operasional",
-                hint: "Contoh: Senin - Sabtu",
-                iconPath: "assets/svg/user.svg",
-                textCapitalization: TextCapitalization.words,
-                validator: (v) => _validateNotEmpty(v, 'Hari Operasional'),
-              ),
-              const SizedBox(height: 22),
-              _buildTextField(
-                controller: decsController,
-                label: "Deskripsi Bengkel",
-                hint: "Jelaskan layanan, keunggulan, dll.",
-                iconPath: "assets/svg/laporan_tebal.svg",
-                textCapitalization: TextCapitalization.sentences,
-                maxline: 3,
-                validator: (v) => _validateNotEmpty(v, 'Deskripsi Bengkel'),
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          children: [
+            Text("Informasi Bengkel", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
+            const SizedBox(height: 20),
+            _buildTextField(controller: workshopController, label: "Nama Bengkel", hint: "Contoh: Bengkel Maju Jaya", iconPath: "assets/icons/workshop.svg", validator: (v) => _validateNotEmpty(v, "Nama Bengkel")),
+            const SizedBox(height: 16),
+            _buildTextField(controller: decsController, label: "Deskripsi", hint: "Spesialisasi, layanan, dll", iconPath: "assets/icons/workshop.svg", maxline: 3, validator: (v) => _validateNotEmpty(v, "Deskripsi")),
+            const SizedBox(height: 16),
+            _buildTextField(controller: addressController, label: "Alamat Lengkap", hint: "Jl. Sudirman No. 1", iconPath: "assets/icons/location.svg", maxline: 2, validator: (v) => _validateNotEmpty(v, "Alamat")),
+            const SizedBox(height: 16),
+            _buildTextField(controller: phoneController, label: "Nomor Telepon", hint: "08123456789", iconPath: "assets/icons/phone.svg", keyboardType: TextInputType.phone, validator: (v) => _validateNotEmpty(v, "Telepon")),
+            const SizedBox(height: 16),
+            _buildTextField(controller: wemailController, label: "Email Bengkel (Opsional)", hint: "bengkel@example.com", iconPath: "assets/icons/email.svg", keyboardType: TextInputType.emailAddress, validator: _validateEmailOptional),
+            const SizedBox(height: 16),
+            _buildTextField(controller: urlController, label: "Google Maps URL", hint: "https://maps.google.com/...", iconPath: "assets/icons/location.svg", validator: (v) => _validateUrl(v, "URL Maps")),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(child: _buildTextField(controller: cityController, label: "Kota", hint: "Jakarta", iconPath: "assets/icons/location.svg", validator: (v) => _validateNotEmpty(v, "Kota"))),
+                const SizedBox(width: 12),
+                Expanded(child: _buildTextField(controller: provinceController, label: "Provinsi", hint: "DKI Jakarta", iconPath: "assets/icons/location.svg", validator: (v) => _validateNotEmpty(v, "Provinsi"))),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _buildTextField(controller: postalCodeController, label: "Kode Pos", hint: "12345", iconPath: "assets/icons/location.svg", keyboardType: TextInputType.number, validator: (v) => _validateNotEmpty(v, "Kode Pos")),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(child: _buildTextField(controller: latitudeController, label: "Latitude", hint: "-6.200000", iconPath: "assets/icons/location.svg", keyboardType: const TextInputType.numberWithOptions(decimal: true), validator: (v) => _validateNumber(v, "Latitude"))),
+                const SizedBox(width: 12),
+                Expanded(child: _buildTextField(controller: longitudeController, label: "Longitude", hint: "106.816666", iconPath: "assets/icons/location.svg", keyboardType: const TextInputType.numberWithOptions(decimal: true), validator: (v) => _validateNumber(v, "Longitude"))),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(child: _buildTextField(controller: openingTimeController, label: "Buka", hint: "08:00", iconPath: "assets/icons/time.svg", validator: (v) => _validateTimeFormat(v, "Jam Buka"))),
+                const SizedBox(width: 12),
+                Expanded(child: _buildTextField(controller: closingTimeController, label: "Tutup", hint: "17:00", iconPath: "assets/icons/time.svg", validator: (v) => _validateTimeFormat(v, "Jam Tutup"))),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _buildTextField(controller: operationalDaysController, label: "Hari Operasional", hint: "Senin - Jumat", iconPath: "assets/icons/calendar.svg", validator: (v) => _validateNotEmpty(v, "Hari Operasional")),
+          ],
         ),
       ),
     );
@@ -699,93 +524,27 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
     final content = _buildFormCard(
       cardWidth: cardWidth,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-        child: Form(
-          key: _formKeys[2],
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          children: [
+            Text("Dokumen Legalitas", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
+            const SizedBox(height: 20),
+            _buildTextField(controller: nibController, label: "Nomor Induk Berusaha (NIB)", hint: "Masukkan NIB", iconPath: "assets/icons/doc.svg", validator: (v) => _validateNotEmpty(v, "NIB")),
+            const SizedBox(height: 16),
+            _buildTextField(controller: npwpController, label: "NPWP", hint: "Masukkan NPWP", iconPath: "assets/icons/doc.svg", validator: (v) => _validateNotEmpty(v, "NPWP")),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.blue.shade200)),
+              child: Row(
                 children: [
-                  Container(
-                    width: 41,
-                    height: 41,
-                    decoration: BoxDecoration(color: const Color.fromRGBO(220, 38, 38, 0.21), borderRadius: BorderRadius.circular(10)),
-                    child: const Icon(Icons.badge_outlined, color: Colors.red, size: 28),
-                  ),
-                  const SizedBox(width: 14),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text("Dokumen Pendukung", style: TextStyle(fontSize: 14, color: Colors.black)),
-                        SizedBox(height: 4),
-                        Text("Lengkapi dokumen legalitas", style: TextStyle(fontSize: 12, color: Colors.black54)),
-                      ],
-                    ),
-                  ),
+                  const Icon(Icons.info_outline, color: Colors.blue),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text("Pastikan data dokumen yang Anda masukkan valid dan sesuai dengan legalitas usaha Anda.", style: GoogleFonts.poppins(fontSize: 12, color: Colors.blue.shade800))),
                 ],
               ),
-              const SizedBox(height: 24),
-              _buildTextField(
-                controller: nibController,
-                label: "NIB (Nomor Induk Berusaha)",
-                hint: "Masukkan NIB (Wajib)",
-                iconPath: "assets/svg/nib.svg",
-                keyboardType: TextInputType.number,
-                validator: (v) => _validateNotEmpty(v, 'NIB'),
-              ),
-              const SizedBox(height: 22),
-              _buildTextField(
-                controller: npwpController,
-                label: "NPWP (Nomor Pokok Wajib Pajak)",
-                hint: "Masukkan NPWP (Opsional)",
-                iconPath: "assets/svg/npwp.svg",
-                keyboardType: TextInputType.text,
-                maxline: 1,
-                validator: (v) => _validateOptional(v, 'NPWP'),
-              ),
-              const SizedBox(height: 16),
-              GestureDetector(
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Fitur upload belum diimplementasikan.')),
-                  );
-                },
-                child: Container(
-                  height: 150,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.red.withAlpha(128)),
-                    borderRadius: BorderRadius.circular(12),
-                    color: Colors.grey.shade50,
-                  ),
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.cloud_upload_outlined, size: 36, color: Colors.grey.shade600),
-                        const SizedBox(height: 8),
-                        Text(
-                          "Upload Dokumen Legalitas (Opsional)\n(.pdf, .jpg, .png maks 10MB)",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                "Informasi Tambahan:\n"
-                    "1. Dokumen Anda aman dan hanya digunakan untuk verifikasi.\n"
-                    "2. Proses verifikasi dapat memakan waktu 1-2 hari kerja.",
-                style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
-                textAlign: TextAlign.left,
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -793,169 +552,108 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
   }
 
   Widget _buildStep3(double cardWidth) {
-    final h = MediaQuery.of(context).size.height;
-    final double imageHeight = (h * 0.35).clamp(250.0, 320.0);
-
-    final content = SizedBox(
-      width: double.infinity,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Positioned.fill(
-            child: SvgPicture.asset(
-              'assets/svg/bg-successreg.svg',
-              fit: BoxFit.cover,
-              placeholderBuilder: (context) => Container(color: Colors.grey.shade200),
-            ),
+    return Center(
+      child: ScaleTransition(
+        scale: _successScaleAnim,
+        child: Container(
+          width: cardWidth,
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), boxShadow: [BoxShadow(color: Colors.black.withAlpha(25), blurRadius: 30, offset: const Offset(0, 10))]),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: Colors.green.shade50, shape: BoxShape.circle), child: const Icon(Icons.check_circle, color: Colors.green, size: 64)),
+              const SizedBox(height: 24),
+              Text("Registrasi Berhasil!", style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87)),
+              const SizedBox(height: 12),
+              Text("Akun dan bengkel Anda telah berhasil didaftarkan. Silakan login untuk memulai.", textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey.shade600)),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFD72B1C), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 4),
+                  onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false),
+                  child: Text("Masuk ke Aplikasi", style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                ),
+              ),
+            ],
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 30),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  "Selamat, bengkel Anda telah resmi terdaftar di aplikasi.",
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w700, color: const Color(0xFF232323)),
-                ),
-                const SizedBox(height: 20),
-                AnimatedBuilder(
-                  animation: _successScaleAnim,
-                  builder: (context, child) => Transform.scale(scale: _successScaleAnim.value, child: child),
-                  child: SizedBox(
-                    height: imageHeight + 10,
-                    width: double.infinity,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Positioned.fill(
-                          child: SvgPicture.asset('assets/svg/bg-successreg.svg', fit: BoxFit.cover, placeholderBuilder: (_) => const SizedBox()),
-                        ),
-                        Positioned(
-                          bottom: 0,
-                          child: Image.asset(
-                            'assets/image/succes-car.png',
-                            height: imageHeight,
-                            fit: BoxFit.contain,
-                            errorBuilder: (_, __, ___) => const Icon(Icons.check_circle_outline, size: 100, color: Colors.green),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 28),
-                FadeTransition(
-                  opacity: CurvedAnimation(parent: _successAnimController, curve: Curves.easeIn),
-                  child: Text(
-                    "Mulailah menambahkan layanan, harga, dan\njadwal operasional untuk menarik lebih banyak pelanggan.",
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.black54),
-                  ),
-                ),
-                const SizedBox(height: 20),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
-    return _scrollableStep(content);
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final cardWidth = screenWidth * 0.85;
-    const horizontalPadding = 24.0;
-    const verticalPadding = 36.0;
+    final size = MediaQuery.of(context).size;
+    final cardWidth = math.min(size.width * 0.9, 400.0);
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: _currentStep > 0 && _currentStep < 3
-            ? IconButton(icon: const Icon(Icons.arrow_back, color: Colors.black), onPressed: () => _goStep(_currentStep - 1))
-            : null,
-        title: Text(_currentStep == 3 ? "Berhasil" : "Daftar",
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
-        centerTitle: true,
-      ),
-      body: Column(
+      body: Stack(
         children: [
-          const SizedBox(height: 8),
-          if (_currentStep < 3)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: horizontalPadding),
-              child: _buildProgressBar(cardWidth),
+          Container(
+            decoration: const BoxDecoration(
+              image: DecorationImage(image: AssetImage("assets/icons/inibg.png"), fit: BoxFit.cover),
             ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: PageView(
-              controller: _pageController,
-              physics: const NeverScrollableScrollPhysics(),
+          ),
+          SafeArea(
+            child: Column(
               children: [
-                _buildStep0(cardWidth),
-                _buildStep1(cardWidth),
-                _buildStep2(cardWidth),
-                _buildStep3(cardWidth),
+                const SizedBox(height: 10),
+                if (_currentStep < 3)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        if (_currentStep > 0)
+                          IconButton(icon: const Icon(Icons.arrow_back_ios, color: Colors.white), onPressed: () => _goStep(_currentStep - 1))
+                        else
+                          IconButton(icon: const Icon(Icons.arrow_back_ios, color: Colors.white), onPressed: () => Navigator.pop(context)),
+                        const Expanded(child: Center(child: Text("Register Owner", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Poppins')))),
+                        const SizedBox(width: 48),
+                      ],
+                    ),
+                  ),
+                if (_currentStep < 3) ...[
+                  const SizedBox(height: 20),
+                  _buildProgressBar(cardWidth),
+                  const SizedBox(height: 20),
+                ],
+                Expanded(
+                  child: PageView(
+                    controller: _pageController,
+                    physics: const NeverScrollableScrollPhysics(),
+                    children: [
+                      _buildStep0(cardWidth),
+                      _buildStep1(cardWidth),
+                      _buildStep2(cardWidth),
+                      _buildStep3(cardWidth),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
-            child: SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: _isLoading
-                    ? null
-                    : () {
-                  if (_currentStep == 2) {
-                    final step2Valid = _formKeys[2].currentState?.validate() ?? false;
-
-                    if (!_step0IsValid) {
-                      _goStep(0);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Data diri Anda belum lengkap.'), backgroundColor: Colors.orange),
-                      );
-                    } else if (!_step1IsValid) {
-                      _goStep(1);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Data bengkel Anda belum lengkap.'), backgroundColor: Colors.orange),
-                      );
-                    } else if (!step2Valid) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Data dokumen Anda belum lengkap.'), backgroundColor: Colors.orange),
-                      );
-                    } else {
-                      _handleRegister();
-                    }
-                  } else if (_currentStep == 3) {
-                    Navigator.pushNamedAndRemoveUntil(context, '/main', (route) => false);
-                  } else {
-                    _onNext();
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  disabledBackgroundColor: Colors.red.withAlpha(128),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
-                  elevation: _isLoading ? 0 : 2,
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                  height: 24,
-                  width: 24,
-                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3),
-                )
-                    : Text(
-                  _currentStep == 2 ? 'Daftar' : (_currentStep == 3 ? 'Selesai' : 'Next'),
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+          if (_currentStep < 3)
+            Positioned(
+              bottom: 30,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: SizedBox(
+                  width: cardWidth,
+                  height: 50,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFD72B1C), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)), elevation: 8),
+                    onPressed: _isLoading ? null : (_currentStep == 2 ? _handleRegister : _onNext),
+                    child: _isLoading
+                        ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        : Text(_currentStep == 2 ? "DAFTAR SEKARANG" : "SELANJUTNYA", style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                  ),
                 ),
               ),
             ),
-          )
         ],
       ),
     );

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:bengkel_online_flutter/feature/owner/widgets/custom_header.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_radius.dart';
@@ -12,9 +12,8 @@ class FeedbackPage extends StatefulWidget {
   State<FeedbackPage> createState() => _FeedbackPageState();
 }
 
-class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderStateMixin {
+class _FeedbackPageState extends State<FeedbackPage> {
   String _selectedFilter = 'semua'; // semua | 5 | 4 | 3 | 2 | 1
-  late AnimationController _animController;
 
   // Dummy Data
   final _reviews = <_Review>[
@@ -63,7 +62,7 @@ class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderSt
       text: 'Bagus, rem mobil jadi pakem lagi. Tapi harga agak sedikit mahal dibanding bengkel sebelah.',
       avatarColor: Colors.redAccent,
     ),
-     _Review(
+    _Review(
       initials: 'JK',
       name: 'Joko Kendil',
       ago: '2 minggu lalu',
@@ -74,22 +73,6 @@ class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderSt
     ),
   ];
 
-  @override
-  void initState() {
-    super.initState();
-    _animController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
-    _animController.forward();
-  }
-
-  @override
-  void dispose() {
-    _animController.dispose();
-    super.dispose();
-  }
-
   List<_Review> get _filteredReviews {
     if (_selectedFilter == 'semua') return _reviews;
     return _reviews.where((r) => r.stars.toString() == _selectedFilter).toList();
@@ -99,74 +82,24 @@ class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
-      body: CustomScrollView(
+      appBar: CustomHeader(
+        title: "Ulasan Pelanggan",
+        onBack: () => Navigator.pop(context),
+      ),
+      body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
-        slivers: [
-          _buildSliverAppBar(),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildRatingOverview(),
-                  AppSpacing.verticalSpaceXXL,
-                  _buildFilterChips(),
-                  AppSpacing.verticalSpaceLG,
-                ],
-              ),
-            ),
-          ),
-          _buildReviewList(),
-          const SliverPadding(padding: EdgeInsets.only(bottom: 40)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSliverAppBar() {
-    return SliverAppBar(
-      expandedHeight: 120.0,
-      floating: false,
-      pinned: true,
-      stretch: true,
-      backgroundColor: AppColors.primaryRed,
-      elevation: 0,
-      systemOverlayStyle: SystemUiOverlayStyle.light,
-      leading: IconButton(
-        icon: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.white.withAlpha(51),
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: Colors.white),
-        ),
-        onPressed: () => Navigator.pop(context),
-      ),
-      flexibleSpace: FlexibleSpaceBar(
-        stretchModes: const [StretchMode.zoomBackground, StretchMode.blurBackground],
-        titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
-        centerTitle: false,
-        title: Text(
-          'Ulasan Pelanggan',
-          style: AppTextStyles.heading3(color: Colors.white),
-        ),
-        background: Container(
-          decoration: const BoxDecoration(
-            gradient: AppColors.primaryGradient,
-          ),
-          child: Stack(
+        child: Padding(
+          padding: AppSpacing.screenPadding,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Positioned(
-                right: -20,
-                top: -20,
-                child: Icon(
-                  Icons.star_rounded,
-                  size: 150,
-                  color: Colors.white.withAlpha(25),
-                ),
-              ),
+              AppSpacing.verticalSpaceLG,
+              _buildRatingOverview(),
+              AppSpacing.verticalSpaceXXL,
+              _buildFilterChips(),
+              AppSpacing.verticalSpaceLG,
+              _buildReviewList(),
+              AppSpacing.verticalSpaceXXL,
             ],
           ),
         ),
@@ -178,13 +111,14 @@ class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderSt
     return Container(
       padding: AppSpacing.paddingXL,
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: AppRadius.radiusXXL,
+        color: Colors.white,
+        borderRadius: AppRadius.radiusXL,
+        border: Border.all(color: AppColors.border, width: 1),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadow,
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            color: Colors.black.withAlpha(10),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -197,13 +131,21 @@ class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderSt
               children: [
                 Text(
                   '4.8',
-                  style: AppTextStyles.heading1(color: AppColors.textPrimary).copyWith(fontSize: 48, height: 1),
+                  style: AppTextStyles.heading1(color: AppColors.textPrimary).copyWith(
+                    fontSize: 52,
+                    height: 1,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 AppSpacing.verticalSpaceXS,
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(5, (index) {
-                    return const Icon(Icons.star_rounded, color: AppColors.accentOrange, size: 20);
+                    return const Icon(
+                      Icons.star_rounded,
+                      color: AppColors.accentOrange,
+                      size: 22,
+                    );
                   }),
                 ),
                 AppSpacing.verticalSpaceSM,
@@ -214,7 +156,7 @@ class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderSt
               ],
             ),
           ),
-          Container(width: 1, height: 80, color: AppColors.divider),
+          Container(width: 1, height: 90, color: AppColors.divider),
           AppSpacing.horizontalSpaceXL,
           Expanded(
             flex: 6,
@@ -235,24 +177,27 @@ class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderSt
 
   Widget _buildProgressBar(String label, double percent) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
+      padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
         children: [
           Text(
             label,
-            style: AppTextStyles.label(color: AppColors.textSecondary).copyWith(fontSize: 12),
+            style: AppTextStyles.bodySmall(color: AppColors.textSecondary).copyWith(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
           ),
           AppSpacing.horizontalSpaceSM,
-          const Icon(Icons.star_rounded, size: 12, color: AppColors.accentOrange),
+          const Icon(Icons.star_rounded, size: 14, color: AppColors.accentOrange),
           AppSpacing.horizontalSpaceSM,
           Expanded(
             child: ClipRRect(
-              borderRadius: AppRadius.radiusXS,
+              borderRadius: AppRadius.radiusSM,
               child: LinearProgressIndicator(
                 value: percent,
                 backgroundColor: AppColors.backgroundLight,
                 valueColor: const AlwaysStoppedAnimation<Color>(AppColors.accentOrange),
-                minHeight: 6,
+                minHeight: 7,
               ),
             ),
           ),
@@ -270,49 +215,47 @@ class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderSt
         children: filters.map((filter) {
           final isSelected = _selectedFilter == filter;
           return Padding(
-            padding: const EdgeInsets.only(right: 10),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-              child: FilterChip(
-                label: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (filter != 'semua') ...[
-                      Icon(
-                        Icons.star_rounded,
-                        size: 16,
-                        color: isSelected ? Colors.white : AppColors.accentOrange,
-                      ),
-                      const SizedBox(width: 4),
-                    ],
-                    Text(
-                      filter == 'semua' ? 'Semua' : filter,
-                      style: isSelected
-                          ? AppTextStyles.label(color: Colors.white)
-                          : AppTextStyles.label(color: AppColors.textPrimary),
+            padding: const EdgeInsets.only(right: 8),
+            child: ChoiceChip(
+              label: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (filter != 'semua') ...[
+                    Icon(
+                      Icons.star_rounded,
+                      size: 16,
+                      color: isSelected ? Colors.white : AppColors.accentOrange,
                     ),
+                    const SizedBox(width: 4),
                   ],
-                ),
-                selected: isSelected,
-                onSelected: (bool selected) {
-                  setState(() {
-                    _selectedFilter = filter;
-                  });
-                },
-                backgroundColor: AppColors.cardBackground,
-                selectedColor: AppColors.primaryRed,
-                checkmarkColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: AppRadius.radiusXL,
-                  side: BorderSide(
-                    color: isSelected ? Colors.transparent : AppColors.border,
+                  Text(
+                    filter == 'semua' ? 'Semua' : filter,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                      color: isSelected ? Colors.white : AppColors.textPrimary,
+                    ),
                   ),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-                elevation: isSelected ? 4 : 0,
-                shadowColor: AppColors.primaryRed.withAlpha(100),
+                ],
               ),
+              selected: isSelected,
+              onSelected: (bool selected) {
+                setState(() {
+                  _selectedFilter = filter;
+                });
+              },
+              backgroundColor: Colors.white,
+              selectedColor: AppColors.primaryRed,
+              shape: RoundedRectangleBorder(
+                borderRadius: AppRadius.radiusXL,
+                side: BorderSide(
+                  color: isSelected ? Colors.transparent : AppColors.border,
+                  width: 1,
+                ),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              elevation: isSelected ? 2 : 0,
+              shadowColor: AppColors.primaryRed.withAlpha(76),
             ),
           );
         }).toList(),
@@ -322,153 +265,104 @@ class _FeedbackPageState extends State<FeedbackPage> with SingleTickerProviderSt
 
   Widget _buildReviewList() {
     final reviews = _filteredReviews;
-    return SliverList(
-      delegate: SliverChildBuilderDelegate(
-        (context, index) {
-          final review = reviews[index];
-          // Staggered Animation Logic
-          final animation = Tween<Offset>(
-            begin: const Offset(0, 0.5),
-            end: Offset.zero,
-          ).animate(
-            CurvedAnimation(
-              parent: _animController,
-              curve: Interval(
-                (index * 0.1).clamp(0.0, 1.0),
-                1.0,
-                curve: Curves.easeOutQuint,
-              ),
-            ),
-          );
-
-          final fadeAnimation = Tween<double>(
-            begin: 0.0,
-            end: 1.0,
-          ).animate(
-            CurvedAnimation(
-              parent: _animController,
-              curve: Interval(
-                (index * 0.1).clamp(0.0, 1.0),
-                1.0,
-                curve: Curves.easeOut,
-              ),
-            ),
-          );
-
-          return AnimatedBuilder(
-            animation: _animController,
-            builder: (context, child) {
-              return FadeTransition(
-                opacity: fadeAnimation,
-                child: SlideTransition(
-                  position: animation,
-                  child: child,
-                ),
-              );
-            },
-            child: _buildReviewCard(review),
-          );
-        },
-        childCount: reviews.length,
-      ),
+    return Column(
+      children: reviews.map((review) => _buildReviewCard(review)).toList(),
     );
   }
 
   Widget _buildReviewCard(_Review review) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      padding: AppSpacing.paddingXL,
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: AppRadius.radiusXL,
+        color: Colors.white,
+        borderRadius: AppRadius.radiusLG,
+        border: Border.all(color: AppColors.border.withAlpha(128), width: 1),
         boxShadow: [
           BoxShadow(
-            color: AppColors.cardShadow,
-            blurRadius: 15,
-            offset: const Offset(0, 5),
+            color: Colors.black.withAlpha(8),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Quote Icon
+          Icon(
+            Icons.format_quote_rounded,
+            size: 32,
+            color: AppColors.accentOrange.withAlpha(76),
+          ),
+          AppSpacing.verticalSpaceSM,
+          
+          // Review Text
+          Text(
+            review.text,
+            style: AppTextStyles.bodyMedium(color: AppColors.textPrimary).copyWith(
+              height: 1.6,
+              fontSize: 14,
+            ),
+          ),
+          
+          AppSpacing.verticalSpaceLG,
+          
+          // User Info
           Row(
             children: [
+              // Avatar
               Container(
-                width: 48,
-                height: 48,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  color: review.avatarColor.withAlpha(26),
+                  color: review.avatarColor.withAlpha(38),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
                   child: Text(
                     review.initials,
-                    style: AppTextStyles.heading4(color: review.avatarColor),
+                    style: AppTextStyles.heading5(color: review.avatarColor).copyWith(
+                      fontSize: 15,
+                    ),
                   ),
                 ),
               ),
-              AppSpacing.horizontalSpaceLG,
+              AppSpacing.horizontalSpaceMD,
+              
+              // Name, Stars, Time
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       review.name,
-                      style: AppTextStyles.heading5(),
+                      style: AppTextStyles.heading5(color: AppColors.textPrimary).copyWith(
+                        fontSize: 15,
+                      ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     Row(
                       children: [
                         ...List.generate(5, (i) {
                           return Icon(
                             Icons.star_rounded,
                             size: 14,
-                            color: i < review.stars ? AppColors.accentOrange : AppColors.border,
+                            color: i < review.stars
+                                ? AppColors.accentOrange
+                                : AppColors.border,
                           );
                         }),
                         AppSpacing.horizontalSpaceSM,
                         Text(
                           review.ago,
-                          style: AppTextStyles.caption(),
+                          style: AppTextStyles.caption(color: AppColors.textHint).copyWith(
+                            fontSize: 12,
+                          ),
                         ),
                       ],
                     ),
                   ],
-                ),
-              ),
-            ],
-          ),
-          AppSpacing.verticalSpaceLG,
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppColors.backgroundLight,
-              borderRadius: AppRadius.radiusSM,
-            ),
-            child: Text(
-              review.service,
-              style: AppTextStyles.caption(color: AppColors.textSecondary).copyWith(fontWeight: FontWeight.w500),
-            ),
-          ),
-          AppSpacing.verticalSpaceMD,
-          Text(
-            review.text,
-            style: AppTextStyles.bodyMedium(color: AppColors.textPrimary).copyWith(height: 1.5),
-          ),
-          AppSpacing.verticalSpaceLG,
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.reply_rounded, size: 18),
-                label: Text('Balas', style: AppTextStyles.buttonSmall(color: AppColors.primaryRed)),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.primaryRed,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusXL),
-                  backgroundColor: AppColors.primaryRed.withAlpha(13),
                 ),
               ),
             ],
