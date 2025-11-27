@@ -315,35 +315,52 @@ class _ReportPageState extends State<ReportPage> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 12,
-                          runSpacing: 12,
-                          children: [
-                            ReportHealthTile(
-                              title: 'Rata-rata antrian',
-                              value: '${d.avgQueue} mobil',
-                              tag: 'Normal',
-                              tagColor: const Color(0xFF22C55E),
-                            ),
-                            ReportHealthTile(
-                              title: 'Occupancy Bengkel',
-                              value: '${d.occupancy}%',
-                              tag: 'Tinggi',
-                              tagColor: kDanger,
-                            ),
-                            ReportHealthTile(
-                              title: 'Peak Hours',
-                              value: d.peakRange,
-                              tag: 'Optimal',
-                              tagColor: const Color(0xFF3B82F6),
-                            ),
-                            ReportHealthTile(
-                              title: 'Efisiensi',
-                              value: '${d.efficiency}%',
-                              tag: 'Baik',
-                              tagColor: const Color(0xFF22C55E),
-                            ),
-                          ],
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final tileWidth = (constraints.maxWidth - 12) / 2;
+                            return Wrap(
+                              spacing: 12,
+                              runSpacing: 12,
+                              children: [
+                                SizedBox(
+                                  width: tileWidth,
+                                  child: ReportHealthTile(
+                                    title: 'Rata-rata antrian',
+                                    value: '${d.avgQueue} mobil',
+                                    tag: 'Normal',
+                                    tagColor: const Color(0xFF22C55E),
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: tileWidth,
+                                  child: ReportHealthTile(
+                                    title: 'Occupancy Bengkel',
+                                    value: '${d.occupancy}%',
+                                    tag: 'Tinggi',
+                                    tagColor: kDanger,
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: tileWidth,
+                                  child: ReportHealthTile(
+                                    title: 'Peak Hours',
+                                    value: d.peakRange,
+                                    tag: 'Optimal',
+                                    tagColor: const Color(0xFF3B82F6),
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: tileWidth,
+                                  child: ReportHealthTile(
+                                    title: 'Efisiensi',
+                                    value: '${d.efficiency}%',
+                                    tag: 'Baik',
+                                    tagColor: const Color(0xFF22C55E),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
                         ),
                       ],
                     ),

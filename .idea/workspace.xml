@@ -6,10 +6,16 @@
   <component name="ChangeListManager">
     <list default="true" id="0f1fd287-7e8a-4e9a-beb2-7c2c21e8966b" name="Changes" comment="refactor(owner): Redesign report and staff management screens&#10;&#10;This commit refactors the &quot;Laporan&quot; (Report) and &quot;Manajemen Karyawan&quot; (Staff Management) screens with a focus on UI consistency, code cleanup, and improved navigation.&#10;&#10;### Key Changes:&#10;&#10;*   **Report Screen (`reportPages.dart`):**&#10;    *   **UI Overhaul**: The entire screen has been redesigned for a cleaner, more modern look with better spacing and component structure. The code has been significantly refactored for readability.&#10;    *   **Navigation**: The hardcoded back button has been replaced with a standard `SliverAppBar` leading action that only appears if navigation is possible (i.e., `Navigator.canPop()`).&#10;    *   **Code Cleanup**: Removed the unused `main()` function and streamlined widget implementations.&#10;&#10;*   **Staff Management Screen (`staffManagement.dart`):**&#10;    *   **Header Redesign**: The screen now uses a `SliverAppBar` similar to the report page for a consistent look and feel, removing the custom back button logic. The header content is now centered and simplified.&#10;    *   **UI Polish**: The &quot;Quick Actions&quot; card has rounded corners, and overall padding and spacing have been adjusted for a better layout.&#10;    *   **Code Cleanup**: Removed commented-out code and dead logic related to fetching `workshopUuid` from the auth provider.&#10;&#10;*   **`CustomHeader` Widget Removal:**&#10;    *   The reusable `CustomHeader` widget (`custom_header.dart`) has been deleted, as its functionality is now directly and more flexibly implemented within the screens using `SliverAppBar`.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/core/screens/loading_gate.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/core/screens/loading_gate.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/core/screens/registers/register.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/core/screens/registers/register.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/feature/owner/screens/feedback.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/owner/screens/feedback.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/core/services/api_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/core/services/api_service.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/feature/owner/providers/employee_provider.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/owner/providers/employee_provider.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/feature/owner/screens/edit_profile_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/owner/screens/edit_profile_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/feature/owner/screens/profil_page_owner.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/owner/screens/profil_page_owner.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/feature/owner/screens/report_pages.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/owner/screens/report_pages.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/feature/owner/widgets/manajemen_karyawan/staff_table.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/owner/widgets/manajemen_karyawan/staff_table.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/feature/owner/widgets/profile/profile_header.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/owner/widgets/profile/profile_header.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/feature/owner/widgets/profile/profile_menu_card.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/owner/widgets/profile/profile_menu_card.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/feature/owner/widgets/report/report_health_tile.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/owner/widgets/report/report_health_tile.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/feature/owner/widgets/report/report_kpi_card.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/owner/widgets/report/report_kpi_card.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -33,6 +39,7 @@
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="UPDATE_TYPE" value="REBASE" />
   </component>
   <component name="GitHubPullRequestSearchHistory">{
   &quot;lastFilter&quot;: {
@@ -76,7 +83,7 @@
     "RunOnceActivity.readMode.enableVisualFormatting": "true",
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
-    "git-widget-placeholder": "#79 on refactor/priority-1-complete",
+    "git-widget-placeholder": "refactor/priority-1-complete",
     "ignore.virus.scanning.warn.message": "true",
     "io.flutter.project.isFirstOpen": "true",
     "io.flutter.reload.alreadyRun": "true",
@@ -172,7 +179,15 @@
       <option name="project" value="LOCAL" />
       <updated>1764084974559</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="refactor(owner): Redesign report and staff management screens&#10;&#10;This commit refactors the &quot;Laporan&quot; (Report) and &quot;Manajemen Karyawan&quot; (Staff Management) screens with a focus on UI consistency, code cleanup, and improved navigation.&#10;&#10;### Key Changes:&#10;&#10;*   **Report Screen (`reportPages.dart`):**&#10;    *   **UI Overhaul**: The entire screen has been redesigned for a cleaner, more modern look with better spacing and component structure. The code has been significantly refactored for readability.&#10;    *   **Navigation**: The hardcoded back button has been replaced with a standard `SliverAppBar` leading action that only appears if navigation is possible (i.e., `Navigator.canPop()`).&#10;    *   **Code Cleanup**: Removed the unused `main()` function and streamlined widget implementations.&#10;&#10;*   **Staff Management Screen (`staffManagement.dart`):**&#10;    *   **Header Redesign**: The screen now uses a `SliverAppBar` similar to the report page for a consistent look and feel, removing the custom back button logic. The header content is now centered and simplified.&#10;    *   **UI Polish**: The &quot;Quick Actions&quot; card has rounded corners, and overall padding and spacing have been adjusted for a better layout.&#10;    *   **Code Cleanup**: Removed commented-out code and dead logic related to fetching `workshopUuid` from the auth provider.&#10;&#10;*   **`CustomHeader` Widget Removal:**&#10;    *   The reusable `CustomHeader` widget (`custom_header.dart`) has been deleted, as its functionality is now directly and more flexibly implemented within the screens using `SliverAppBar`.">
+      <option name="closed" value="true" />
+      <created>1764221185577</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1764221185577</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
