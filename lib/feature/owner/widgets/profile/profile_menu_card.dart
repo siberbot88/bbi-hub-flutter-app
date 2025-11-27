@@ -7,6 +7,7 @@ import 'package:bengkel_online_flutter/feature/owner/screens/feedback.dart';
 import 'package:bengkel_online_flutter/feature/owner/screens/voucher_page.dart';
 import 'package:bengkel_online_flutter/feature/owner/screens/ubah_bahasa_page.dart';
 import 'package:bengkel_online_flutter/feature/owner/screens/help_support_page.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/edit_user_screen.dart';
 
 import 'profile_animations.dart';
 import 'profile_menu_item.dart';
@@ -42,9 +43,29 @@ class ProfileMenuCard extends StatelessWidget {
               ),
               child: Column(
                 children: [
+                  // Edit Profil User
                   _buildAnimatedItem(
                     context,
                     index: 0,
+                    iconPath: "assets/icons/profile_edit.svg",
+                    title: "Edit Profil User",
+                    iconSize: itemIconSize,
+                    fontSize: itemFontSize,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const EditUserScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  const ProfileSoftDivider(),
+
+                  // Bahasa
+                  _buildAnimatedItem(
+                    context,
+                    index: 1,
                     iconPath: "assets/icons/bahasa.svg",
                     title: "Bahasa",
                     iconSize: itemIconSize,
@@ -59,9 +80,11 @@ class ProfileMenuCard extends StatelessWidget {
                     },
                   ),
                   const ProfileSoftDivider(),
+
+                  // Bantuan & Dukungan
                   _buildAnimatedItem(
                     context,
-                    index: 1,
+                    index: 2,
                     iconPath: "assets/icons/help.svg",
                     title: "Bantuan & Dukungan",
                     iconSize: itemIconSize,
@@ -76,9 +99,11 @@ class ProfileMenuCard extends StatelessWidget {
                     },
                   ),
                   const ProfileSoftDivider(),
+
+                  // Ganti Password
                   _buildAnimatedItem(
                     context,
-                    index: 2,
+                    index: 3,
                     iconPath: "assets/icons/password.svg",
                     title: "Ganti Password",
                     iconSize: itemIconSize,
@@ -88,9 +113,11 @@ class ProfileMenuCard extends StatelessWidget {
                     },
                   ),
                   const ProfileSoftDivider(),
+
+                  // Voucher
                   _buildAnimatedItem(
                     context,
-                    index: 3,
+                    index: 4,
                     iconPath: "assets/icons/voucher.svg",
                     title: "Voucher",
                     iconSize: itemIconSize,
@@ -105,9 +132,11 @@ class ProfileMenuCard extends StatelessWidget {
                     },
                   ),
                   const ProfileSoftDivider(),
+
+                  // Umpan Balik
                   _buildAnimatedItem(
                     context,
-                    index: 4,
+                    index: 5,
                     iconPath: "assets/icons/feedback.svg",
                     title: "Umpan Balik",
                     iconSize: itemIconSize,
@@ -126,7 +155,7 @@ class ProfileMenuCard extends StatelessWidget {
                   // Logout
                   _buildAnimatedItem(
                     context,
-                    index: 5,
+                    index: 6,
                     iconPath: "assets/icons/logout.svg",
                     title: "Keluar",
                     isLogout: true,

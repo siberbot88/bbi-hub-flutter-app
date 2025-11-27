@@ -13,12 +13,14 @@ class EmployeeProvider extends ChangeNotifier {
   String? get lastError => _lastError;
   List<Employment> get items => List.unmodifiable(_items);
 
-  Future<void> fetchOwnerEmployees() async {
+  Future<void> fetchOwnerEmployees({int page = 1, String? search}) async {
     _loading = true;
     _lastError = null;
     notifyListeners();
     try {
-      final list = await _api.fetchOwnerEmployees();
+      final list = await _api.fetchOwnerEmployees(page: page, search: search);
+      // Jika page > 1, mungkin perlu append. Tapi untuk sekarang replace dulu sesuai request "ambil list dari page 1"
+      // Atau jika user implement infinite scroll nanti, logic ini bisa diubah.
       _items = list;
     } catch (e) {
       _lastError = e.toString();

@@ -314,6 +314,70 @@ class ApiService {
     }
   }
 
+  Future<Workshop> updateWorkshop({
+    required String id,
+    required String name,
+    File? photo,
+    required String openingTime,
+    required String closingTime,
+    required String operationalDays,
+    required bool isActive,
+    required String information,
+  }) async {
+    try {
+      final uri = Uri.parse('${_baseUrl}owners/workshops/$id');
+      final token = await _getToken();
+      if (token == null) throw Exception('Token not found');
+
+      final request = http.MultipartRequest('POST', uri);
+      
+      // Method spoofing untuk Laravel
+      request.fields['_method'] = 'PUT';
+
+      request.headers.addAll({
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+      });
+
+      request.fields['name'] = name;
+      request.fields['opening_time'] = openingTime;
+      request.fields['closing_time'] = closingTime;
+      request.fields['operational_days'] = operationalDays;
+      request.fields['is_active'] = isActive ? '1' : '0';
+      request.fields['information'] = information;
+
+      if (photo != null) {
+        request.files.add(await http.MultipartFile.fromPath(
+          'photo',
+          photo.path,
+        ));
+      }
+
+      _debugRequest('UPDATE_WORKSHOP', uri, request.headers, 'Multipart fields: ${request.fields}');
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      
+      _debugResponse('UPDATE_WORKSHOP', response);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final json = _tryDecodeJson(response.body);
+        if (json is Map<String, dynamic> && json['data'] is Map<String, dynamic>) {
+          return Workshop.fromJson(json['data']);
+        }
+        throw Exception('Format respon tidak valid');
+      } else {
+        final json = _tryDecodeJson(response.body);
+        if (json is Map<String, dynamic>) {
+          throw Exception(_getErrorMessage(json));
+        }
+        throw Exception('Gagal update workshop (HTTP ${response.statusCode})');
+      }
+    } catch (e) {
+      throw Exception('Gagal update workshop: ${e.toString().replaceFirst("Exception: ", "")}');
+    }
+  }
+
   Future<WorkshopDocument> createDocument({
     required String workshopUuid,
     required String nib,
@@ -412,9 +476,16 @@ class ApiService {
     }
   }
 
-  Future<List<Employment>> fetchOwnerEmployees() async {
+  Future<List<Employment>> fetchOwnerEmployees({int page = 1, String? search}) async {
     try {
-      final uri = Uri.parse('${_baseUrl}owners/employee');
+      final queryParams = <String, String>{
+        'page': page.toString(),
+      };
+      if (search != null && search.isNotEmpty) {
+        queryParams['search'] = search;
+      }
+
+      final uri = Uri.parse('${_baseUrl}owners/employee').replace(queryParameters: queryParams);
       final headers = await _getAuthHeaders();
 
       _debugRequest('FETCH_EMPLOYEES', uri, headers, null);
@@ -435,16 +506,39 @@ class ApiService {
 
       final decoded = _tryDecodeJson(res.body);
 
-      final listJson = decoded is List
-          ? decoded
-          : (decoded is Map<String, dynamic> ? (decoded['data'] ?? []) : []);
+      // Handle pagination structure: { "data": { "data": [...] } }
+      if (decoded is Map<String, dynamic>) {
+        final dataWrapper = decoded['data'];
+        
+        // Case 1: Pagination wrapper
+        if (dataWrapper is Map<String, dynamic> && dataWrapper.containsKey('data')) {
+          final list = dataWrapper['data'];
+          if (list is List) {
+            return list
+                .whereType<Map<String, dynamic>>()
+                .map((e) => Employment.fromJson(e))
+                .toList();
+          }
+        }
+        
+        // Case 2: Direct list (fallback)
+        if (dataWrapper is List) {
+          return dataWrapper
+              .whereType<Map<String, dynamic>>()
+              .map((e) => Employment.fromJson(e))
+              .toList();
+        }
+      }
 
-      if (listJson is! List) return <Employment>[];
+      // If decoded is List (old structure fallback)
+      if (decoded is List) {
+         return decoded
+            .whereType<Map<String, dynamic>>()
+            .map((e) => Employment.fromJson(e))
+            .toList();
+      }
 
-      return listJson
-          .whereType<Map<String, dynamic>>()
-          .map((e) => Employment.fromJson(e))
-          .toList();
+      return <Employment>[];
     } catch (e) {
       throw Exception('Gagal mengambil data employee: '
           '${e.toString().replaceFirst("Exception: ", "")}');

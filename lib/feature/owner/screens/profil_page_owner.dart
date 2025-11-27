@@ -70,6 +70,7 @@ class ProfilePageOwner extends StatelessWidget {
                   initials: initials,
                   workshopEmail: workshopEmail,
                   roleName: roleName,
+                  workshop: workshop,
                 ),
                 ProfileMenuCard(width: width),
                 SizedBox(height: width * 0.02),

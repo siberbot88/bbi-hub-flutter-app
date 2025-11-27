@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:bengkel_online_flutter/feature/owner/screens/edit_profile_page.dart';
+import 'package:bengkel_online_flutter/core/models/workshop.dart';
 import 'profile_animations.dart';
 import 'profile_avatar.dart';
 
@@ -11,6 +12,7 @@ class ProfileHeader extends StatelessWidget {
   final String initials;
   final String workshopEmail;
   final String roleName;
+  final Workshop? workshop;
 
   const ProfileHeader({
     super.key,
@@ -20,6 +22,7 @@ class ProfileHeader extends StatelessWidget {
     required this.initials,
     required this.workshopEmail,
     required this.roleName,
+    this.workshop,
   });
 
   @override
@@ -166,12 +169,18 @@ class ProfileHeader extends StatelessWidget {
                           ),
                         ),
                         onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const EditProfilePage(),
-                            ),
-                          );
+                          if (workshop != null) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => EditProfilePage(workshop: workshop!),
+                              ),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Data workshop belum tersedia')),
+                            );
+                          }
                         },
                         icon: const Icon(
                           Icons.edit_outlined,
