@@ -6,36 +6,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'dart:math' as math;
 
-void main() {
-  runApp(
-    ChangeNotifierProvider(
-      create: (context) => AuthProvider(),
-      child: const MyApp(),
-    ),
-  );
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Register Multi Step',
-      theme: ThemeData(
-        primaryColor: const Color(0xFFD72B1C),
-        scaffoldBackgroundColor: Colors.grey.shade100,
-        fontFamily: 'Poppins',
-        textSelectionTheme: const TextSelectionThemeData(cursorColor: Colors.red),
-      ),
-      home: const RegisterFlowPage(),
-      debugShowCheckedModeBanner: false,
-      routes: {
-        '/login': (context) => const Scaffold(body: Center(child: Text('Halaman Login'))),
-        // Pastikan /main sudah didefinisikan di app utama kamu
-      },
-    );
-  }
-}
+import 'widgets/register_step_one.dart';
+import 'widgets/register_step_two.dart';
+import 'widgets/register_step_three.dart';
 
 class RegisterFlowPage extends StatefulWidget {
   const RegisterFlowPage({super.key});
@@ -84,8 +57,6 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
   final TextEditingController operationalDaysController = TextEditingController();
 
   int _currentStep = 0;
-  bool _step0IsValid = false;
-  bool _step1IsValid = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
@@ -113,8 +84,6 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
 
   void _onNext() {
     if (_formKeys[_currentStep].currentState?.validate() ?? false) {
-      if (_currentStep == 0) _step0IsValid = true;
-      if (_currentStep == 1) _step1IsValid = true;
       _goStep(_currentStep + 1);
     }
   }
@@ -207,9 +176,11 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
       // refresh profil agar workshop tampil di AuthProvider.user
       await authProvider.checkLoginStatus();
 
+      if (!mounted) return;
       setState(() => _isLoading = false);
       _goStep(3);
     } catch (e) {
+      if (!mounted) return;
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: ${e.toString().replaceFirst("Exception: ", "")}'), backgroundColor: Colors.red),
@@ -221,43 +192,6 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
       }
     }
   }
-
-  String? _validateNotEmpty(String? v, String name) => (v == null || v.trim().isEmpty) ? '$name tidak boleh kosong.' : null;
-  String? _validateEmail(String? v) {
-    if (v == null || v.trim().isEmpty) return 'Email tidak boleh kosong.';
-    final r = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-    return r.hasMatch(v.trim()) ? null : 'Format email tidak valid.';
-  }
-  String? _validateEmailOptional(String? v) {
-    if (v == null || v.trim().isEmpty) return null;
-    final r = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-    return r.hasMatch(v.trim()) ? null : 'Format email tidak valid.';
-  }
-  String? _validatePassword(String? v) {
-    if (v == null || v.isEmpty) return 'Password tidak boleh kosong.';
-    if (v.length < 8) return 'Password minimal 8 karakter.';
-    return null;
-  }
-  String? _validateConfirmPassword(String? v) {
-    if (v == null || v.isEmpty) return 'Verifikasi password tidak boleh kosong.';
-    if (v != passwordController.text) return 'Password tidak cocok.';
-    return null;
-  }
-  String? _validateTimeFormat(String? v, String name) {
-    if (v == null || v.trim().isEmpty) return '$name tidak boleh kosong.';
-    final r = RegExp(r'^\d{2}:\d{2}$');
-    return r.hasMatch(v.trim()) ? null : 'Format $name harus HH:MM (08:00).';
-  }
-  String? _validateNumber(String? v, String name) {
-    if (v == null || v.trim().isEmpty) return '$name tidak boleh kosong.';
-    return double.tryParse(v.trim().replaceAll(',', '.')) == null ? '$name harus berupa angka.' : null;
-  }
-  String? _validateUrl(String? v, String name) {
-    if (v == null || v.trim().isEmpty) return '$name tidak boleh kosong.';
-    final s = v.trim().toLowerCase();
-    return (s.startsWith('http://') || s.startsWith('https://')) ? null : 'Format $name tidak valid (http/https).';
-  }
-  String? _validateOptional(String? v, String name) => null;
 
   Widget _buildProgressBar(double width) {
     final segment = width / 3;
@@ -318,79 +252,6 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
     );
   }
 
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    required String iconPath,
-    bool isPassword = false,
-    int maxline = 1,
-    TextInputType keyboardType = TextInputType.text,
-    TextCapitalization textCapitalization = TextCapitalization.none,
-    bool? obscureState,
-    VoidCallback? onToggleObscure,
-    FormFieldValidator<String>? validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      maxLines: maxline,
-      obscureText: isPassword ? (obscureState ?? true) : false,
-      keyboardType: keyboardType,
-      textCapitalization: textCapitalization,
-      validator: validator,
-      autovalidateMode: AutovalidateMode.onUserInteraction,
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: GoogleFonts.poppins(color: Colors.red, fontSize: 14, fontWeight: FontWeight.w500),
-        hintText: hint,
-        hintStyle: GoogleFonts.poppins(color: Colors.grey),
-        prefixIcon: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: SvgPicture.asset(iconPath, width: 20, height: 20, color: Colors.red),
-        ),
-        suffixIcon: isPassword
-            ? IconButton(
-          icon: Icon((obscureState ?? true) ? Icons.visibility_off : Icons.visibility, color: const Color(0xFFD72B1C)),
-          onPressed: onToggleObscure,
-        )
-            : null,
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFD72B1C), width: 1.5),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFD72B1C), width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.orange, width: 1.5),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.orange, width: 2),
-        ),
-        errorStyle: const TextStyle(fontSize: 10, color: Colors.orange),
-        filled: true,
-        fillColor: const Color(0x66FFFFFF),
-      ),
-      style: GoogleFonts.poppins(color: Colors.black, fontSize: 12),
-    );
-  }
-
-  Widget _buildFormCard({required Widget child, required double cardWidth}) {
-    return Container(
-      width: cardWidth,
-      margin: const EdgeInsets.symmetric(vertical: 16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black.withAlpha(20), offset: const Offset(0, 0), blurRadius: 22)],
-      ),
-      child: child,
-    );
-  }
-
   Widget _scrollableStep(Widget child) {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -407,389 +268,11 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
     );
   }
 
-  Widget _buildStep0(double cardWidth) {
-    final content = _buildFormCard(
-      cardWidth: cardWidth,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-        child: Form(
-          key: _formKeys[0],
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 41,
-                    height: 41,
-                    decoration: BoxDecoration(color: const Color.fromRGBO(220, 38, 38, 0.21), borderRadius: BorderRadius.circular(10)),
-                    child: const Icon(Icons.person, color: Colors.red, size: 28),
-                  ),
-                  const SizedBox(width: 14),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text("Isi Data Diri", style: TextStyle(fontSize: 14, color: Colors.black)),
-                        SizedBox(height: 4),
-                        Text("Buatlah akun pertamamu...", style: TextStyle(fontSize: 12, color: Colors.black54)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              _buildTextField(
-                controller: fullnameController,
-                label: "Nama Lengkap",
-                hint: "Masukkan nama lengkap kamu",
-                iconPath: "assets/svg/user.svg",
-                textCapitalization: TextCapitalization.words,
-                validator: (v) => _validateNotEmpty(v, 'Nama Lengkap'),
-              ),
-              const SizedBox(height: 22),
-              _buildTextField(
-                controller: usernameController,
-                label: "Username",
-                hint: "Masukkan username",
-                iconPath: "assets/svg/user.svg",
-                keyboardType: TextInputType.visiblePassword,
-                validator: (v) => _validateNotEmpty(v, 'Username'),
-              ),
-              const SizedBox(height: 22),
-              _buildTextField(
-                controller: emailController,
-                label: "Email",
-                hint: "Masukkan email kamu",
-                iconPath: "assets/svg/email.svg",
-                keyboardType: TextInputType.emailAddress,
-                validator: _validateEmail,
-              ),
-              const SizedBox(height: 22),
-              _buildTextField(
-                controller: passwordController,
-                label: "Password",
-                hint: "Minimal 8 karakter",
-                iconPath: "assets/svg/key.svg",
-                isPassword: true,
-                obscureState: _obscurePassword,
-                onToggleObscure: () => setState(() => _obscurePassword = !_obscurePassword),
-                validator: _validatePassword,
-              ),
-              const SizedBox(height: 22),
-              _buildTextField(
-                controller: confirmPasswordController,
-                label: "Verifikasi Password",
-                hint: "Ulangi password kamu",
-                iconPath: "assets/svg/key.svg",
-                isPassword: true,
-                obscureState: _obscureConfirmPassword,
-                onToggleObscure: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
-                validator: _validateConfirmPassword,
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
-        ),
-      ),
-    );
-    return _scrollableStep(content);
-  }
-
-  Widget _buildStep1(double cardWidth) {
-    final content = _buildFormCard(
-      cardWidth: cardWidth,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-        child: Form(
-          key: _formKeys[1],
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 41,
-                    height: 41,
-                    decoration: BoxDecoration(color: const Color.fromRGBO(220, 38, 38, 0.21), borderRadius: BorderRadius.circular(10)),
-                    child: const Icon(Icons.store, color: Colors.red, size: 28),
-                  ),
-                  const SizedBox(width: 14),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text("Isi Data Bengkel", style: TextStyle(fontSize: 14, color: Colors.black)),
-                        SizedBox(height: 4),
-                        Text("Daftarkan bengkelmu sekarang...", style: TextStyle(fontSize: 12, color: Colors.black54)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              _buildTextField(
-                controller: workshopController,
-                label: "Nama bengkel",
-                hint: "Masukkan Nama bengkel",
-                iconPath: "assets/svg/workshop.svg",
-                textCapitalization: TextCapitalization.words,
-                validator: (v) => _validateNotEmpty(v, 'Nama bengkel'),
-              ),
-              const SizedBox(height: 22),
-              _buildTextField(
-                controller: addressController,
-                label: "Alamat Lengkap Bengkel",
-                hint: "Contoh: Jl. Merdeka No. 17",
-                iconPath: "assets/svg/address.svg",
-                textCapitalization: TextCapitalization.sentences,
-                maxline: 2,
-                validator: (v) => _validateNotEmpty(v, 'Alamat'),
-              ),
-              const SizedBox(height: 22),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildTextField(
-                      controller: cityController,
-                      label: "Kota",
-                      hint: "Masukkan kota",
-                      iconPath: "assets/svg/address.svg",
-                      textCapitalization: TextCapitalization.words,
-                      validator: (v) => _validateNotEmpty(v, 'Kota'),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildTextField(
-                      controller: provinceController,
-                      label: "Provinsi",
-                      hint: "Contoh: Jawa Barat",
-                      iconPath: "assets/svg/address.svg",
-                      textCapitalization: TextCapitalization.words,
-                      validator: (v) => _validateNotEmpty(v, 'Provinsi'),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 22),
-              _buildTextField(
-                controller: postalCodeController,
-                label: "Kode Pos",
-                hint: "Contoh: 40123",
-                iconPath: "assets/svg/address.svg",
-                keyboardType: TextInputType.number,
-                validator: (v) => _validateNotEmpty(v, 'Kode Pos'),
-              ),
-              const SizedBox(height: 22),
-              _buildTextField(
-                controller: phoneController,
-                label: "Telepon Bengkel",
-                hint: "Contoh: 081234567890",
-                iconPath: "assets/svg/phone.svg",
-                keyboardType: TextInputType.phone,
-                validator: (v) => _validateNotEmpty(v, 'Telepon'),
-              ),
-              const SizedBox(height: 22),
-              _buildTextField(
-                controller: wemailController,
-                label: "Email Bengkel (Opsional)",
-                hint: "Contoh: info@bengkeljaya.com",
-                iconPath: "assets/svg/email.svg",
-                keyboardType: TextInputType.emailAddress,
-                validator: _validateEmailOptional,
-              ),
-              const SizedBox(height: 22),
-              _buildTextField(
-                controller: urlController,
-                label: "URL Google Maps",
-                hint: "Salin dari Google Maps",
-                iconPath: "assets/svg/url.svg",
-                keyboardType: TextInputType.url,
-                validator: (v) => _validateUrl(v, 'URL Google Maps'),
-              ),
-              const SizedBox(height: 22),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildTextField(
-                      controller: latitudeController,
-                      label: "Latitude",
-                      hint: "Contoh: -6.9175",
-                      iconPath: "assets/svg/url.svg",
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
-                      validator: (v) => _validateNumber(v, 'Latitude'),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildTextField(
-                      controller: longitudeController,
-                      label: "Longitude",
-                      hint: "Contoh: 107.6191",
-                      iconPath: "assets/svg/url.svg",
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
-                      validator: (v) => _validateNumber(v, 'Longitude'),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 22),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildTextField(
-                      controller: openingTimeController,
-                      label: "Jam Buka",
-                      hint: "HH:MM (Contoh: 08:00)",
-                      iconPath: "assets/svg/user.svg",
-                      keyboardType: TextInputType.datetime,
-                      validator: (v) => _validateTimeFormat(v, 'Jam Buka'),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildTextField(
-                      controller: closingTimeController,
-                      label: "Jam Tutup",
-                      hint: "HH:MM (Contoh: 17:00)",
-                      iconPath: "assets/svg/user.svg",
-                      keyboardType: TextInputType.datetime,
-                      validator: (v) => _validateTimeFormat(v, 'Jam Tutup'),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 22),
-              _buildTextField(
-                controller: operationalDaysController,
-                label: "Hari Operasional",
-                hint: "Contoh: Senin - Sabtu",
-                iconPath: "assets/svg/user.svg",
-                textCapitalization: TextCapitalization.words,
-                validator: (v) => _validateNotEmpty(v, 'Hari Operasional'),
-              ),
-              const SizedBox(height: 22),
-              _buildTextField(
-                controller: decsController,
-                label: "Deskripsi Bengkel",
-                hint: "Jelaskan layanan, keunggulan, dll.",
-                iconPath: "assets/svg/laporan_tebal.svg",
-                textCapitalization: TextCapitalization.sentences,
-                maxline: 3,
-                validator: (v) => _validateNotEmpty(v, 'Deskripsi Bengkel'),
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
-        ),
-      ),
-    );
-    return _scrollableStep(content);
-  }
-
-  Widget _buildStep2(double cardWidth) {
-    final content = _buildFormCard(
-      cardWidth: cardWidth,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-        child: Form(
-          key: _formKeys[2],
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 41,
-                    height: 41,
-                    decoration: BoxDecoration(color: const Color.fromRGBO(220, 38, 38, 0.21), borderRadius: BorderRadius.circular(10)),
-                    child: const Icon(Icons.badge_outlined, color: Colors.red, size: 28),
-                  ),
-                  const SizedBox(width: 14),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text("Dokumen Pendukung", style: TextStyle(fontSize: 14, color: Colors.black)),
-                        SizedBox(height: 4),
-                        Text("Lengkapi dokumen legalitas", style: TextStyle(fontSize: 12, color: Colors.black54)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              _buildTextField(
-                controller: nibController,
-                label: "NIB (Nomor Induk Berusaha)",
-                hint: "Masukkan NIB (Wajib)",
-                iconPath: "assets/svg/nib.svg",
-                keyboardType: TextInputType.number,
-                validator: (v) => _validateNotEmpty(v, 'NIB'),
-              ),
-              const SizedBox(height: 22),
-              _buildTextField(
-                controller: npwpController,
-                label: "NPWP (Nomor Pokok Wajib Pajak)",
-                hint: "Masukkan NPWP (Opsional)",
-                iconPath: "assets/svg/npwp.svg",
-                keyboardType: TextInputType.text,
-                maxline: 1,
-                validator: (v) => _validateOptional(v, 'NPWP'),
-              ),
-              const SizedBox(height: 16),
-              GestureDetector(
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Fitur upload belum diimplementasikan.')),
-                  );
-                },
-                child: Container(
-                  height: 150,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.red.withAlpha(128)),
-                    borderRadius: BorderRadius.circular(12),
-                    color: Colors.grey.shade50,
-                  ),
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.cloud_upload_outlined, size: 36, color: Colors.grey.shade600),
-                        const SizedBox(height: 8),
-                        Text(
-                          "Upload Dokumen Legalitas (Opsional)\n(.pdf, .jpg, .png maks 10MB)",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                "Informasi Tambahan:\n"
-                    "1. Dokumen Anda aman dan hanya digunakan untuk verifikasi.\n"
-                    "2. Proses verifikasi dapat memakan waktu 1-2 hari kerja.",
-                style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
-                textAlign: TextAlign.left,
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
-        ),
-      ),
-    );
-    return _scrollableStep(content);
-  }
-
-  Widget _buildStep3(double cardWidth) {
+  Widget _buildStep3() {
     final h = MediaQuery.of(context).size.height;
     final double imageHeight = (h * 0.35).clamp(250.0, 320.0);
 
-    final content = SizedBox(
+    return SizedBox(
       width: double.infinity,
       child: Stack(
         alignment: Alignment.center,
@@ -847,109 +330,151 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                   ),
                 ),
                 const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pushReplacementNamed(context, '/login');
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFD72B1C),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 5,
+                      shadowColor: const Color(0xFFD72B1C).withAlpha(100),
+                    ),
+                    child: Text("Masuk Sekarang", style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
+                  ),
+                ),
               ],
             ),
           ),
         ],
       ),
     );
-    return _scrollableStep(content);
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final cardWidth = screenWidth * 0.85;
-    const horizontalPadding = 24.0;
-    const verticalPadding = 36.0;
+    final width = MediaQuery.of(context).size.width;
+    final cardWidth = width > 600 ? 500.0 : width * 0.9;
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: _currentStep > 0 && _currentStep < 3
-            ? IconButton(icon: const Icon(Icons.arrow_back, color: Colors.black), onPressed: () => _goStep(_currentStep - 1))
-            : null,
-        title: Text(_currentStep == 3 ? "Berhasil" : "Daftar",
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
-        centerTitle: true,
-      ),
-      body: Column(
-        children: [
-          const SizedBox(height: 8),
-          if (_currentStep < 3)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: horizontalPadding),
-              child: _buildProgressBar(cardWidth),
-            ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: PageView(
-              controller: _pageController,
-              physics: const NeverScrollableScrollPhysics(),
-              children: [
-                _buildStep0(cardWidth),
-                _buildStep1(cardWidth),
-                _buildStep2(cardWidth),
-                _buildStep3(cardWidth),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
-            child: SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: _isLoading
-                    ? null
-                    : () {
-                  if (_currentStep == 2) {
-                    final step2Valid = _formKeys[2].currentState?.validate() ?? false;
-
-                    if (!_step0IsValid) {
-                      _goStep(0);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Data diri Anda belum lengkap.'), backgroundColor: Colors.orange),
-                      );
-                    } else if (!_step1IsValid) {
-                      _goStep(1);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Data bengkel Anda belum lengkap.'), backgroundColor: Colors.orange),
-                      );
-                    } else if (!step2Valid) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Data dokumen Anda belum lengkap.'), backgroundColor: Colors.orange),
-                      );
-                    } else {
-                      _handleRegister();
-                    }
-                  } else if (_currentStep == 3) {
-                    Navigator.pushNamedAndRemoveUntil(context, '/main', (route) => false);
-                  } else {
-                    _onNext();
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  disabledBackgroundColor: Colors.red.withAlpha(128),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
-                  elevation: _isLoading ? 0 : 2,
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                  height: 24,
-                  width: 24,
-                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3),
-                )
-                    : Text(
-                  _currentStep == 2 ? 'Daftar' : (_currentStep == 3 ? 'Selesai' : 'Next'),
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+      body: SafeArea(
+        child: Column(
+          children: [
+            if (_currentStep < 3) ...[
+              const SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.black),
+                      onPressed: _currentStep > 0 ? () => _goStep(_currentStep - 1) : () => Navigator.pop(context),
+                    ),
+                    Text(
+                      "Daftar Akun",
+                      style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black),
+                    ),
+                    const SizedBox(width: 48), // spacer
+                  ],
                 ),
               ),
+              const SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: _buildProgressBar(width - 48),
+              ),
+            ],
+            Expanded(
+              child: PageView(
+                controller: _pageController,
+                physics: const NeverScrollableScrollPhysics(),
+                children: [
+                  _scrollableStep(
+                    SizedBox(
+                      width: cardWidth,
+                      child: RegisterStepOne(
+                        formKey: _formKeys[0],
+                        fullnameController: fullnameController,
+                        usernameController: usernameController,
+                        emailController: emailController,
+                        passwordController: passwordController,
+                        confirmPasswordController: confirmPasswordController,
+                        obscurePassword: _obscurePassword,
+                        obscureConfirmPassword: _obscureConfirmPassword,
+                        onToggleObscurePassword: () => setState(() => _obscurePassword = !_obscurePassword),
+                        onToggleObscureConfirmPassword: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                      ),
+                    ),
+                  ),
+                  _scrollableStep(
+                    SizedBox(
+                      width: cardWidth,
+                      child: RegisterStepTwo(
+                        formKey: _formKeys[1],
+                        workshopController: workshopController,
+                        addressController: addressController,
+                        cityController: cityController,
+                        provinceController: provinceController,
+                        postalCodeController: postalCodeController,
+                        phoneController: phoneController,
+                        wemailController: wemailController,
+                        urlController: urlController,
+                        latitudeController: latitudeController,
+                        longitudeController: longitudeController,
+                        openingTimeController: openingTimeController,
+                        closingTimeController: closingTimeController,
+                        operationalDaysController: operationalDaysController,
+                        decsController: decsController,
+                      ),
+                    ),
+                  ),
+                  _scrollableStep(
+                    SizedBox(
+                      width: cardWidth,
+                      child: RegisterStepThree(
+                        formKey: _formKeys[2],
+                        nibController: nibController,
+                        npwpController: npwpController,
+                      ),
+                    ),
+                  ),
+                  _buildStep3(),
+                ],
+              ),
             ),
-          )
-        ],
+            if (_currentStep < 3)
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [BoxShadow(color: Colors.black.withAlpha(10), offset: const Offset(0, -4), blurRadius: 16)],
+                ),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : (_currentStep == 2 ? _handleRegister : _onNext),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFD72B1C),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 5,
+                      shadowColor: const Color(0xFFD72B1C).withAlpha(100),
+                    ),
+                    child: _isLoading
+                        ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        : Text(
+                            _currentStep == 2 ? "Daftar Sekarang" : "Lanjut",
+                            style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+                          ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
