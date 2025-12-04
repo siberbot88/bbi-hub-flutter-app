@@ -65,6 +65,12 @@ class AppTextStyles {
         color: color ?? AppColors.textPrimary,
       );
 
+  static TextStyle labelBold({Color? color}) => GoogleFonts.poppins(
+        fontSize: 14,
+        fontWeight: FontWeight.bold,
+        color: color ?? AppColors.textPrimary,
+      );
+
   static TextStyle caption({Color? color}) => GoogleFonts.poppins(
         fontSize: 12,
         fontWeight: FontWeight.normal,

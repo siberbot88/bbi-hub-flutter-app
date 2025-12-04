@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
+import 'package:bengkel_online_flutter/core/models/user.dart';
 import 'package:bengkel_online_flutter/core/providers/service_provider.dart';
 import 'package:bengkel_online_flutter/feature/owner/providers/employee_provider.dart';
 import 'package:bengkel_online_flutter/feature/owner/widgets/staff/performance_helpers.dart';
@@ -38,7 +39,7 @@ class _StaffPerformanceScreenState extends State<StaffPerformanceScreen> {
 
     // Fetch employees and services
     await Future.wait([
-      context.read<EmployeeProvider>().fetchEmployees(),
+      context.read<EmployeeProvider>().fetchOwnerEmployees(),
       context.read<ServiceProvider>().fetchServices(
         workshopUuid: wsId,
         includeExtras: true,
@@ -100,7 +101,7 @@ class _StaffPerformanceScreenState extends State<StaffPerformanceScreen> {
                         Text(
                           'Pantau performa tim Anda',
                           style: AppTextStyles.bodySmall(
-                            color: Colors.white.withOpacity(0.9),
+                            color: Colors.white.withValues(alpha: 0.9),
                           ),
                         ),
                       ],
@@ -184,7 +185,7 @@ class _StaffPerformanceScreenState extends State<StaffPerformanceScreen> {
                   Icon(
                     Icons.people_outline,
                     size: 80,
-                    color: AppColors.textSecondary.withOpacity(0.5),
+                    color: AppColors.textSecondary.withValues(alpha: 0.5),
                   ),
                   AppSpacing.verticalSpaceMD,
                   Text(
@@ -208,7 +209,7 @@ class _StaffPerformanceScreenState extends State<StaffPerformanceScreen> {
 
         // Calculate performance untuk semua staff
         final performanceList = PerformanceHelpers.calculateAllStaffPerformance(
-          staffList: employeeProv.items.map((e) => e.user).toList(),
+          staffList: employeeProv.items.map((e) => e.user).whereType<User>().toList(),
           allServices: serviceProv.items,
           range: _selectedRange,
         );

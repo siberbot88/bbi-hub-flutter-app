@@ -5,35 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="0f1fd287-7e8a-4e9a-beb2-7c2c21e8966b" name="Changes" comment="feat: Implement workshop and user profile editing&#10;&#10;This commit introduces significant new features and UI enhancements, primarily focused on enabling owners to edit their workshop and user profiles. It also includes a major redesign of the staff management table and registration forms.&#10;&#10;### New Features&#10;&#10;-   **Edit Workshop Profile (`edit_profile_page.dart`)**:&#10;    -   A new screen allowing owners to update their workshop details, including name, photo, opening/closing times, operational days, and description.&#10;    -   Integrates with `ApiService` to persist changes via a `PUT /owners/workshops/{id}` endpoint.&#10;    -   Features an image picker for uploading a new workshop photo and time pickers for setting hours.&#10;    -   Allows toggling the workshop's &quot;active&quot; status.&#10;&#10;-   **Edit User Profile (`edit_user_screen.dart` &amp; `profile_menu_card.dart`)**:&#10;    -   Adds a new &quot;Edit Profil User&quot; screen accessible from the profile page.&#10;    -   Provides a form for users to update their full name and username.&#10;    -   The email field is present but read-only.&#10;    -   The backend implementation for updating user data is noted as a future task.&#10;&#10;### Refactoring and UI Enhancements&#10;&#10;-   **Staff Management UI (`staff_table.dart`)**:&#10;    -   The staff list has been completely redesigned with a modern, card-based table layout.&#10;    -   Introduces pagination with animated page transitions for better performance and UX with large staff lists.&#10;    -   Replaces separate edit/delete buttons with a `PopupMenuButton` (`more_vert` icon) for a cleaner action menu.&#10;    -   Improves the visual design of status badges and user avatars.&#10;&#10;-   **Report Widgets (`report_health_tile.dart` &amp; `report_kpi_card.dart`)**:&#10;    -   The `ReportHealthTile` has been significantly redesigned into a modern KPI card, featuring a progress bar, trend indicator icon (up/down arrow), and more organized data presentation.&#10;    -   Responsive layout logic in `report_kpi_card.dart` and `report_pages.dart` has been fixed and simplified to ensure correct sizing on different screens.&#10;&#10;-   **Registration Forms (`register_step_*.dart`)**:&#10;    -   The multi-step registration process is now broken down into separate, reusable widget files: `RegisterStepOne`, `RegisterStepTwo`, and `RegisterStepThree`.&#10;    -   A new shared `RegisterTextField` widget is created to standardize input field styling and validation logic across the registration flow.&#10;&#10;### Backend and State Management&#10;&#10;-   **`ApiService`**:&#10;    -   Adds `updateWorkshop` method to handle `PUT` requests with multipart/form-data for updating workshop details, including photo uploads.&#10;    -   Enhances `fetchOwnerEmployees` to support server-side pagination and search functionality.&#10;&#10;-   **`EmployeeProvider`**:&#10;    -   `fetchOwnerEmployees` now accepts `page` and `search` parameters to align with API updates.">
-      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/analysis.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/analysis_change_password.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/analysis_final.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/analysis_final_check.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/analysis_issues.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/analysis_output.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/analysis_ps.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/analysis_report.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/analysis_result.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/dashboard_error.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/helpers_error.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/homepage_error.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/core/screens/registers/register.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/core/screens/registers/register.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/feature/admin/widgets/home/home_app_bar.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/admin/widgets/home/home_app_bar.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/feature/owner/screens/edit_profile_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/owner/screens/edit_profile_page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/feature/owner/screens/homepage_owner.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/owner/screens/homepage_owner.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/feature/owner/widgets/dashboard/dashboard_helpers.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/owner/widgets/dashboard/dashboard_helpers.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/feature/owner/widgets/report/report_kpi_card.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/owner/widgets/report/report_kpi_card.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/main.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/list_work_error.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/macos/Flutter/GeneratedPluginRegistrant.swift" beforeDir="false" afterPath="$PROJECT_DIR$/macos/Flutter/GeneratedPluginRegistrant.swift" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/reflog.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/replace_opacity.ps1" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/windows/flutter/generated_plugin_registrant.cc" beforeDir="false" afterPath="$PROJECT_DIR$/windows/flutter/generated_plugin_registrant.cc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/windows/flutter/generated_plugins.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/windows/flutter/generated_plugins.cmake" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/core/theme/app_text_styles.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/core/theme/app_text_styles.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/feature/owner/screens/staff_performance_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/owner/screens/staff_performance_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/feature/owner/widgets/staff/performance_card.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/feature/owner/widgets/staff/performance_card.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -101,7 +76,6 @@
     "RunOnceActivity.readMode.enableVisualFormatting": "true",
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
-    "dart.analysis.tool.window.visible": "false",
     "git-widget-placeholder": "#82 on refactor/priority-1-complete",
     "ignore.virus.scanning.warn.message": "true",
     "io.flutter.project.isFirstOpen": "true",

@@ -38,7 +38,7 @@ class PerformanceCard extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 24,
-                    backgroundColor: AppColors.primaryRed.withOpacity(0.1),
+                    backgroundColor: AppColors.primaryRed.withValues(alpha: 0.1),
                     backgroundImage: performance.photoUrl != null
                         ? NetworkImage(performance.photoUrl!)
                         : null,
@@ -105,7 +105,7 @@ class PerformanceCard extends StatelessWidget {
               Container(
                 padding: AppSpacing.paddingSM,
                 decoration: BoxDecoration(
-                  color: AppColors.primaryRed.withOpacity(0.05),
+                  color: AppColors.primaryRed.withValues(alpha: 0.05),
                   borderRadius: AppRadius.radiusMD,
                 ),
                 child: Row(
@@ -156,10 +156,10 @@ class _MetricBox extends StatelessWidget {
     return Container(
       padding: AppSpacing.paddingSM,
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: AppRadius.radiusMD,
         border: Border.all(
-          color: color.withOpacity(0.3),
+          color: color.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
