@@ -23,6 +23,7 @@ dependencies:
   provider: ^6.1.2
   app_links: ^5.0.0
   shared_preferences: ^2.0.0
+  connectivity_plus: ^6.0.5
 
 
 dev_dependencies:

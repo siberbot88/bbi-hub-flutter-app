@@ -5,9 +5,12 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/custom_alert.dart';
+import '../../../../core/models/workshop.dart';
 
 class EditProfilePage extends StatefulWidget {
-  const EditProfilePage({super.key});
+  final Workshop workshop;
+  
+  const EditProfilePage({super.key, required this.workshop});
 
   @override
   State<EditProfilePage> createState() => _EditProfilePageState();
@@ -113,7 +116,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     _LabeledField(
                       label: "Nama Lengkap",
                       controller: _fullNameC,
-                      prefixIcon: Icons.badge_outlined,
+                      prefixIcon: Icons.person_add_alt,
                     ),
                   ],
                 ),

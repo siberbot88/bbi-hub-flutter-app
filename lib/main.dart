@@ -15,6 +15,9 @@ import 'package:bengkel_online_flutter/core/screens/registers/register.dart';
 import 'package:bengkel_online_flutter/core/screens/splash_screen.dart';
 import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
 
+// OFFLINE DETECTION
+import 'package:bengkel_online_flutter/core/widgets/connectivity_wrapper.dart';
+
 // ADMIN
 import 'package:bengkel_online_flutter/feature/admin/screens/dashboard.dart';
 import 'package:bengkel_online_flutter/feature/admin/screens/profil_page.dart' as admin_profil;
@@ -119,7 +122,9 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return ConnectivityWrapper(
+      navigatorKey: navigatorKey,
+      child: MaterialApp(
       navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'BBI HUB PLUS',
@@ -166,6 +171,7 @@ class _MyAppState extends State<MyApp> {
         return null;
       },
       onUnknownRoute: (_) => MaterialPageRoute(builder: (_) => const SplashScreen()),
+      ),
     );
   }
 }
@@ -305,3 +311,5 @@ String? _pickWorkshopUuid(dynamic user) {
 
   return null;
 }
+
+

@@ -233,10 +233,10 @@ class _Roundel extends StatelessWidget {
             center: const Alignment(-0.2, -0.2),
             radius: 0.8,
             colors: [
-              innerColor.withOpacity(opacity),
+              innerColor.withValues(alpha: opacity),
               Color.lerp(innerColor, outerColor, 0.5)!
-                  .withOpacity(opacity * 0.6),
-              outerColor.withOpacity(0.0),
+                  .withValues(alpha: opacity * 0.6),
+              outerColor.withValues(alpha: 0.0),
             ],
             stops: const [0.0, 0.6, 1.0],
           ),

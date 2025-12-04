@@ -17,24 +17,31 @@ class SummaryData {
 }
 
 /// Build summary based on date range
+/// Build summary based on date range
 SummaryData buildSummary(List<ServiceModel> list, SummaryRange range) {
   final now = DateTime.now();
 
+  /// Check if service date is within the selected range
   bool inRange(ServiceModel s) {
-    final d = s.scheduledDate ?? s.createdAt ?? s.updatedAt;
+    // Prioritize createdAt for accurate filtering of when the job was actually created/received
+    final d = s.createdAt ?? s.scheduledDate ?? s.updatedAt;
     if (d == null) return false;
 
     switch (range) {
       case SummaryRange.today:
+        // Hari ini: same year, month, and day
         return d.year == now.year &&
             d.month == now.month &&
             d.day == now.day;
+            
       case SummaryRange.week:
-        final diff = now.difference(
-          DateTime(d.year, d.month, d.day),
-        );
-        return !diff.isNegative && diff.inDays < 7;
+        // Minggu ini: dari 7 hari yang lalu sampai sekarang
+        final startOfWeek = DateTime(now.year, now.month, now.day).subtract(const Duration(days: 7));
+        final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
+        return d.isAfter(startOfWeek) && d.isBefore(endOfDay);
+        
       case SummaryRange.month:
+        // Bulan ini: same year and month
         return d.year == now.year && d.month == now.month;
     }
   }
@@ -46,10 +53,13 @@ SummaryData buildSummary(List<ServiceModel> list, SummaryRange range) {
   for (final s in list.where(inRange)) {
     final status = s.status.toLowerCase();
 
+    // Pendapatan: hanya dari service completed
     if (status == 'completed') {
       totalDone++;
       revenue += serviceRevenue(s);
-    } else if (status != 'cancelled') {
+    } 
+    // Total Job: dari service pending ATAU in progress
+    else if (status == 'pending' || status == 'in progress' || status == 'accept') {
       totalJob++;
     }
   }

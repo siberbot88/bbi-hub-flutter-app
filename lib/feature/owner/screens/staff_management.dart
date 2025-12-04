@@ -6,6 +6,7 @@ import 'package:bengkel_online_flutter/feature/owner/providers/employee_provider
 import 'package:bengkel_online_flutter/core/models/employment.dart';
 import 'package:bengkel_online_flutter/feature/owner/screens/add_staff.dart';
 import 'package:bengkel_online_flutter/feature/owner/screens/list_staff.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/staff_performance_screen.dart';
 
 const Color _grad1 = Color(0xFF510606);
 const Color _grad2 = Color(0xFF9B0D0D);
@@ -162,9 +163,17 @@ class _ManajemenKaryawanPageState extends State<ManajemenKaryawanPage> {
                                     },
                                   ),
                                   _FeatureButton(
-                                    icon: Icons.access_time,
-                                    label: 'Absensi',
-                                    onTap: () {},
+                                    icon: Icons.analytics_outlined,
+                                    label: 'Kinerja Staff',
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                          const StaffPerformanceScreen(),
+                                        ),
+                                      );
+                                    },
                                   ),
                                 ],
                               ),

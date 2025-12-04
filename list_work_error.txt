@@ -1,5 +1,0 @@
-Analyzing list_work.dart...                                     
-
-   info - Parameter 'key' could be a super parameter - lib\feature\owner\screens\list_work.dart:17:9 - use_super_parameters
-
-1 issue found. (ran in 0.9s)
