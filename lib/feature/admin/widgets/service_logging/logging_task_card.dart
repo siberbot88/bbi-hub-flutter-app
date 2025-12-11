@@ -40,7 +40,7 @@ class LoggingTaskCard extends StatelessWidget {
            Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => pending.ServicePendingDetail(task: _toLegacyMap(service)),
+                builder: (_) => pending.ServicePendingDetail(service: service),
               ));
         },
         style: ElevatedButton.styleFrom(

@@ -165,7 +165,7 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
               ),
             )
                 : Column(
-              children: scheduled.where((s) => s.acceptanceStatus == 'pending').map((s) {
+              children: scheduled.where((s) => (s.acceptanceStatus ?? '').toLowerCase() == 'pending').map((s) {
                 return ServiceCard(service: s);
               }).toList(),
             ),
