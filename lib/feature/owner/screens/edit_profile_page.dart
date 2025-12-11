@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -18,39 +19,129 @@ class EditProfilePage extends StatefulWidget {
 
 class _EditProfilePageState extends State<EditProfilePage> {
   final _formKey = GlobalKey<FormState>();
-  final _emailC = TextEditingController(text: "");
-  final _usernameC = TextEditingController(text: "");
-  final _fullNameC = TextEditingController(text: "");
+  final _apiService = ApiService();
 
-  ImageProvider? _pickedImage;
+  late TextEditingController _nameC;
+  late TextEditingController _openingTimeC;
+  late TextEditingController _closingTimeC;
+  late TextEditingController _operationalDaysC;
+  late TextEditingController _informationC;
+  
+  bool _isActive = false;
+  File? _pickedImage;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameC = TextEditingController(text: widget.workshop.name);
+    _openingTimeC = TextEditingController(text: widget.workshop.openingTime);
+    _closingTimeC = TextEditingController(text: widget.workshop.closingTime);
+    _operationalDaysC = TextEditingController(text: widget.workshop.operationalDays);
+    _informationC = TextEditingController(text: widget.workshop.description ?? '');
+    _isActive = widget.workshop.isActive;
+  }
 
   @override
   void dispose() {
-    _emailC.dispose();
-    _usernameC.dispose();
-    _fullNameC.dispose();
+    _nameC.dispose();
+    _openingTimeC.dispose();
+    _closingTimeC.dispose();
+    _operationalDaysC.dispose();
+    _informationC.dispose();
     super.dispose();
   }
 
-  // Placeholder pemilihan gambar (tanpa dependency).
-  void _pickImageMock() {
-    // Demo: pakai gambar mockup yang kamu punya
-    setState(() {
-      _pickedImage = const AssetImage("assets/image/profil_image.png");
-      // kalau mau benar2 pilih dari gallery/camera, tinggal ganti
-      // dengan image_picker / file_picker.
-    });
+  Future<void> _pickImage() async {
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+      if (pickedFile != null) {
+        setState(() {
+          _pickedImage = File(pickedFile.path);
+        });
+      }
+    } catch (e) {
+      debugPrint('Error picking image: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal mengambil gambar: $e')),
+      );
+    }
   }
 
-  void _save() {
-    if (!_formKey.currentState!.validate()) return;
-    CustomAlert.show(
-      context,
-      title: "Berhasil",
-      message: "Profil disimpan",
-      type: AlertType.success,
+  Future<void> _selectTime(BuildContext context, TextEditingController controller) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: AppColors.primaryRed,
+              onPrimary: Colors.white,
+              onSurface: AppColors.textPrimary,
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.primaryRed,
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
-    Navigator.pop(context);
+
+    if (picked != null) {
+      // Format ke HH:mm:ss
+      final hour = picked.hour.toString().padLeft(2, '0');
+      final minute = picked.minute.toString().padLeft(2, '0');
+      setState(() {
+        controller.text = "$hour:$minute:00";
+      });
+    }
+  }
+
+  Future<void> _save() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      await _apiService.updateWorkshop(
+        id: widget.workshop.id,
+        name: _nameC.text,
+        photo: _pickedImage,
+        openingTime: _openingTimeC.text,
+        closingTime: _closingTimeC.text,
+        operationalDays: _operationalDaysC.text,
+        isActive: _isActive,
+        information: _informationC.text,
+      );
+
+      if (!mounted) return;
+
+      CustomAlert.show(
+        context,
+        title: "Berhasil",
+        message: "Profil workshop berhasil diperbarui",
+        type: AlertType.success,
+      );
+      
+      Navigator.pop(context, true); 
+
+    } catch (e) {
+      if (!mounted) return;
+      CustomAlert.show(
+        context,
+        title: "Gagal",
+        message: e.toString().replaceAll('Exception: ', ''),
+        type: AlertType.error,
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -62,7 +153,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         elevation: 0,
         centerTitle: true,
         title: Text(
-          "Edit Profil",
+          "Edit Profil Workshop",
           style: AppTextStyles.heading4(color: Colors.white),
         ),
         leading: IconButton(
@@ -101,18 +192,45 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 child: Column(
                   children: [
                     _LabeledField(
-                      label: "Email",
-                      controller: _emailC,
-                      keyboardType: TextInputType.emailAddress,
-                      prefixIcon: Icons.email_outlined,
+                      label: "Nama Workshop",
+                      controller: _nameC,
+                      prefixIcon: Icons.store_rounded,
                     ),
                     AppSpacing.verticalSpaceLG,
+                    
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _LabeledField(
+                            label: "Jam Buka",
+                            controller: _openingTimeC,
+                            prefixIcon: Icons.access_time_rounded,
+                            readOnly: true,
+                            onTap: () => _selectTime(context, _openingTimeC),
+                          ),
+                        ),
+                        AppSpacing.horizontalSpaceMD,
+                        Expanded(
+                          child: _LabeledField(
+                            label: "Jam Tutup",
+                            controller: _closingTimeC,
+                            prefixIcon: Icons.access_time_filled_rounded,
+                            readOnly: true,
+                            onTap: () => _selectTime(context, _closingTimeC),
+                          ),
+                        ),
+                      ],
+                    ),
+                    AppSpacing.verticalSpaceLG,
+
                     _LabeledField(
-                      label: "Username",
-                      controller: _usernameC,
-                      prefixIcon: Icons.person_outline,
+                      label: "Hari Operasional",
+                      controller: _operationalDaysC,
+                      prefixIcon: Icons.calendar_today_rounded,
+                      hintText: "Contoh: Senin - Jumat",
                     ),
                     AppSpacing.verticalSpaceLG,
+
                     _LabeledField(
                       label: "Nama Lengkap",
                       controller: _fullNameC,
@@ -126,7 +244,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: _save,
+                  onPressed: _isLoading ? null : _save,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryRed,
                     foregroundColor: Colors.white,
@@ -136,10 +254,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     elevation: 4,
                     shadowColor: AppColors.primaryRed.withAlpha(100),
                   ),
-                  child: Text(
-                    "SIMPAN PERUBAHAN",
-                    style: AppTextStyles.button(),
-                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Text(
+                          "SIMPAN PERUBAHAN",
+                          style: AppTextStyles.button(),
+                        ),
                 ),
               ),
             ],
@@ -154,7 +281,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       child: Stack(
         children: [
           GestureDetector(
-            onTap: _pickImageMock,
+            onTap: _pickImage,
             child: Container(
               width: 120,
               height: 120,
@@ -170,11 +297,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   ),
                 ],
                 image: _pickedImage != null
-                    ? DecorationImage(image: _pickedImage!, fit: BoxFit.cover)
-                    : null,
+                    ? DecorationImage(
+                        image: FileImage(_pickedImage!),
+                        fit: BoxFit.cover,
+                      )
+                    : (widget.workshop.photo != null
+                        ? DecorationImage(
+                            image: NetworkImage(widget.workshop.photo!),
+                            fit: BoxFit.cover,
+                          )
+                        : null),
               ),
-              child: _pickedImage == null
-                  ? const Icon(Icons.person_rounded, size: 60, color: Colors.grey)
+              child: (_pickedImage == null && widget.workshop.photo == null)
+                  ? const Icon(Icons.store_rounded, size: 60, color: Colors.grey)
                   : null,
             ),
           ),
@@ -182,7 +317,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             bottom: 0,
             right: 0,
             child: GestureDetector(
-              onTap: _pickImageMock,
+              onTap: _pickImage,
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
@@ -210,14 +345,20 @@ class _EditProfilePageState extends State<EditProfilePage> {
 class _LabeledField extends StatelessWidget {
   final String label;
   final TextEditingController controller;
-  final TextInputType? keyboardType;
   final IconData? prefixIcon;
+  final bool readOnly;
+  final VoidCallback? onTap;
+  final int maxLines;
+  final String? hintText;
 
   const _LabeledField({
     required this.label,
     required this.controller,
-    this.keyboardType,
     this.prefixIcon,
+    this.readOnly = false,
+    this.onTap,
+    this.maxLines = 1,
+    this.hintText,
   });
 
   @override
@@ -229,7 +370,9 @@ class _LabeledField extends StatelessWidget {
         AppSpacing.verticalSpaceXS,
         TextFormField(
           controller: controller,
-          keyboardType: keyboardType,
+          readOnly: readOnly,
+          onTap: onTap,
+          maxLines: maxLines,
           validator: (v) => (v == null || v.isEmpty) ? "Tidak boleh kosong" : null,
           decoration: InputDecoration(
             prefixIcon: prefixIcon != null
@@ -237,7 +380,7 @@ class _LabeledField extends StatelessWidget {
                 : null,
             filled: true,
             fillColor: AppColors.backgroundLight,
-            hintText: "Masukkan $label",
+            hintText: hintText ?? "Masukkan $label",
             hintStyle: AppTextStyles.bodyMedium(color: AppColors.textHint),
             contentPadding: AppSpacing.paddingMD,
             enabledBorder: OutlineInputBorder(
