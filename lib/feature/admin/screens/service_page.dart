@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+
 import 'service_logging.dart';
 import '../widgets/custom_header.dart';
 import '../widgets/service/service_tab_selector.dart';
 import '../widgets/service/service_calendar_section.dart';
 import '../widgets/service/service_card.dart';
 import '../widgets/service/service_helpers.dart';
+
+import 'package:bengkel_online_flutter/feature/admin/providers/admin_service_provider.dart';
+import 'package:bengkel_online_flutter/core/models/service.dart';
 
 class ServicePageAdmin extends StatefulWidget {
   const ServicePageAdmin({super.key});
@@ -21,67 +26,53 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
   String selectedFilter = "All";
   int selectedTab = 0; // 0 = Scheduled, 1 = Logging
 
-  final List<Map<String, dynamic>> allTasks = [
-    {
-      "id": "1",
-      "name": "Prabowo",
-      "date": DateTime(2025, 9, 2),
-      "service": "Engine Oil Change",
-      "plate": "SU 814 NTO",
-      "motor": "BEAT 2012",
-      "vehicleCategory": "Sepeda Motor",
-      "location": "WORKSHOP",
-      "status": "Waiting",
-    },
-    {
-      "id": "2",
-      "name": "Ayu",
-      "date": DateTime(2025, 9, 4),
-      "service": "Battery Check",
-      "plate": "XY 9999",
-      "motor": "Honda 2020",
-      "vehicleCategory": "Mobil",
-      "location": "ON-SITE",
-      "status": "Accept",
-    },
-  ];
-
   DateTime get selectedDate =>
       DateTime(displayedYear, displayedMonth, selectedDay);
 
-  bool _matchesFilterKey(Map<String, dynamic> t, String filterKey) {
-    if (filterKey == 'All') return true;
-    return (t['status'] as String).toLowerCase() == filterKey.toLowerCase();
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AdminServiceProvider>().fetchServices();
+    });
   }
 
-  List<Map<String, dynamic>> _getScheduledTasks() {
-    return allTasks
-        .where((t) =>
-            ServiceHelpers.isSameDate(t['date'] as DateTime, selectedDate))
-        .where((t) => _matchesFilterKey(t, selectedFilter))
+  bool _matchesFilterKey(ServiceModel s, String filterKey) {
+    if (filterKey == 'All') return true;
+    return s.status.toLowerCase() == filterKey.toLowerCase();
+  }
+
+  List<ServiceModel> _getScheduledServices(List<ServiceModel> all) {
+    return all
+        .where((s) =>
+    s.scheduledDate != null &&
+        ServiceHelpers.isSameDate(s.scheduledDate!, selectedDate))
+        .where((s) => _matchesFilterKey(s, selectedFilter))
         .toList();
   }
 
   void _prevMonth() => setState(() {
-        displayedMonth--;
-        if (displayedMonth < 1) {
-          displayedMonth = 12;
-          displayedYear--;
-        }
-        selectedDay = 1;
-      });
+    displayedMonth--;
+    if (displayedMonth < 1) {
+      displayedMonth = 12;
+      displayedYear--;
+    }
+    selectedDay = 1;
+  });
 
   void _nextMonth() => setState(() {
-        displayedMonth++;
-        if (displayedMonth > 12) {
-          displayedMonth = 1;
-          displayedYear++;
-        }
-        selectedDay = 1;
-      });
+    displayedMonth++;
+    if (displayedMonth > 12) {
+      displayedMonth = 1;
+      displayedYear++;
+    }
+    selectedDay = 1;
+  });
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<AdminServiceProvider>();
+
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: const CustomHeader(
@@ -100,7 +91,7 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
             child: IndexedStack(
               index: selectedTab,
               children: [
-                _buildScheduledTab(),
+                _buildScheduledTab(provider),
                 const ServiceLoggingPage(),
               ],
             ),
@@ -110,8 +101,21 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
     );
   }
 
-  Widget _buildScheduledTab() {
-    final scheduled = _getScheduledTasks();
+  Widget _buildScheduledTab(AdminServiceProvider provider) {
+    if (provider.loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (provider.error != null) {
+      return Center(
+        child: Text(
+          provider.error!,
+          style: GoogleFonts.poppins(),
+        ),
+      );
+    }
+
+    final scheduled = _getScheduledServices(provider.items);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: 80),
@@ -132,12 +136,28 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: scheduled.isEmpty
                 ? Center(
-                    child: Text("No scheduled tasks",
-                        style: GoogleFonts.poppins()))
+              child: Text(
+                "No scheduled tasks",
+                style: GoogleFonts.poppins(),
+              ),
+            )
                 : Column(
-                    children:
-                        scheduled.map((t) => ServiceCard(task: t)).toList(),
-                  ),
+              children: scheduled.map((s) {
+                final taskMap = {
+                  "id": s.id,
+                  "name": s.displayCustomerName,
+                  "date": s.scheduledDate ?? DateTime.now(),
+                  "service": s.name,
+                  "plate": s.displayVehiclePlate,
+                  "motor": s.displayVehicleName,
+                  "vehicleCategory": "-",
+                  "location": s.displayWorkshopName,
+                  "status": s.status,
+                };
+
+                return ServiceCard(task: taskMap);
+              }).toList(),
+            ),
           ),
         ],
       ),
