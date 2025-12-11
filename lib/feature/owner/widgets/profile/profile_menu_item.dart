@@ -18,7 +18,8 @@ class ProfileSoftDivider extends StatelessWidget {
 }
 
 class ProfileMenuItem extends StatelessWidget {
-  final String iconPath;
+  final String? iconPath;
+  final IconData? icon;
   final String title;
   final bool isLogout;
   final VoidCallback? onTap;
@@ -27,17 +28,19 @@ class ProfileMenuItem extends StatelessWidget {
 
   const ProfileMenuItem({
     super.key,
-    required this.iconPath,
+    this.iconPath,
+    this.icon,
     required this.title,
     this.isLogout = false,
     this.onTap,
     this.iconSize = 28,
     this.fontSize = 16,
-  });
+  }) : assert(iconPath != null || icon != null, 'Either iconPath or icon must be provided');
 
   @override
   Widget build(BuildContext context) {
     final isDarkLogout = isLogout;
+    final primaryColor = isDarkLogout ? const Color(0xFFB70F0F) : const Color(0xFF9B0D0D);
 
     return Material(
       color: Colors.transparent,
@@ -52,13 +55,13 @@ class ProfileMenuItem extends StatelessWidget {
           child: ListTile(
             minLeadingWidth: 0,
             contentPadding: EdgeInsets.zero,
-            leading: _buildIcon(
-              iconPath,
-              size: iconSize,
-              color: isDarkLogout
-                  ? const Color(0xFFB70F0F)
-                  : const Color(0xFF9B0D0D),
-            ),
+            leading: icon != null 
+              ? Icon(icon, size: iconSize, color: primaryColor)
+              : _buildIcon(
+                  iconPath!,
+                  size: iconSize,
+                  color: primaryColor,
+                ),
             title: Text(
               title,
               style: GoogleFonts.poppins(

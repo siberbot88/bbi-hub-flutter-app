@@ -8,6 +8,8 @@ import 'package:bengkel_online_flutter/feature/owner/screens/voucher_page.dart';
 import 'package:bengkel_online_flutter/feature/owner/screens/ubah_bahasa_page.dart';
 import 'package:bengkel_online_flutter/feature/owner/screens/help_support_page.dart';
 import 'package:bengkel_online_flutter/feature/owner/screens/edit_user_screen.dart';
+import 'package:bengkel_online_flutter/features/membership/presentation/premium_membership_screen.dart';
+import 'package:bengkel_online_flutter/features/membership/presentation/membership_selection_screen.dart';
 
 import 'profile_animations.dart';
 import 'profile_menu_item.dart';
@@ -60,12 +62,43 @@ class ProfileMenuCard extends StatelessWidget {
                       );
                     },
                   ),
+
+                  const ProfileSoftDivider(),
+
+                  // Membership / Langganan
+                  _buildAnimatedItem(
+                    context,
+                    index: 1,
+                    icon: Icons.card_membership_rounded,
+                    title: "Langganan & Membership",
+                    iconSize: itemIconSize,
+                    fontSize: itemFontSize,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => PremiumMembershipScreen(
+                            isViewOnly: false,
+                            onViewMembershipPackages: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      const MembershipSelectionScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                   const ProfileSoftDivider(),
 
                   // Bahasa
                   _buildAnimatedItem(
                     context,
-                    index: 1,
+                    index: 2, // Check index order
                     iconPath: "assets/icons/bahasa.svg",
                     title: "Bahasa",
                     iconSize: itemIconSize,
@@ -84,7 +117,7 @@ class ProfileMenuCard extends StatelessWidget {
                   // Bantuan & Dukungan
                   _buildAnimatedItem(
                     context,
-                    index: 2,
+                    index: 3,
                     iconPath: "assets/icons/help.svg",
                     title: "Bantuan & Dukungan",
                     iconSize: itemIconSize,
@@ -103,7 +136,7 @@ class ProfileMenuCard extends StatelessWidget {
                   // Ganti Password
                   _buildAnimatedItem(
                     context,
-                    index: 3,
+                    index: 4,
                     iconPath: "assets/icons/password.svg",
                     title: "Ganti Password",
                     iconSize: itemIconSize,
@@ -117,7 +150,7 @@ class ProfileMenuCard extends StatelessWidget {
                   // Voucher
                   _buildAnimatedItem(
                     context,
-                    index: 4,
+                    index: 5,
                     iconPath: "assets/icons/voucher.svg",
                     title: "Voucher",
                     iconSize: itemIconSize,
@@ -136,7 +169,7 @@ class ProfileMenuCard extends StatelessWidget {
                   // Umpan Balik
                   _buildAnimatedItem(
                     context,
-                    index: 5,
+                    index: 6,
                     iconPath: "assets/icons/feedback.svg",
                     title: "Umpan Balik",
                     iconSize: itemIconSize,
@@ -155,7 +188,7 @@ class ProfileMenuCard extends StatelessWidget {
                   // Logout
                   _buildAnimatedItem(
                     context,
-                    index: 6,
+                    index: 7,
                     iconPath: "assets/icons/logout.svg",
                     title: "Keluar",
                     isLogout: true,
@@ -175,7 +208,8 @@ class ProfileMenuCard extends StatelessWidget {
   Widget _buildAnimatedItem(
     BuildContext context, {
     required int index,
-    required String iconPath,
+    String? iconPath,
+    IconData? icon,
     required String title,
     required double iconSize,
     required double fontSize,
@@ -188,6 +222,7 @@ class ProfileMenuCard extends StatelessWidget {
       delayMs: delayMs,
       child: ProfileMenuItem(
         iconPath: iconPath,
+        icon: icon,
         title: title,
         isLogout: isLogout,
         onTap: onTap,

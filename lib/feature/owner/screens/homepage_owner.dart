@@ -11,6 +11,8 @@ import '../widgets/dashboard/dashboard_helpers.dart';
 import '../widgets/dashboard/owner_mini_dashboard.dart';
 import '../widgets/dashboard/owner_quick_menu.dart';
 import '../widgets/dashboard/owner_job_card.dart';
+import 'package:bengkel_online_flutter/features/membership/presentation/premium_membership_screen.dart';
+import 'package:bengkel_online_flutter/features/membership/presentation/membership_selection_screen.dart';
 
 const Color primaryRed = Color(0xFFB70F0F);
 const Color gradientRedStart = Color(0xFF9B0D0D);
@@ -96,22 +98,89 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
-                              children: const [
-                                Text(
-                                  'BBI HUB +',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
+                              children: [
+                                if (auth.user?.isPremium ?? false)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withAlpha(50),
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                          color: Colors.amber, width: 1.5),
+                                    ),
+                                    child: Row(
+                                      children: const [
+                                        Icon(
+                                          Icons.verified,
+                                          color: Colors.amber,
+                                          size: 16,
+                                        ),
+                                        SizedBox(width: 6),
+                                        Text(
+                                          'Premium Member',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                else
+                                  Row(
+                                    children: [
+                                      Text(
+                                        'BBI HUB +',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8), // Spacer
+                                      InkWell(
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) =>
+                                                  PremiumMembershipScreen(
+                                                isViewOnly: false,
+                                                onViewMembershipPackages: () {
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (_) =>
+                                                          const MembershipSelectionScreen(),
+                                                    ),
+                                                  );
+                                                },
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withAlpha(50),
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                              color: Colors.amber,
+                                              width: 1.5,
+                                            ),
+                                          ),
+                                          child: const Icon(
+                                            Icons.workspace_premium_rounded,
+                                            color: Colors.amber,
+                                            size: 20,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
                                 Spacer(),
-                                CircleAvatar(
-                                  radius: 18,
-                                  backgroundColor: Colors.white,
-                                  child:
-                                  Icon(Icons.person, color: Colors.black),
-                                ),
                               ],
                             ),
                             const SizedBox(height: 12),
