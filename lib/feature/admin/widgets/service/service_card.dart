@@ -4,14 +4,26 @@ import '../reject_dialog.dart';
 import '../accept_dialog.dart';
 import '../../screens/service_detail.dart';
 import 'service_helpers.dart';
+import 'package:provider/provider.dart';
+import 'package:bengkel_online_flutter/feature/admin/providers/admin_service_provider.dart';
+import 'package:bengkel_online_flutter/core/models/service.dart';
 
 class ServiceCard extends StatelessWidget {
-  final Map<String, dynamic> task;
+  final ServiceModel service;
 
-  const ServiceCard({super.key, required this.task});
+  const ServiceCard({super.key, required this.service});
 
   @override
   Widget build(BuildContext context) {
+    // Helper accessors
+    final customerName = service.displayCustomerName;
+    final vehicleName = service.displayVehicleName;
+    final plate = service.displayVehiclePlate;
+    final category = service.vehicle?.category ?? service.vehicle?.type ?? "Unknown";
+    final scheduledDate = service.scheduledDate ?? DateTime.now();
+    final serviceName = service.name;
+    final id = service.id;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
@@ -35,17 +47,17 @@ class ServiceCard extends StatelessWidget {
               CircleAvatar(
                 radius: 18,
                 backgroundImage: NetworkImage(
-                    "https://i.pravatar.cc/150?img=${task['id']}"),
+                    "https://i.pravatar.cc/150?img=$id"),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(task['name'],
+                    Text(customerName,
                         style: GoogleFonts.poppins(
                             fontWeight: FontWeight.w600, fontSize: 14)),
-                    Text("ID: ${task['id']}",
+                    Text("ID: $id",
                         style: GoogleFonts.poppins(
                             fontSize: 12, color: Colors.grey[600])),
                   ],
@@ -54,10 +66,11 @@ class ServiceCard extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(ServiceHelpers.formatDate(task['date'] as DateTime),
+                  Text(ServiceHelpers.formatDate(scheduledDate),
                       style: GoogleFonts.poppins(
                           fontSize: 12, color: Colors.grey[700])),
-                  Text("Scheduled : 7 September 2025",
+                  // Jika mau menampilkan info scheduled spesifik
+                  Text("Scheduled",
                       style: GoogleFonts.poppins(
                           fontSize: 12, color: Colors.grey[600])),
                 ],
@@ -69,7 +82,7 @@ class ServiceCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  task['service'],
+                  serviceName,
                   style: GoogleFonts.poppins(
                       fontSize: 16, fontWeight: FontWeight.bold),
                 ),
@@ -78,16 +91,16 @@ class ServiceCard extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: _getVehicleBgColor(task['vehicleCategory'])
+                  color: _getVehicleBgColor(category)
                       .withAlpha(51), // 0.2 * 255
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  task['vehicleCategory'] ?? "Unknown",
+                  category,
                   style: GoogleFonts.poppins(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: _getVehicleTextColor(task['vehicleCategory'])),
+                      color: _getVehicleTextColor(category)),
                 ),
               )
             ],
@@ -103,7 +116,7 @@ class ServiceCard extends StatelessWidget {
                   Text("Plat Nomor",
                       style:
                           GoogleFonts.poppins(fontSize: 12, color: Colors.grey)),
-                  Text(task['plate'],
+                  Text(plate,
                       style: GoogleFonts.poppins(
                           fontSize: 15, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 10),
@@ -111,7 +124,18 @@ class ServiceCard extends StatelessWidget {
                     children: [
                       Builder(
                         builder: (ctx) => ElevatedButton(
-                          onPressed: () => showRejectDialog(ctx),
+                          onPressed: () => showRejectDialog(
+                            ctx,
+                            onConfirm: (reason, desc) {
+                              context
+                                  .read<AdminServiceProvider>()
+                                  .declineServiceAsAdmin(
+                                    service.id,
+                                    reason: reason,
+                                    reasonDescription: desc,
+                                  );
+                            },
+                          ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.red.shade700,
                             padding: const EdgeInsets.symmetric(
@@ -132,7 +156,14 @@ class ServiceCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       ElevatedButton(
-                        onPressed: () => showAcceptDialog(context),
+                        onPressed: () => showAcceptDialog(
+                          context,
+                          onConfirm: () {
+                            context
+                                .read<AdminServiceProvider>()
+                                .acceptServiceAsAdmin(service.id);
+                          },
+                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green.shade700,
                           padding: const EdgeInsets.symmetric(
@@ -160,7 +191,7 @@ class ServiceCard extends StatelessWidget {
                   Text("Type Motor",
                       style:
                           GoogleFonts.poppins(fontSize: 12, color: Colors.grey)),
-                  Text(task['motor'],
+                  Text(vehicleName,
                       style: GoogleFonts.poppins(
                           fontSize: 15, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
@@ -169,7 +200,7 @@ class ServiceCard extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (_) => ServiceDetailPage(task: task)),
+                            builder: (_) => ServiceDetailPage(service: service)),
                       );
                     },
                     style: ElevatedButton.styleFrom(

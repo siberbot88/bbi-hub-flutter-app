@@ -11,6 +11,8 @@ import '../widgets/service/service_helpers.dart';
 
 import 'package:bengkel_online_flutter/feature/admin/providers/admin_service_provider.dart';
 import 'package:bengkel_online_flutter/core/models/service.dart';
+import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
+import 'package:intl/intl.dart';
 
 class ServicePageAdmin extends StatefulWidget {
   const ServicePageAdmin({super.key});
@@ -33,8 +35,21 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AdminServiceProvider>().fetchServices();
+      _fetchData();
     });
+  }
+
+  void _fetchData() {
+    final auth = context.read<AuthProvider>();
+    final workshopUuid = auth.user?.workshopUuid;
+    final dateStr = DateFormat('yyyy-MM-dd').format(selectedDate);
+    
+    context.read<AdminServiceProvider>().fetchServices(
+      dateFrom: dateStr,
+      dateTo: dateStr,
+      status: 'pending', // Sesuai request: acceptance_status pending
+      workshopUuid: workshopUuid,
+    );
   }
 
   bool _matchesFilterKey(ServiceModel s, String filterKey) {
@@ -42,32 +57,37 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
     return s.status.toLowerCase() == filterKey.toLowerCase();
   }
 
+  // Karena sudah difilter di API, local filtering schedule date bisa disederhanakan 
+  // atau tetap dipertahankan sebagai dual-check.
+  // Namun, request user: "menampilkan service berdasarkan tanggal yang dipilih"
+  // Kalau API sudah return services di tanggal itu, maka list sudah sesuai.
   List<ServiceModel> _getScheduledServices(List<ServiceModel> all) {
-    return all
-        .where((s) =>
-    s.scheduledDate != null &&
-        ServiceHelpers.isSameDate(s.scheduledDate!, selectedDate))
-        .where((s) => _matchesFilterKey(s, selectedFilter))
-        .toList();
+    return all;
   }
 
-  void _prevMonth() => setState(() {
-    displayedMonth--;
-    if (displayedMonth < 1) {
-      displayedMonth = 12;
-      displayedYear--;
-    }
-    selectedDay = 1;
-  });
+  void _prevMonth() {
+    setState(() {
+      displayedMonth--;
+      if (displayedMonth < 1) {
+        displayedMonth = 12;
+        displayedYear--;
+      }
+      selectedDay = 1;
+    });
+    _fetchData();
+  }
 
-  void _nextMonth() => setState(() {
-    displayedMonth++;
-    if (displayedMonth > 12) {
-      displayedMonth = 1;
-      displayedYear++;
-    }
-    selectedDay = 1;
-  });
+  void _nextMonth() {
+    setState(() {
+      displayedMonth++;
+      if (displayedMonth > 12) {
+        displayedMonth = 1;
+        displayedYear++;
+      }
+      selectedDay = 1;
+    });
+    _fetchData();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -129,7 +149,10 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
             selectedDay: selectedDay,
             onPrevMonth: _prevMonth,
             onNextMonth: _nextMonth,
-            onDaySelected: (day) => setState(() => selectedDay = day),
+            onDaySelected: (day) {
+              setState(() => selectedDay = day);
+              _fetchData();
+            },
           ),
           const SizedBox(height: 12),
           Padding(
@@ -142,20 +165,8 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
               ),
             )
                 : Column(
-              children: scheduled.map((s) {
-                final taskMap = {
-                  "id": s.id,
-                  "name": s.displayCustomerName,
-                  "date": s.scheduledDate ?? DateTime.now(),
-                  "service": s.name,
-                  "plate": s.displayVehiclePlate,
-                  "motor": s.displayVehicleName,
-                  "vehicleCategory": "-",
-                  "location": s.displayWorkshopName,
-                  "status": s.status,
-                };
-
-                return ServiceCard(task: taskMap);
+              children: scheduled.where((s) => s.acceptanceStatus == 'pending').map((s) {
+                return ServiceCard(service: s);
               }).toList(),
             ),
           ),

@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 
+import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
+import 'package:bengkel_online_flutter/feature/admin/providers/admin_service_provider.dart';
+import 'package:bengkel_online_flutter/core/providers/auth_provider.dart';
+import 'package:bengkel_online_flutter/core/models/service.dart';
 import '../widgets/service_logging/logging_summary_boxes.dart';
 import '../widgets/service_logging/logging_calendar.dart';
 import '../widgets/service_logging/logging_filter_tabs.dart';
@@ -23,113 +28,81 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
   String selectedLoggingFilter = "All";
   String? selectedTimeSlot;
 
-  final List<Map<String, dynamic>> availableTimeSlots = [
-    {
-      "time": "08:00 - 10:00",
-      "tasks": 4,
-      "status": "Aktif",
-    },
-    {
-      "time": "10:00 - 12:00",
-      "tasks": 2,
-      "status": "Akan Datang",
-    },
-    {
-      "time": "14:00 - 15:30",
-      "tasks": 5,
-      "status": "Penjadwalaan",
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchData();
+    });
+  }
 
-  final List<Map<String, dynamic>> allTasks = [
-    {
-      "id": "1",
-      "user": "Andi",
-      "date": DateTime(2025, 9, 1),
-      "title": "General Checkup",
-      "desc":
-          "Penggantian bantalan rem lengkap dan kalibrasi sistem untuk unit excavator",
-      "plate": "L 1234 XX",
-      "motor": "Vario 2021",
-      "status": "Pending",
-      "category": "logging",
-      "time": "07:00 - 08:00",
-    },
-    {
-      "id": "4",
-      "user": "Rina",
-      "date": DateTime(2025, 9, 1),
-      "title": "Electrical Inspection",
-      "desc": "Check battery and wiring",
-      "plate": "D 5678 YY",
-      "motor": "NMAX 2019",
-      "status": "Pending",
-      "category": "logging",
-      "time": "07:30 - 08:30",
-    },
-    {
-      "id": "2",
-      "user": "Siti",
-      "date": DateTime(2025, 9, 2),
-      "title": "Brake System Maintenance",
-      "desc": "Complete brake pad replacement and calibration",
-      "plate": "SU 814 NTO",
-      "motor": "BEAT 2012",
-      "status": "In Progress",
-      "category": "logging",
-      "time": "08:00 - 10:00",
-    },
-    {
-      "id": "3",
-      "user": "Budi",
-      "date": DateTime(2025, 9, 4),
-      "title": "Tire Replacement",
-      "desc": "Full tire replacement for Yamaha 2018",
-      "plate": "AB 1111",
-      "motor": "Yamaha 2018",
-      "status": "Completed",
-      "category": "logging",
-      "time": "10:00 - 12:00",
-    },
-  ];
+  void _fetchData() {
+    final auth = context.read<AuthProvider>();
+    final workshopUuid = auth.user?.workshopUuid;
+    final dateStr = DateFormat('yyyy-MM-dd').format(selectedDate);
+
+    // Fetch ALL services for the date, then we filter client-side if needed for 'accepted' status
+    // Or if API supports filtering by acceptance_status, use that.
+    // Assuming API 'status' param maps to service status (pending, in_progress, etc), not acceptance.
+    // So we fetch by date and workshop, then filter for acceptanceStatus == 'accepted'.
+    
+    context.read<AdminServiceProvider>().fetchServices(
+      dateFrom: dateStr,
+      dateTo: dateStr,
+      workshopUuid: workshopUuid,
+      // We don't limit by status here because logging page shows Pending (Mechanic), In Progress, and Completed.
+      // But we MUST exclude those that are NOT accepted yet (handled in filtering later).
+    );
+  }
 
   DateTime get selectedDate =>
       DateTime(displayedYear, displayedMonth, selectedDay);
 
-  bool _matchesFilterKey(Map<String, dynamic> t, String filterKey) {
+  bool _matchesFilterKey(ServiceModel t, String filterKey) {
     if (filterKey == 'All') return true;
-    final status = (t['status'] as String).toLowerCase();
+    final status = (t.status ?? '').toLowerCase();
     switch (filterKey) {
       case 'Pending':
-        return status.contains('pending');
+        return status == 'pending';
       case 'In Progress':
-        return status.contains('progress');
+        return status == 'in_progress' || status == 'on_process';
       case 'Completed':
-        return status.contains('completed');
+        return status == 'completed';
       default:
         return false;
     }
   }
 
-  List<Map<String, dynamic>> _getFilteredTasks() {
-    return allTasks.where((task) {
-      bool dateMatch =
-          LoggingHelpers.isSameDate(task['date'] as DateTime, selectedDate);
-      bool categoryMatch = task['category'] == 'logging';
-      if (!dateMatch || !categoryMatch) return false;
+  List<ServiceModel> _getFilteredTasks(List<ServiceModel> allServices) {
+    return allServices.where((service) {
+      // 1. Must be Accepted by Admin
+      if (service.acceptanceStatus != 'accepted') return false;
 
-      bool statusMatch = _matchesFilterKey(task, selectedLoggingFilter);
+      // 2. Date match (API filters by date, but double check)
+       // bool dateMatch = LoggingHelpers.isSameDate(service.scheduledDate ?? DateTime.now(), selectedDate);
+       // if (!dateMatch) return false;
+
+      // 3. Status Filter (Tabs)
+      bool statusMatch = _matchesFilterKey(service, selectedLoggingFilter);
       if (!statusMatch) return false;
 
-      if (selectedTimeSlot != null && task['time'] != selectedTimeSlot) {
-        return false;
+      // 4. Time Slot Filter
+      // Assuming time match logic based on hours
+      if (selectedTimeSlot != null) {
+        // Simple string match or parsing. Current implementation is string based.
+        // Let's rely on string match for now if service has time property, otherwise skip or implement better time logic later.
+        // For now, let's ignore time slot filter if model doesn't support it well, or try to match formatted time.
+        // if (task['time'] != selectedTimeSlot) return false;
       }
 
+      // 5. Search Text
       if (searchText.trim().isNotEmpty) {
         final q = searchText.toLowerCase();
-        return (task['title'] as String).toLowerCase().contains(q) ||
-            (task['plate'] as String).toLowerCase().contains(q) ||
-            (task['user'] as String).toLowerCase().contains(q);
+        final title = (service.name).toLowerCase();
+        final plate = (service.displayVehiclePlate).toLowerCase();
+        final user = (service.displayCustomerName).toLowerCase();
+        
+        return title.contains(q) || plate.contains(q) || user.contains(q);
       }
 
       return true;
@@ -138,26 +111,29 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
 
   @override
   Widget build(BuildContext context) {
-    final tasksForDate =
-        allTasks.where((t) => LoggingHelpers.isSameDate(t['date'] as DateTime, selectedDate));
-    
-    final pending = tasksForDate
-        .where((t) =>
-            (t['status'] as String).toLowerCase().contains('pending'))
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<AdminServiceProvider>();
+    final allServices = provider.services;
+
+    // Filter for accepted services strictly
+    // And for the current date (though API should handle date, but safe to double check if needed)
+    final acceptedServicesForDate = allServices.where((s) => s.acceptanceStatus == 'accepted').toList();
+
+    final pending = acceptedServicesForDate
+        .where((t) => (t.status ?? '').toLowerCase() == 'pending')
         .length;
-    final inProgress = tasksForDate
-        .where((t) =>
-            (t['status'] as String).toLowerCase().contains('progress'))
+    final inProgress = acceptedServicesForDate
+        .where((t) => (t.status ?? '').toLowerCase() == 'in_progress' || (t.status ?? '').toLowerCase() == 'on_process')
         .length;
-    final completed = tasksForDate
-        .where((t) =>
-            (t['status'] as String).toLowerCase().contains('completed'))
+    final completed = acceptedServicesForDate
+        .where((t) => (t.status ?? '').toLowerCase() == 'completed')
         .length;
 
-    final loggingFiltered = _getFilteredTasks();
+    final loggingFiltered = _getFilteredTasks(allServices);
     final title = selectedTimeSlot == null
         ? "Semua Tugas"
-        : "Tugas untuk jam $selectedTimeSlot";
+        : "Tugas untuk jam $selectedTimeSlot"; // Time slot logic is pending proper implementation
 
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: 90),
@@ -177,7 +153,10 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
             selectedDay: selectedDay,
             onPrevMonth: _prevMonth,
             onNextMonth: _nextMonth,
-            onDaySelected: (day) => setState(() => selectedDay = day),
+            onDaySelected: (day) {
+              setState(() => selectedDay = day);
+              _fetchData();
+            },
           ),
           const SizedBox(height: 12),
           _buildSearchBar(),
@@ -189,13 +168,9 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
           ),
           const SizedBox(height: 12),
           if (selectedLoggingFilter == "All") ...[
-            LoggingTimeSlots(
-              timeSlots: availableTimeSlots,
-              selectedTimeSlot: selectedTimeSlot,
-              onTimeSlotSelected: (slot) =>
-                  setState(() => selectedTimeSlot = slot),
-            ),
-            const SizedBox(height: 12),
+            // Padding for timeslots if we implement logic later
+            // LoggingTimeSlots(...), 
+            // const SizedBox(height: 12),
           ],
           _buildLoggingContent(title, loggingFiltered),
         ],
@@ -235,7 +210,7 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
   }
 
   Widget _buildLoggingContent(
-      String title, List<Map<String, dynamic>> filtered) {
+      String title, List<ServiceModel> filtered) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
@@ -261,7 +236,7 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
               ),
             )
           else
-            ...filtered.map((t) => LoggingTaskCard(task: t)),
+            ...filtered.map((t) => LoggingTaskCard(service: t)),
         ],
       ),
     );
@@ -274,6 +249,7 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
           displayedYear -= 1;
         }
         selectedDay = 1;
+        _fetchData();
       });
 
   void _nextMonth() => setState(() {
@@ -283,5 +259,6 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
           displayedYear += 1;
         }
         selectedDay = 1;
+        _fetchData();
       });
 }

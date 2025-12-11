@@ -3,39 +3,44 @@ import 'logging_helpers.dart';
 import '../../screens/service_pending.dart' as pending;
 import '../../screens/service_progress.dart' as progress;
 import '../../screens/service_complete.dart' as complete;
+import 'package:bengkel_online_flutter/core/models/service.dart';
 
 class LoggingTaskCard extends StatelessWidget {
-  final Map<String, dynamic> task;
+  final ServiceModel service;
 
   const LoggingTaskCard({
     super.key,
-    required this.task,
+    required this.service,
   });
 
   @override
   Widget build(BuildContext context) {
     Color statusColor;
-    final status = task['status'] as String;
+    // Map API status to UI status colors
+    // Statuses: pending, in_progress, completed, canceled
+    final status = service.status ?? 'Pending';
 
-    if (status == "Completed") {
+    if (status.toLowerCase() == "completed") {
       statusColor = Colors.green;
-    } else if (status == "In Progress") {
+    } else if (status.toLowerCase() == "in_progress" || status.toLowerCase() == "on_process") {
       statusColor = Colors.orange;
-    } else if (status == "Pending") {
-      statusColor = Colors.grey.shade800;
+    } else if (status.toLowerCase() == "pending") {
+      statusColor = Colors.grey.shade800; // Pending mechanic assignment
     } else {
       statusColor = Colors.grey.shade800;
     }
 
     Widget actionButton;
 
-    if (status == 'Pending') {
+    // Logic for buttons based on status
+    if (status.toLowerCase() == 'pending') {
       actionButton = ElevatedButton(
         onPressed: () {
-          Navigator.push(
+          // TODO: Use ServiceModel in ServicePendingDetail
+           Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => pending.ServicePendingDetail(task: task),
+                builder: (_) => pending.ServicePendingDetail(task: _toLegacyMap(service)),
               ));
         },
         style: ElevatedButton.styleFrom(
@@ -47,13 +52,14 @@ class LoggingTaskCard extends StatelessWidget {
         child: const Text("Tetapkan Mekanik",
             style: TextStyle(fontSize: 12, color: Colors.white)),
       );
-    } else if (status == 'In Progress') {
+    } else if (status.toLowerCase() == 'in_progress' || status.toLowerCase() == "on_process") {
       actionButton = ElevatedButton(
         onPressed: () {
-          Navigator.push(
+          // TODO: Use ServiceModel in ServiceProgressDetail
+           Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => progress.ServiceProgressDetail(task: task),
+                builder: (_) => progress.ServiceProgressDetail(task: _toLegacyMap(service)),
               ));
         },
         style: ElevatedButton.styleFrom(
@@ -65,13 +71,14 @@ class LoggingTaskCard extends StatelessWidget {
         child: const Text("Lihat Detail",
             style: TextStyle(fontSize: 12, color: Colors.white)),
       );
-    } else if (status == 'Completed') {
+    } else if (status.toLowerCase() == 'completed') {
       actionButton = ElevatedButton(
         onPressed: () {
-          Navigator.push(
+          // TODO: Use ServiceModel in ServiceCompleteDetail
+           Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => complete.ServiceCompleteDetail(task: task),
+                builder: (_) => complete.ServiceCompleteDetail(task: _toLegacyMap(service)),
               ));
         },
         style: ElevatedButton.styleFrom(
@@ -86,6 +93,10 @@ class LoggingTaskCard extends StatelessWidget {
     } else {
       actionButton = const SizedBox.shrink();
     }
+
+    final scheduledDate = service.scheduledDate ?? DateTime.now();
+    // Assuming time is not separate in ServiceModel yet, or use scheduledDate time
+    final timeStr = "${scheduledDate.hour.toString().padLeft(2, '0')}:${scheduledDate.minute.toString().padLeft(2, '0')}";
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -111,14 +122,14 @@ class LoggingTaskCard extends StatelessWidget {
                 decoration: BoxDecoration(
                     color: statusColor.withAlpha(77), // 0.3 * 255
                     borderRadius: BorderRadius.circular(20)),
-                child: Text(task['status'],
+                child: Text(status,
                     style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: statusColor)),
               ),
               Text(
-                  "${LoggingHelpers.formatDate(task['date'] as DateTime)} • ${task['time']}",
+                  "${LoggingHelpers.formatDate(scheduledDate)} • $timeStr",
                   style: const TextStyle(
                       fontSize: 12,
                       color: Colors.grey,
@@ -126,18 +137,20 @@ class LoggingTaskCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          Text(task['title'],
+          Text(service.name,
               style:
                   const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
-          Text(task['desc'],
-              style: const TextStyle(fontSize: 12, color: Colors.black87)),
+          Text(service.complaint ?? service.request ?? service.description ?? '-',
+              style: const TextStyle(fontSize: 12, color: Colors.black87), 
+              maxLines: 2, 
+              overflow: TextOverflow.ellipsis),
           const SizedBox(height: 8),
           Row(
             children: [
               const Icon(Icons.settings, size: 16, color: Colors.grey),
               const SizedBox(width: 6),
-              Text("${task['motor']}  #${task['plate']}",
+              Text("${service.displayVehicleName}  #${service.displayVehiclePlate}",
                   style: const TextStyle(fontSize: 12, color: Colors.grey)),
             ],
           ),
@@ -150,15 +163,15 @@ class LoggingTaskCard extends StatelessWidget {
                   CircleAvatar(
                       radius: 14,
                       backgroundImage: NetworkImage(
-                          "https://i.pravatar.cc/150?img=${task['id']}")),
+                          "https://i.pravatar.cc/150?img=${service.id}")),
                   const SizedBox(width: 8),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(task['user'],
+                      Text(service.displayCustomerName,
                           style: const TextStyle(
                               fontSize: 13, fontWeight: FontWeight.w600)),
-                      Text("ID: ${task['id']}",
+                      Text("ID: ${service.id}",
                           style: const TextStyle(
                               fontSize: 11, color: Colors.grey)),
                     ],
@@ -171,5 +184,22 @@ class LoggingTaskCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  // Temporary helper to maintain compatibility with detail pages if they still use Map
+  // Ideally those pages should also be refactored
+  Map<String, dynamic> _toLegacyMap(ServiceModel s) {
+    return {
+      "id": s.id,
+      "user": s.displayCustomerName,
+      "date": s.scheduledDate ?? DateTime.now(),
+      "title": s.name,
+      "desc": s.description ?? s.complaint ?? "-",
+      "plate": s.displayVehiclePlate,
+      "motor": s.displayVehicleName,
+      "status": s.status,
+      "category": "logging",
+      "time": "", // todo
+    };
   }
 }

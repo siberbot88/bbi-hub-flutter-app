@@ -3,17 +3,33 @@ import 'package:google_fonts/google_fonts.dart';
 import '../widgets/custom_header.dart';
 import '../widgets/reject_dialog.dart';
 import '../widgets/accept_dialog.dart';
+import 'package:provider/provider.dart';
+import 'package:bengkel_online_flutter/feature/admin/providers/admin_service_provider.dart';
+import 'package:bengkel_online_flutter/core/models/service.dart';
+import '../widgets/service/service_helpers.dart';
 
 class ServiceDetailPage extends StatelessWidget {
-  final Map<String, dynamic> task;
+  final ServiceModel service;
 
-  const ServiceDetailPage({super.key, required this.task});
+  const ServiceDetailPage({super.key, required this.service});
 
   @override
   Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);
     final textScale = mq.textScaler.scale(1.0).clamp(0.9, 1.15);
     double s(double size) => (size * textScale);
+
+    // Helpers
+    final id = service.id;
+    final customerName = service.displayCustomerName;
+    final scheduledDate = service.scheduledDate ?? DateTime.now();
+    final dateOrder = service.createdAt ?? DateTime.now();
+    final vehicleName = service.displayVehicleName;
+    final plate = service.displayVehiclePlate;
+    final category = service.vehicle?.category ?? service.vehicle?.type ?? "Unknown";
+    final phone = service.customer?.phoneNumber ?? '-'; // Asumsi ada phone number di customer atau di mana saja
+    final address = service.customer?.address ?? '-'; // Asumsi ada address
+    final desc = service.reasonDescription ?? service.description ?? '-';
 
     Widget divider() => Divider(
           color: Colors.grey.shade300,
@@ -69,7 +85,7 @@ class ServiceDetailPage extends StatelessWidget {
                                 CircleAvatar(
                                   radius: 24,
                                   backgroundImage: NetworkImage(
-                                    "https://i.pravatar.cc/150?img=${task['id']}",
+                                    "https://i.pravatar.cc/150?img=$id",
                                   ),
                                 ),
                                 const SizedBox(width: 12),
@@ -79,14 +95,14 @@ class ServiceDetailPage extends StatelessWidget {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        task['name'] ?? '-',
+                                        customerName,
                                         style: GoogleFonts.poppins(
                                           fontSize: s(18),
                                           fontWeight: FontWeight.w700,
                                         ),
                                       ),
                                       Text(
-                                        "ID: ${task['id'] ?? '-'}",
+                                        "ID: $id",
                                         style: GoogleFonts.poppins(
                                           fontSize: s(13),
                                           color: Colors.grey[600],
@@ -102,7 +118,7 @@ class ServiceDetailPage extends StatelessWidget {
                                         style: TextStyle(
                                             fontSize: s(12),
                                             color: Colors.grey[600])),
-                                    Text("2 September 2025",
+                                    Text(ServiceHelpers.formatDate(dateOrder),
                                         style: GoogleFonts.poppins(
                                             fontSize: s(14),
                                             fontWeight: FontWeight.w600)),
@@ -141,7 +157,7 @@ class ServiceDetailPage extends StatelessWidget {
                                           style: TextStyle(
                                               fontSize: s(12),
                                               color: Colors.grey[600])),
-                                      Text(task['motor'] ?? 'BEAT 2012',
+                                      Text(vehicleName,
                                           style: GoogleFonts.poppins(
                                               fontSize: s(15),
                                               fontWeight: FontWeight.w700)),
@@ -156,7 +172,7 @@ class ServiceDetailPage extends StatelessWidget {
                                           style: TextStyle(
                                               fontSize: s(12),
                                               color: Colors.grey[600])),
-                                      Text("8 AM - 12 PM :\n7 September 2025",
+                                      Text("${ServiceHelpers.formatDate(scheduledDate)}", // Simplified for now
                                           textAlign: TextAlign.right,
                                           style: GoogleFonts.poppins(
                                               fontSize: s(15),
@@ -180,7 +196,7 @@ class ServiceDetailPage extends StatelessWidget {
                                           style: TextStyle(
                                               fontSize: s(12),
                                               color: Colors.grey[600])),
-                                      Text(task['plate'] ?? 'SU 814 NTO',
+                                      Text(plate,
                                           style: GoogleFonts.poppins(
                                               fontSize: s(15),
                                               fontWeight: FontWeight.w700)),
@@ -205,7 +221,7 @@ class ServiceDetailPage extends StatelessWidget {
                                               BorderRadius.circular(20),
                                         ),
                                         child: Text(
-                                          "Sepeda Motor",
+                                          category,
                                           style: GoogleFonts.poppins(
                                             fontSize: s(13),
                                             fontWeight: FontWeight.w600,
@@ -243,7 +259,7 @@ class ServiceDetailPage extends StatelessWidget {
                                               BorderRadius.circular(20),
                                         ),
                                         child: Text(
-                                          "Pemeliharaan",
+                                          service.categoryName ?? "Pemeliharaan",
                                           style: GoogleFonts.poppins(
                                             fontSize: s(13),
                                             fontWeight: FontWeight.w600,
@@ -262,7 +278,7 @@ class ServiceDetailPage extends StatelessWidget {
                                           style: TextStyle(
                                               fontSize: s(12),
                                               color: Colors.grey[600])),
-                                      Text("08956733xxx",
+                                      Text(phone,
                                           style: GoogleFonts.poppins(
                                               fontSize: s(14),
                                               fontWeight: FontWeight.w600)),
@@ -283,7 +299,7 @@ class ServiceDetailPage extends StatelessWidget {
                                         fontSize: s(12),
                                         color: Colors.grey[600])),
                                 Text(
-                                  "Jl. Medokan Ayu No.13, Kecamatan Gunung Anyar",
+                                  address,
                                   style: GoogleFonts.poppins(
                                     fontSize: s(14),
                                     fontWeight: FontWeight.w500,
@@ -310,8 +326,7 @@ class ServiceDetailPage extends StatelessWidget {
                                 color: Colors.red.shade50,
                               ),
                               child: Text(
-                                task['desc'] ??
-                                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit...",
+                                desc,
                                 style: TextStyle(fontSize: s(13)),
                               ),
                             ),
@@ -338,7 +353,20 @@ class ServiceDetailPage extends StatelessWidget {
               child: SizedBox(
                 height: 58,
                 child: ElevatedButton(
-                  onPressed: () => showRejectDialog(context),
+                  onPressed: () => showRejectDialog(
+                    context,
+                    onConfirm: (reason, desc) {
+                      context.read<AdminServiceProvider>().declineServiceAsAdmin(
+                            service.id,
+                            reason: reason,
+                            reasonDescription: desc,
+                          );
+                      Navigator.pop(context); // Close detail page after action? Maybe better to keep open or refresh. 
+                      // User flow usually expects going back if item status changes heavily.
+                      // Let's pop for now as it moves to history.
+                      Navigator.pop(context);
+                    },
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red,
                     shape: RoundedRectangleBorder(
@@ -362,7 +390,15 @@ class ServiceDetailPage extends StatelessWidget {
               child: SizedBox(
                 height: 58,
                 child: ElevatedButton(
-                  onPressed: () => showAcceptDialog(context),
+                  onPressed: () => showAcceptDialog(
+                    context,
+                    onConfirm: () {
+                      context
+                          .read<AdminServiceProvider>()
+                          .acceptServiceAsAdmin(service.id);
+                      Navigator.pop(context); // Close detail page
+                    },
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
                     shape: RoundedRectangleBorder(
