@@ -57,9 +57,17 @@ class PerformanceHelpers {
       (sum, service) => sum + _calculateServiceRevenue(service),
     );
 
+    // Determine staff name
+    String displayName = 'Unknown';
+    if (staff.name.isNotEmpty) {
+      displayName = staff.name;
+    } else if (staff.username.isNotEmpty) {
+      displayName = staff.username;
+    }
+
     return StaffPerformance(
       staffId: staff.id,
-      staffName: staff.name ?? staff.username ?? 'Unknown',
+      staffName: displayName,
       role: staff.role,
       photoUrl: staff.photo,
       totalJobsCompleted: completedJobs.length,
@@ -72,7 +80,7 @@ class PerformanceHelpers {
 
   /// Get services untuk specific staff dalam range tertentu
   static List<ServiceModel> _getStaffServices({
-    required String staffId,
+    required String staffId,  // Currently unused, will be used when backend has assignment
     required List<ServiceModel> allServices,
     required PerformanceRange range,
   }) {
@@ -80,6 +88,8 @@ class PerformanceHelpers {
       // TODO: Filter by technician/assigned_to when field available
       // For now, randomly assign for demo purposes
       // In production, check: service.assignedTo == staffId
+      // ignore: unused_local_variable
+      final _ = staffId;  // Suppress warning, will be used in production
       
       // Filter by date range
       if (!_isServiceInRange(service, range)) {
@@ -93,7 +103,9 @@ class PerformanceHelpers {
   /// Check if service is within the selected date range
   static bool _isServiceInRange(ServiceModel service, PerformanceRange range) {
     final now = DateTime.now();
-    final serviceDate = service.scheduledDate ?? service.createdAt ?? service.updatedAt;
+    DateTime? serviceDate = service.scheduledDate;
+    serviceDate ??= service.createdAt;
+    serviceDate ??= service.updatedAt;
     
     if (serviceDate == null) return false;
 
@@ -144,8 +156,7 @@ class PerformanceHelpers {
     // Distribute services evenly across staff
     final assignedServices = <ServiceModel>[];
     for (int i = 0; i < services.length; i++) {
-      final staff = staffList[i % staffList.length];
-      // In real app, this would be service.assignedTo = staff.id
+      // In real app, this would be: service.assignedTo = staffList[i % staffList.length].id
       // For now just return as-is
       assignedServices.add(services[i]);
     }
