@@ -1058,4 +1058,45 @@ class ApiService {
       throw Exception('Error delete voucher: $e');
     }
   }
+
+  /* ======================= SUBSCRIPTION ======================= */
+
+  Future<void> cancelSubscription() async {
+    try {
+      final uri = Uri.parse('${_baseUrl}owner/subscription/cancel');
+      final headers = await _getAuthHeaders();
+
+      _debugRequest('CANCEL_SUBSCRIPTION', uri, headers, null);
+      final res = await http.post(uri, headers: headers);
+      _debugResponse('CANCEL_SUBSCRIPTION', res);
+
+      if (res.statusCode != 200) {
+        final j = _tryDecodeJson(res.body);
+        if (j is Map<String, dynamic>) {
+          throw Exception(_getErrorMessage(j));
+        }
+        throw Exception('Gagal membatalkan langganan (HTTP ${res.statusCode}).');
+      }
+    } catch (e) {
+      throw Exception('Gagal membatalkan langganan: '
+          '${e.toString().replaceFirst("Exception: ", "")}');
+    }
+  }
+
+  Future<void> checkSubscriptionStatus() async {
+    try {
+      final uri = Uri.parse('${_baseUrl}owner/subscription/check-status');
+      final headers = await _getAuthHeaders();
+
+      _debugRequest('CHECK_SUB_STATUS', uri, headers, null);
+      final res = await http.post(uri, headers: headers);
+      _debugResponse('CHECK_SUB_STATUS', res);
+
+      if (res.statusCode != 200) {
+        throw Exception('Gagal memperbarui status (HTTP ${res.statusCode}).');
+      }
+    } catch (e) {
+      throw Exception('Gagal cek status: ${e.toString()}');
+    }
+  }
 }

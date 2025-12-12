@@ -10,6 +10,8 @@ import 'package:bengkel_online_flutter/core/models/employment.dart';
 import '../widgets/staff/staff_form_fields.dart';
 import '../widgets/staff/staff_info_header.dart';
 import '../widgets/staff/staff_success_screen.dart';
+import '../../../../features/membership/presentation/widgets/premium_limit_dialog.dart';
+import '../../../../features/membership/presentation/premium_membership_screen.dart';
 
 const _primary = Color(0xFFD72B1C);
 
@@ -129,7 +131,32 @@ class _AddStaffRegisterPageState extends State<AddStaffRegisterPage>
       if (!mounted) return;
       setState(() {
         _saving = false;
-        _errorMessage = e.toString().replaceFirst("Exception: ", "");
+        
+        final msg = e.toString().replaceFirst("Exception: ", "");
+        _errorMessage = msg;
+
+        // Check for limit reached error
+        if (msg.contains("Batas staff tercapai") || msg.contains("Upgrade") || msg.contains("LIMIT_REACHED")) {
+           showDialog(
+             context: context,
+             builder: (ctx) => PremiumLimitDialog(
+               message: "Maksimal 5 staff untuk paket Gratis. \nSilakan upgrade untuk menambah lebih banyak staff.",
+               onUpgrade: () {
+                 // Navigate to Premium Screen
+                 Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => PremiumMembershipScreen(
+                        onViewMembershipPackages: () {
+                            // Logic to scroll to packages or handling
+                        },
+                      ),
+                    ),
+                 );
+               },
+             ),
+           );
+        }
       });
     }
   }
