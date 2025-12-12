@@ -8,6 +8,7 @@ import '../widgets/report/report_charts.dart';
 import '../widgets/report/report_data.dart';
 import '../widgets/report/report_health_matrix.dart';
 import '../widgets/report/report_kpi_card.dart';
+import '../../../core/services/report_pdf_service.dart';
 
 // --- Colors ---
 const Color kPrimaryRed = Color(0xFFB70F0F); // Darker red to match Staff Management
@@ -60,12 +61,10 @@ class _ReportPageState extends State<ReportPage> {
                     topLeft: Radius.circular(30),
                     topRight: Radius.circular(30),
                   ),
-                  child: Stack(
-                      children: [
-                         ListView(
-                          padding: const EdgeInsets.fromLTRB(20, 24, 20, 100), // Bottom padding for CTA
-                          physics: const BouncingScrollPhysics(),
-                          children: [
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+                    physics: const BouncingScrollPhysics(),
+                    children: [
                             // KPI GRid
                             _buildKpiSection(d),
                             const SizedBox(height: 24),
@@ -82,24 +81,21 @@ class _ReportPageState extends State<ReportPage> {
                             _buildPeakHour(d),
                             const SizedBox(height: 20),
 
-                            // Operational Health
-                            ReportHealthMatrix(
-                              avgQueue: '${d.avgQueue} mobil',
-                              occupancy: '${d.occupancy}%',
-                              peakRange: d.peakRange,
-                              efficiency: '${d.efficiency}%',
-                            ),
-                          ],
-                        ),
-                        
-                        // Floating CTA Button
-                        Positioned(
-                           left: 20,
-                           right: 20,
-                           bottom: 24,
-                           child: _buildCtaButton(),
-                        )
-                      ],
+                      // Operational Health
+                      ReportHealthMatrix(
+                        avgQueue: '${d.avgQueue} mobil',
+                        occupancy: '${d.occupancy}%',
+                        peakRange: d.peakRange,
+                        efficiency: '${d.efficiency}%',
+                      ),
+                      
+                      const SizedBox(height: 32),
+                      
+                      // CTA Button (now at bottom of scrollable content)
+                      _buildCtaButton(),
+                      
+                      const SizedBox(height: 24),
+                    ],
                   ),
                 ),
               ),
@@ -511,7 +507,13 @@ class _ReportPageState extends State<ReportPage> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           elevation: 0,
         ),
-        onPressed: () {},
+        onPressed: () async {
+          // Generate and show PDF
+          await ReportPdfService.generate(
+            data: _data.forRange(_range),
+            range: _range,
+          );
+        },
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
