@@ -66,15 +66,15 @@ class PerformanceHelpers {
     }
 
     return StaffPerformance(
-      staffId: staff.id,
-      staffName: displayName,
-      role: staff.role,
-      photoUrl: staff.photo,
-      totalJobsCompleted: completedJobs.length,
-      totalRevenue: totalRevenue,
-      activeJobs: inProgressJobs.length,
-      inProgressJobs: inProgressJobs,
-      completedJobs: completedJobs,
+      name: displayName,
+      role: StaffRole.values.firstWhere(
+        (e) => e.toString().contains(staff.role.toLowerCase()),
+        orElse: () => StaffRole.seniorMechanic
+      ),
+      avatarUrl: staff.photo ?? '',
+      jobsDone: completedJobs.length,
+      jobsInProgress: inProgressJobs.length,
+      estimatedRevenue: totalRevenue.toInt(),
     );
   }
 

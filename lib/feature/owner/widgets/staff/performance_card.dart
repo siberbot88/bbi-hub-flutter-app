@@ -39,10 +39,10 @@ class PerformanceCard extends StatelessWidget {
                   CircleAvatar(
                     radius: 24,
                     backgroundColor: AppColors.primaryRed.withValues(alpha: 0.1),
-                    backgroundImage: performance.photoUrl != null
-                        ? NetworkImage(performance.photoUrl!)
+                    backgroundImage: performance.avatarUrl.isNotEmpty
+                        ? NetworkImage(performance.avatarUrl)
                         : null,
-                    child: performance.photoUrl == null
+                    child: performance.avatarUrl.isEmpty
                         ? const Icon(Icons.person, color: AppColors.primaryRed)
                         : null,
                   ),
@@ -52,14 +52,14 @@ class PerformanceCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          performance.staffName,
+                          performance.name,
                           style: AppTextStyles.heading5(),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                         AppSpacing.verticalSpaceXS,
                         Text(
-                          performance.role,
+                          performance.roleDisplayName,
                           style: AppTextStyles.bodySmall(
                             color: AppColors.textSecondary,
                           ),
@@ -82,7 +82,7 @@ class PerformanceCard extends StatelessWidget {
                   Expanded(
                     child: _MetricBox(
                       label: 'Jobs Selesai',
-                      value: performance.totalJobsCompleted.toString(),
+                      value: performance.jobsDone.toString(),
                       icon: Icons.check_circle_outline,
                       color: Colors.green,
                     ),
@@ -91,7 +91,7 @@ class PerformanceCard extends StatelessWidget {
                   Expanded(
                     child: _MetricBox(
                       label: 'Sedang Dikerjakan',
-                      value: performance.activeJobs.toString(),
+                      value: performance.jobsInProgress.toString(),
                       icon: Icons.build_circle_outlined,
                       color: Colors.orange,
                     ),
@@ -121,7 +121,7 @@ class PerformanceCard extends StatelessWidget {
                       style: AppTextStyles.bodySmall(),
                     ),
                     Text(
-                      'Rp ${rupiah(performance.totalRevenue)}',
+                      'Rp ${rupiah(performance.estimatedRevenue)}',
                       style: AppTextStyles.labelBold(
                         color: AppColors.primaryRed,
                       ),

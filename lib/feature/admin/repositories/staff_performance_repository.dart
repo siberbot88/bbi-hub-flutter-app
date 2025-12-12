@@ -1,0 +1,37 @@
+import 'dart:convert';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
+import '../../../../core/models/staff_performance.dart';
+
+class StaffPerformanceRepository {
+  final String baseUrl = 'http://10.0.2.2:8000/api/v1'; // Adjust if using different config
+  final _storage = const FlutterSecureStorage();
+
+  Future<List<StaffPerformance>> getStaffPerformance({String range = 'today'}) async {
+    final token = await _storage.read(key: 'auth_token');
+
+    if (token == null) {
+      throw Exception('Unauthorized');
+    }
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/owners/staff/performance?range=$range'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final jsonResponse = json.decode(response.body);
+      if (jsonResponse['success'] == true) {
+        final List<dynamic> data = jsonResponse['data'];
+        return data.map((json) => StaffPerformance.fromJson(json)).toList();
+      } else {
+        throw Exception(jsonResponse['message'] ?? 'Failed to load staff performance');
+      }
+    } else {
+      throw Exception('Failed to load staff performance: ${response.statusCode}');
+    }
+  }
+}

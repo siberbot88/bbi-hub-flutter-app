@@ -7,6 +7,7 @@ import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/models/user.dart';
 import '../../../core/services/auth_provider.dart';
+import '../../../core/services/api_service.dart';
 
 class UnderlineCurvePainter extends CustomPainter {
   final Color color;
@@ -124,153 +125,157 @@ class _PremiumMembershipScreenState extends State<PremiumMembershipScreen>
         child: Column(
           children: [
             Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    if (!widget.isViewOnly) ...[
-                      // Header nav
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            IconButton(
-                              onPressed: () => Navigator.of(context).pop(),
-                              icon: Icon(
-                                Icons.close_rounded,
-                                color: isDark ? Colors.white : AppColors.textPrimary,
-                              ),
-                              splashRadius: 24,
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: primaryColor.withAlpha(25),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                'PRO',
-                                style: AppTextStyles.labelBold(color: primaryColor),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-
-                    // Hero Image - Fixed Height
-                    Container(
-                      height: 250,
-                      width: double.infinity,
-                      margin: const EdgeInsets.only(top: 10, bottom: 20),
-                      child: Image.asset(
-                        'assets/image/premium_hero.png',
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Center(
-                            child: Icon(Icons.workspace_premium, size: 80, color: Colors.amber[300]),
-                          );
-                        },
-                      ),
-                    ),
-
-                    // Title Section
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Column(
-                        children: [
-                          Text(
-                            'Upgrade ke Premium',
-                            textAlign: TextAlign.center,
-                            style: AppTextStyles.heading2(
-                              color: isDark ? Colors.white : AppColors.textPrimary,
-                            ).copyWith(height: 1.2),
-                          ),
-                          const SizedBox(height: 8),
-                          Stack(
+              child: RefreshIndicator(
+                onRefresh: _refreshStatus,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      if (!widget.isViewOnly) ...[
+                        // Header nav
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Positioned(
-                                bottom: -2, // Lowered slightly so it doesn't strike through
-                                left: 0,
-                                right: 0,
-                                child: CustomPaint(
-                                  painter: UnderlineCurvePainter(
-                                    color: primaryColor.withAlpha(40), 
-                                  ),
-                                  size: const Size(double.infinity, 12),
+                              IconButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                icon: Icon(
+                                  Icons.close_rounded,
+                                  color: isDark ? Colors.white : AppColors.textPrimary,
                                 ),
+                                splashRadius: 24,
                               ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: primaryColor.withAlpha(25),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
                                 child: Text(
-                                  'Untung Lebih Banyak!',
-                                  textAlign: TextAlign.center,
-                                  style: AppTextStyles.heading2(
-                                    color: primaryColor,
-                                  ).copyWith(height: 1.2),
+                                  'PRO',
+                                  style: AppTextStyles.labelBold(color: primaryColor),
                                 ),
                               ),
                             ],
                           ),
-                        ],
+                        ),
+                      ],
+
+                      // Hero Image - Fixed Height
+                      Container(
+                        height: 250,
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(top: 10, bottom: 20),
+                        child: Image.asset(
+                          'assets/image/premium_hero.png',
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Center(
+                              child: Icon(Icons.workspace_premium, size: 80, color: Colors.amber[300]),
+                            );
+                          },
+                        ),
                       ),
-                    ),
 
-                    AppSpacing.verticalSpaceMD,
-
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Text(
-                        'Nikmati fitur eksklusif untuk memaksimalkan\npertumbuhan bengkel Anda.',
-                        textAlign: TextAlign.center,
-                        style: AppTextStyles.bodyMedium(
-                          color: isDark ? Colors.grey[300] : AppColors.textSecondary,
-                        ).copyWith(height: 1.5),
+                      // Title Section
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Column(
+                          children: [
+                            Text(
+                              'Upgrade ke Premium',
+                              textAlign: TextAlign.center,
+                              style: AppTextStyles.heading2(
+                                color: isDark ? Colors.white : AppColors.textPrimary,
+                              ).copyWith(height: 1.2),
+                            ),
+                            const SizedBox(height: 8),
+                            Stack(
+                              children: [
+                                Positioned(
+                                  bottom: -2,
+                                  left: 0,
+                                  right: 0,
+                                  child: CustomPaint(
+                                    painter: UnderlineCurvePainter(
+                                      color: primaryColor.withAlpha(40), 
+                                    ),
+                                    size: const Size(double.infinity, 12),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                                  child: Text(
+                                    'Untung Lebih Banyak!',
+                                    textAlign: TextAlign.center,
+                                    style: AppTextStyles.heading2(
+                                      color: primaryColor,
+                                    ).copyWith(height: 1.2),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
 
-                    AppSpacing.verticalSpaceXL,
+                      AppSpacing.verticalSpaceMD,
 
-                    // Benefits List
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Column(
-                        children: [
-                          _buildBenefitRow(
-                            context,
-                            icon: Icons.analytics_outlined,
-                            title: 'Analisis Bisnis Mendalam',
-                            subtitle: 'Pantau performa bengkel dengan grafik detail.',
-                            isLast: false,
-                          ),
-                          _buildBenefitRow(
-                            context,
-                            icon: Icons.people_outline_rounded,
-                            title: 'Manajemen Staff Tanpa Batas',
-                            subtitle: 'Kelola tim dan jadwal kerja lebih efisien.',
-                            isLast: false,
-                          ),
-                          _buildBenefitRow(
-                            context,
-                            icon: Icons.print_outlined,
-                            title: 'Cetak Laporan Otomatis',
-                            subtitle: 'Export laporan keuangan dalam sekali klik.',
-                            isLast: true,
-                          ),
-                        ],
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Text(
+                          'Nikmati fitur eksklusif untuk memaksimalkan\npertumbuhan bengkel Anda.',
+                          textAlign: TextAlign.center,
+                          style: AppTextStyles.bodyMedium(
+                            color: isDark ? Colors.grey[300] : AppColors.textSecondary,
+                          ).copyWith(height: 1.5),
+                        ),
                       ),
-                    ),
 
-                    AppSpacing.verticalSpaceXXL,
-                  ],
+                      AppSpacing.verticalSpaceXL,
+
+                      // Benefits List
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Column(
+                          children: [
+                            _buildBenefitRow(
+                              context,
+                              icon: Icons.analytics_outlined,
+                              title: 'Analisis Bisnis Mendalam',
+                              subtitle: 'Pantau performa bengkel dengan grafik detail.',
+                              isLast: false,
+                            ),
+                            _buildBenefitRow(
+                              context,
+                              icon: Icons.people_outline_rounded,
+                              title: 'Manajemen Staff Tanpa Batas',
+                              subtitle: 'Kelola tim dan jadwal kerja lebih efisien.',
+                              isLast: false,
+                            ),
+                            _buildBenefitRow(
+                              context,
+                              icon: Icons.print_outlined,
+                              title: 'Cetak Laporan Otomatis',
+                              subtitle: 'Export laporan keuangan dalam sekali klik.',
+                              isLast: true,
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      AppSpacing.verticalSpaceXXL,
+                    ],
+                  ),
                 ),
               ),
             ),
+
             
             // Bottom Buttons (Fixed at bottom)
             Container(
@@ -378,120 +383,139 @@ class _PremiumMembershipScreenState extends State<PremiumMembershipScreen>
         formattedDate = "Aktif Selamanya"; // Or "30 Hari" depending on context
      }
 
-     return Padding(
-       padding: const EdgeInsets.all(20.0),
-       child: Column(
-         crossAxisAlignment: CrossAxisAlignment.stretch,
-         children: [
-           Container(
-             padding: const EdgeInsets.all(24),
-             decoration: BoxDecoration(
-               gradient: LinearGradient(
-                 colors: [
-                   isDark ? const Color(0xFF2C2C2C) : Colors.white,
-                   isDark ? const Color(0xFF222222) : const Color(0xFFF8F9FA),
-                 ],
-                 begin: Alignment.topLeft,
-                 end: Alignment.bottomRight
-               ),
-               borderRadius: BorderRadius.circular(24),
-               boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, 10))
-               ],
-               border: Border.all(color: Colors.amber.withOpacity(0.5), width: 1)
-             ),
-             child: Column(
-               children: [
-                 const Icon(Icons.verified, color: Colors.amber, size: 48),
-                 const SizedBox(height: 16),
-                 Text('Paket Aktif',
-                  style: AppTextStyles.labelBold(color: Colors.grey),
-                 ),
-                 const SizedBox(height: 8),
-                 Text(
-                   user.subscriptionPlanName ?? 'Premium Plan',
-                   style: AppTextStyles.heading2(color: isDark ? Colors.white : Colors.black87),
-                   textAlign: TextAlign.center,
-                 ),
-                 const SizedBox(height: 24),
-                 Divider(color: Colors.grey.withOpacity(0.2)),
-                 const SizedBox(height: 24),
-                 Row(
-                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                   children: [
-                     Text('Masa Berlaku', style: AppTextStyles.bodyMedium(color: Colors.grey)),
-                     Text(formattedDate, style: AppTextStyles.heading5(color: isDark ? Colors.white : Colors.black87)),
+     return RefreshIndicator(
+       onRefresh: _refreshStatus,
+       child: SingleChildScrollView(
+         physics: const AlwaysScrollableScrollPhysics(), // Ensure scroll even if content fits
+         child: Padding(
+           padding: const EdgeInsets.all(20.0),
+           child: Column(
+             crossAxisAlignment: CrossAxisAlignment.stretch,
+             children: [
+               Container(
+                 padding: const EdgeInsets.all(24),
+                 decoration: BoxDecoration(
+                   gradient: LinearGradient(
+                     colors: [
+                       isDark ? const Color(0xFF2C2C2C) : Colors.white,
+                       isDark ? const Color(0xFF222222) : const Color(0xFFF8F9FA),
+                     ],
+                     begin: Alignment.topLeft,
+                     end: Alignment.bottomRight
+                   ),
+                   borderRadius: BorderRadius.circular(24),
+                   boxShadow: [
+                      BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, 10))
                    ],
+                   border: Border.all(color: Colors.amber.withOpacity(0.5), width: 1)
                  ),
-                  const SizedBox(height: 12),
-                 Row(
-                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                 child: Column(
                    children: [
-                     Text('Status', style: AppTextStyles.bodyMedium(color: Colors.grey)),
-                     Container(
-                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                       decoration: BoxDecoration(
-                         color: Colors.green.withOpacity(0.1),
-                         borderRadius: BorderRadius.circular(20)
-                       ),
-                       child: Text('AKTIF', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 12)),
+                     const Icon(Icons.verified, color: Colors.amber, size: 48),
+                     const SizedBox(height: 16),
+                     Text('Paket Aktif',
+                      style: AppTextStyles.labelBold(color: Colors.grey),
+                     ),
+                     const SizedBox(height: 8),
+                     Text(
+                       user.subscriptionPlanName ?? 'Premium Plan',
+                       style: AppTextStyles.heading2(color: isDark ? Colors.white : Colors.black87),
+                       textAlign: TextAlign.center,
+                     ),
+                     const SizedBox(height: 24),
+                     Divider(color: Colors.grey.withOpacity(0.2)),
+                     const SizedBox(height: 24),
+                     Row(
+                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                       children: [
+                         Text('Masa Berlaku', style: AppTextStyles.bodyMedium(color: Colors.grey)),
+                         Text(formattedDate, style: AppTextStyles.heading5(color: isDark ? Colors.white : Colors.black87)),
+                       ],
+                     ),
+                      const SizedBox(height: 12),
+                     Row(
+                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                       children: [
+                         Text('Status', style: AppTextStyles.bodyMedium(color: Colors.grey)),
+                         Container(
+                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                           decoration: BoxDecoration(
+                             color: Colors.green.withOpacity(0.1),
+                             borderRadius: BorderRadius.circular(20)
+                           ),
+                           child: Text('AKTIF', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 12)),
+                         )
+                       ],
                      )
                    ],
-                 )
-               ],
-             ),
+                 ),
+               ),
+               
+               const SizedBox(height: 32),
+               Padding(
+                 padding: const EdgeInsets.symmetric(horizontal: 8),
+                 child: Text(
+                   "Keuntungan Paket Anda:",
+                    style: AppTextStyles.heading4(color: isDark ? Colors.white : Colors.black87),
+                 ),
+               ),
+                const SizedBox(height: 16),
+                 // Benefits List Reused
+                 _buildBenefitRow(
+                   context,
+                   icon: Icons.analytics_outlined,
+                   title: 'Analisis Bisnis Mendalam',
+                   subtitle: 'Akses penuh ke semua grafik performa bengkel.',
+                   isLast: false,
+                 ),
+                 _buildBenefitRow(
+                   context,
+                   icon: Icons.people_outline_rounded,
+                   title: 'Manajemen Staff Tanpa Batas',
+                   subtitle: 'Tidak ada batasan jumlah karyawan.',
+                   isLast: false,
+                 ),
+                 _buildBenefitRow(
+                   context,
+                   icon: Icons.print_outlined,
+                   title: 'Laporan Keuangan Prioritas',
+                   subtitle: 'Export data kapan saja tanpa batasan.',
+                   isLast: true,
+                 ),
+   
+               const SizedBox(height: 40), // Replaced Spacer with fixed space
+               Text(
+                 "Ingin mengubah paket?",
+                 textAlign: TextAlign.center,
+                 style: AppTextStyles.bodyMedium(color: Colors.grey),
+               ),
+               const SizedBox(height: 16),
+               ElevatedButton(
+                 onPressed: widget.onViewMembershipPackages, // Re-use callback to show packages
+                 style: ElevatedButton.styleFrom(
+                   backgroundColor: primaryColor,
+                   padding: const EdgeInsets.symmetric(vertical: 16),
+                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))
+                 ),
+                 child: Text('Perpanjang / Ganti Paket', style: AppTextStyles.button(color: Colors.white)),
+               ),
+               const SizedBox(height: 16),
+               Center(
+                 child: TextButton(
+                   onPressed: () => _showCancelSubscriptionDialog(context),
+                   style: TextButton.styleFrom(
+                     foregroundColor: Colors.red,
+                   ),
+                   child: Text(
+                     'Batalkan Langganan',
+                     style: AppTextStyles.labelBold(color: Colors.red),
+                   ),
+                 ),
+               ),
+                const SizedBox(height: 32),
+             ],
            ),
-           
-           const SizedBox(height: 32),
-           Padding(
-             padding: const EdgeInsets.symmetric(horizontal: 8),
-             child: Text(
-               "Keuntungan Paket Anda:",
-                style: AppTextStyles.heading4(color: isDark ? Colors.white : Colors.black87),
-             ),
-           ),
-            const SizedBox(height: 16),
-             // Benefits List Reused
-             _buildBenefitRow(
-               context,
-               icon: Icons.analytics_outlined,
-               title: 'Analisis Bisnis Mendalam',
-               subtitle: 'Akses penuh ke semua grafik performa bengkel.',
-               isLast: false,
-             ),
-             _buildBenefitRow(
-               context,
-               icon: Icons.people_outline_rounded,
-               title: 'Manajemen Staff Tanpa Batas',
-               subtitle: 'Tidak ada batasan jumlah karyawan.',
-               isLast: false,
-             ),
-             _buildBenefitRow(
-               context,
-               icon: Icons.print_outlined,
-               title: 'Laporan Keuangan Prioritas',
-               subtitle: 'Export data kapan saja tanpa batasan.',
-               isLast: true,
-             ),
-
-           const Spacer(),
-           Text(
-             "Ingin mengubah paket?",
-             textAlign: TextAlign.center,
-             style: AppTextStyles.bodyMedium(color: Colors.grey),
-           ),
-           const SizedBox(height: 16),
-           ElevatedButton(
-             onPressed: widget.onViewMembershipPackages, // Re-use callback to show packages
-             style: ElevatedButton.styleFrom(
-               backgroundColor: primaryColor,
-               padding: const EdgeInsets.symmetric(vertical: 16),
-               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))
-             ),
-             child: Text('Perpanjang / Ganti Paket', style: AppTextStyles.button(color: Colors.white)),
-           ),
-            const SizedBox(height: 32),
-         ],
+         ),
        ),
      );
   }
@@ -560,6 +584,107 @@ class _PremiumMembershipScreenState extends State<PremiumMembershipScreen>
               ),
             ),
           ],
+        ),
+      ),
+    );
+
+  }
+
+
+  Future<void> _refreshStatus() async {
+    try {
+      final api = ApiService();
+      await api.checkSubscriptionStatus();
+      if (!mounted) return;
+      await context.read<AuthProvider>().checkLoginStatus();
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Status langganan diperbarui'), backgroundColor: Colors.green),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  void _showCancelSubscriptionDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 48),
+              const SizedBox(height: 16),
+              Text(
+                'Batalkan Langganan?',
+                style: AppTextStyles.heading3(color: Colors.black),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Anda akan kehilangan akses ke fitur Premium setelah periode langganan saat ini berakhir. Apakah Anda yakin?',
+                style: AppTextStyles.bodyMedium(color: Colors.grey[600]!),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    Navigator.pop(ctx); // Close dialog
+                    
+                    // Show loading
+                    showDialog(
+                      context: context, 
+                      barrierDismissible: false,
+                      builder: (_) => const Center(child: CircularProgressIndicator())
+                    );
+                    
+                    try {
+                      final api = ApiService();
+                      await api.cancelSubscription();
+                      
+                      if (!mounted) return;
+                      Navigator.pop(context); // Close loading
+                      
+                      // Refresh user data
+                      await context.read<AuthProvider>().checkLoginStatus();
+                      
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Langganan berhasil dibatalkan'), backgroundColor: Colors.green),
+                      );
+                      Navigator.pop(context); // Close Premium Screen
+                      
+                    } catch (e) {
+                      if (!mounted) return;
+                      Navigator.pop(context); // Close loading
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
+                  ),
+                  child: Text('Ya, Batalkan', style: AppTextStyles.button(color: Colors.white)),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text('Tidak, Kembali', style: AppTextStyles.bodyMedium(color: Colors.grey)),
+              ),
+            ],
+          ),
         ),
       ),
     );
