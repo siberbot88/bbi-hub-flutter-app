@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
 
 import 'service_logging.dart';
 import '../widgets/custom_header.dart';
@@ -30,6 +32,9 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
 
   DateTime get selectedDate =>
       DateTime(displayedYear, displayedMonth, selectedDay);
+      
+  /// Strict filter: Hanya menampilkan service dengan acceptance_status == 'pending'
+  /// Ini adalah permintaan baru/request yang BELUM di-accept/decline.
 
   @override
   void initState() {
@@ -40,6 +45,9 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
   }
 
   void _fetchData() {
+
+
+    
     final auth = context.read<AuthProvider>();
     final workshopUuid = auth.user?.workshopUuid;
     final dateStr = DateFormat('yyyy-MM-dd').format(selectedDate);
@@ -94,7 +102,7 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
     final provider = context.watch<AdminServiceProvider>();
 
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: AppColors.backgroundLight,
       appBar: const CustomHeader(
         title: "Service",
         showBack: false,
@@ -130,7 +138,7 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
       return Center(
         child: Text(
           provider.error!,
-          style: GoogleFonts.poppins(),
+          style: AppTextStyles.bodyMedium(color: AppColors.error),
         ),
       );
     }
@@ -138,7 +146,7 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
     final scheduled = _getScheduledServices(provider.items);
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.only(bottom: 80),
+      padding:  const EdgeInsets.only(bottom: 80),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -161,11 +169,17 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
                 ? Center(
               child: Text(
                 "No scheduled tasks",
-                style: GoogleFonts.poppins(),
+                style: AppTextStyles.bodyMedium(color: AppColors.textSecondary),
               ),
             )
                 : Column(
-              children: scheduled.where((s) => (s.acceptanceStatus ?? '').toLowerCase() == 'pending').map((s) {
+              // Strict Filter: Only show services where acceptance_status is 'pending'
+              // This is the "Inbox" / "Request" list for new orders.
+              children: scheduled.where((s) {
+                 final acceptStatus = (s.acceptanceStatus ?? '').toLowerCase();
+                 // Show strict pending only
+                 return acceptStatus == 'pending';
+              }).map((s) {
                 return ServiceCard(service: s);
               }).toList(),
             ),

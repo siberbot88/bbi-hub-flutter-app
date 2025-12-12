@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import 'logging_helpers.dart';
 import '../../screens/service_pending.dart' as pending;
 import '../../screens/service_progress.dart' as progress;
@@ -21,13 +23,13 @@ class LoggingTaskCard extends StatelessWidget {
     final status = service.status ?? 'Pending';
 
     if (status.toLowerCase() == "completed") {
-      statusColor = Colors.green;
+      statusColor = AppColors.statusCompleted;
     } else if (status.toLowerCase() == "in_progress" || status.toLowerCase() == "on_process") {
-      statusColor = Colors.orange;
+      statusColor = AppColors.statusInProgress;
     } else if (status.toLowerCase() == "pending") {
-      statusColor = Colors.grey.shade800; // Pending mechanic assignment
+      statusColor = AppColors.statusPending; // Pending mechanic assignment
     } else {
-      statusColor = Colors.grey.shade800;
+      statusColor = AppColors.textSecondary;
     }
 
     Widget actionButton;
@@ -44,13 +46,13 @@ class LoggingTaskCard extends StatelessWidget {
               ));
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFDC2626),
+          backgroundColor: AppColors.primaryRed,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         ),
-        child: const Text("Tetapkan Mekanik",
-            style: TextStyle(fontSize: 12, color: Colors.white)),
+        child: Text("Tetapkan Mekanik",
+            style: AppTextStyles.buttonSmall(color: Colors.white).copyWith(fontSize: 12)),
       );
     } else if (status.toLowerCase() == 'in_progress' || status.toLowerCase() == "on_process") {
       actionButton = ElevatedButton(
@@ -63,13 +65,13 @@ class LoggingTaskCard extends StatelessWidget {
               ));
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.orange,
+          backgroundColor: AppColors.statusInProgress,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         ),
-        child: const Text("Lihat Detail",
-            style: TextStyle(fontSize: 12, color: Colors.white)),
+        child: Text("Lihat Detail",
+            style: AppTextStyles.buttonSmall(color: Colors.white).copyWith(fontSize: 12)),
       );
     } else if (status.toLowerCase() == 'completed') {
       actionButton = ElevatedButton(
@@ -82,13 +84,13 @@ class LoggingTaskCard extends StatelessWidget {
               ));
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.green,
+          backgroundColor: AppColors.statusCompleted,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         ),
-        child: const Text("Buat Invoice",
-            style: TextStyle(fontSize: 12, color: Colors.white)),
+        child: Text("Buat Invoice",
+            style: AppTextStyles.buttonSmall(color: Colors.white).copyWith(fontSize: 12)),
       );
     } else {
       actionButton = const SizedBox.shrink();
@@ -120,38 +122,31 @@ class LoggingTaskCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                    color: statusColor.withAlpha(77), // 0.3 * 255
+                    color: statusColor.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(20)),
                 child: Text(status,
-                    style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: statusColor)),
+                    style: AppTextStyles.caption(color: statusColor).copyWith(fontWeight: FontWeight.w600)),
               ),
               Text(
                   "${LoggingHelpers.formatDate(scheduledDate)} • $timeStr",
-                  style: const TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey,
-                      fontWeight: FontWeight.w500)),
+                  style: AppTextStyles.caption()),
             ],
           ),
           const SizedBox(height: 8),
           Text(service.name,
-              style:
-                  const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              style: AppTextStyles.heading5()),
           const SizedBox(height: 4),
           Text(service.complaint ?? service.request ?? service.description ?? '-',
-              style: const TextStyle(fontSize: 12, color: Colors.black87), 
+              style: AppTextStyles.bodyMedium(color: AppColors.textPrimary), 
               maxLines: 2, 
               overflow: TextOverflow.ellipsis),
           const SizedBox(height: 8),
           Row(
             children: [
-              const Icon(Icons.settings, size: 16, color: Colors.grey),
+              const Icon(Icons.settings, size: 16, color: AppColors.textSecondary),
               const SizedBox(width: 6),
               Text("${service.displayVehicleName}  #${service.displayVehiclePlate}",
-                  style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                  style: AppTextStyles.caption()),
             ],
           ),
           const SizedBox(height: 10),
@@ -169,11 +164,9 @@ class LoggingTaskCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(service.displayCustomerName,
-                          style: const TextStyle(
-                              fontSize: 13, fontWeight: FontWeight.w600)),
+                          style: AppTextStyles.labelBold()),
                       Text("ID: ${service.id}",
-                          style: const TextStyle(
-                              fontSize: 11, color: Colors.grey)),
+                          style: AppTextStyles.caption()),
                     ],
                   ),
                 ],

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:bengkel_online_flutter/feature/admin/providers/admin_service_provider.dart';
+import 'package:bengkel_online_flutter/feature/owner/providers/employee_provider.dart';
 import 'package:bengkel_online_flutter/core/models/employment.dart';
 
 /// 🔹 Popup pertama: pilih teknisi
@@ -48,7 +49,10 @@ class _TechnicianSelectContentState extends State<TechnicianSelectContent> {
 
   Future<void> _fetchMechanics() async {
     try {
-      final employees = await context.read<AdminServiceProvider>().fetchOwnerEmployees(page: 1);
+      final employeeProvider = context.read<EmployeeProvider>();
+      await employeeProvider.fetchOwnerEmployees(page: 1);
+      final employees = employeeProvider.items;
+      
       // Filter for mechanics if role is available, otherwise show all or filter by jobdesk/specialist
       // For now, let's assume all employees can be assigned or filter if role contains 'mechanic' or 'teknisi'
       setState(() {

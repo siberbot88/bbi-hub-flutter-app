@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
 
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:bengkel_online_flutter/feature/admin/providers/admin_service_provider.dart';
-import 'package:bengkel_online_flutter/core/providers/auth_provider.dart';
+import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
 import 'package:bengkel_online_flutter/core/models/service.dart';
 import '../widgets/service_logging/logging_summary_boxes.dart';
 import '../widgets/service_logging/logging_calendar.dart';
@@ -63,6 +65,7 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
     final status = (t.status ?? '').toLowerCase();
     switch (filterKey) {
       case 'Pending':
+        // Di logging page, 'Pending' berarti Accepted but waiting for Mechanic
         return status == 'pending';
       case 'In Progress':
         return status == 'in_progress' || status == 'on_process';
@@ -111,21 +114,28 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
 
   @override
   Widget build(BuildContext context) {
-  @override
-  Widget build(BuildContext context) {
     final provider = context.watch<AdminServiceProvider>();
-    final allServices = provider.services;
+    final allServices = provider.items;
 
     // Filter for accepted services strictly
-    // And for the current date (though API should handle date, but safe to double check if needed)
-    final acceptedServicesForDate = allServices.where((s) => s.acceptanceStatus == 'accepted').toList();
+    // API returns all services for the date. We filter client side.
+    final acceptedServicesForDate = allServices.where((s) {
+       final acc = (s.acceptanceStatus ?? '').toLowerCase();
+       return acc == 'accepted';
+    }).toList();
 
+    // Categorize based on Service Status
+    // Pending: Accepted by Admin, but "status" is still pending (Waiting for Mechanic)
     final pending = acceptedServicesForDate
         .where((t) => (t.status ?? '').toLowerCase() == 'pending')
         .length;
+        
+    // In Progress: Mechanic Assigned
     final inProgress = acceptedServicesForDate
         .where((t) => (t.status ?? '').toLowerCase() == 'in_progress' || (t.status ?? '').toLowerCase() == 'on_process')
         .length;
+        
+    // Completed
     final completed = acceptedServicesForDate
         .where((t) => (t.status ?? '').toLowerCase() == 'completed')
         .length;
@@ -184,18 +194,21 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: Colors.grey[200],
+          color: Colors.white,
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.border),
         ),
         child: Row(
           children: [
             const Icon(Icons.search, color: Colors.grey),
             const SizedBox(width: 8),
             Expanded(
-              child: TextField(
-                decoration: const InputDecoration.collapsed(
+                child: TextField(
+                decoration: InputDecoration.collapsed(
                   hintText: "Search logging...",
+                  hintStyle: AppTextStyles.caption(),
                 ),
+                style: AppTextStyles.bodyMedium(),
                 onChanged: (val) => setState(() => searchText = val),
               ),
             ),
@@ -218,20 +231,17 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
         children: [
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
+            style: AppTextStyles.heading4(),
           ),
           const SizedBox(height: 12),
           if (filtered.isEmpty)
-            const Center(
+            Center(
               child: Padding(
                 padding: EdgeInsets.all(24.0),
                 child: Text(
                   "Tidak ada tugas yang sesuai dengan filter.",
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey),
+                  style: AppTextStyles.bodyMedium(color: AppColors.textSecondary),
                 ),
               ),
             )

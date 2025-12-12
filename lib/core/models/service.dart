@@ -339,4 +339,8 @@ class ServiceModel {
     ];
     return parts.where((e) => e.isNotEmpty).join(' | ').toLowerCase();
   }
+
+  // Getters for compatibility
+  String? get complaint => description;
+  String? get request => description;
 }
