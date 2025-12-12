@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'theme/app_theme.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'features/membership/presentation/premium_membership_screen.dart';
+import 'features/membership/presentation/membership_selection_screen.dart'; // Import this
 
 void main() {
   runApp(const MyApp());
@@ -13,17 +14,15 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'BBI HUB Plus - Premium Membership',
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system, // Bisa diganti ke light/dark untuk testing
+      theme: ThemeData(
+        fontFamily: GoogleFonts.poppins().fontFamily,
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFDC2626)),
+        useMaterial3: true,
+      ),
+      // Set initial route to PremiumMembershipScreen for demo
       home: PremiumMembershipScreen(
+        isViewOnly: false,
         onViewMembershipPackages: () {
-          // TODO: Navigasi ke halaman daftar paket membership
-          // Contoh:
-          // Navigator.push(
-          //   context,
-          //   MaterialPageRoute(
           //     builder: (context) => MembershipPackagesScreen(),
           //   ),
           // );

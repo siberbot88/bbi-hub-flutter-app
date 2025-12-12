@@ -11,7 +11,7 @@ class AuthProvider with ChangeNotifier {
   String? _token;
   bool _isLoggedIn = false;
   String? _authError;
-  bool _mustChangePassword = false; // <- flag paksa ganti password
+  bool _mustChangePassword = false; 
 
   // --- GETTERS (Untuk dibaca UI) ---
   User? get user => _user;
