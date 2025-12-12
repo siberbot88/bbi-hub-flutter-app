@@ -9,6 +9,7 @@ import '../widgets/report/report_data.dart';
 import '../widgets/report/report_health_matrix.dart';
 import '../widgets/report/report_kpi_card.dart';
 import '../../../core/services/report_pdf_service.dart';
+import '../../../core/repositories/analytics_repository.dart';
 
 // --- Colors ---
 const Color kPrimaryRed = Color(0xFFB70F0F); // Darker red to match Staff Management
@@ -24,19 +25,90 @@ class ReportPage extends StatefulWidget {
 
 class _ReportPageState extends State<ReportPage> {
   TimeRange _range = TimeRange.monthly;
-  late ReportData _data;
+  ReportData? _data;
+  bool _isLoading = true;
+  String? _errorMessage;
+  final _analyticsRepo = AnalyticsRepository();
 
   @override
   void initState() {
     super.initState();
     // Use light status bar icons when on red header
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
-    _data = ReportData.seed();
+    _loadAnalytics();
+  }
+
+  Future<void> _loadAnalytics() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final rangeString = _range == TimeRange.monthly ? 'monthly' 
+          : _range == TimeRange.weekly ? 'weekly' : 'daily';
+      
+      final data = await _analyticsRepo.getAnalyticsWithAuth(range: rangeString);
+      
+      setState(() {
+        _data = data;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString();
+        _isLoading = false;
+        // Fallback to seed data on error
+        _data = ReportData.seed();
+      });
+      
+      // Show error snackbar
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal memuat data: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            action: SnackBarAction(
+              label: 'Coba Lagi',
+              textColor: Colors.white,
+              onPressed: _loadAnalytics,
+            ),
+          ),
+        );
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final d = _data.forRange(_range);
+    if (_isLoading || _data == null) {
+      return Scaffold(
+        backgroundColor: kPrimaryRed,
+        body: Column(
+          children: [
+            _buildHeader(context),
+            Expanded(
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: kBackground,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(30),
+                    topRight: Radius.circular(30),
+                  ),
+                ),
+                child: const Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(kPrimaryRed),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final d = _data!;
     
     return Scaffold(
       backgroundColor: kPrimaryRed, // Background fallback
@@ -208,7 +280,12 @@ class _ReportPageState extends State<ReportPage> {
     final bool isSelected = _range == range;
     return Expanded(
       child: GestureDetector(
-        onTap: () => setState(() => _range = range),
+        onTap: () {
+          if (_range != range) {
+            setState(() => _range = range);
+            _loadAnalytics(); // Reload with new range
+          }
+        },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 10),
@@ -509,10 +586,12 @@ class _ReportPageState extends State<ReportPage> {
         ),
         onPressed: () async {
           // Generate and show PDF
-          await ReportPdfService.generate(
-            data: _data.forRange(_range),
-            range: _range,
-          );
+          if (_data != null) {
+            await ReportPdfService.generate(
+              data: _data!,
+              range: _range,
+            );
+          }
         },
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,

@@ -82,6 +82,86 @@ class ReportData {
     );
   }
 
+  /// Parse analytics data from backend API response
+  factory ReportData.fromJson(Map<String, dynamic> json, String rangeString) {
+    final metrics = json['metrics'] as Map<String, dynamic>;
+    final growth = json['growth'] as Map<String, dynamic>;
+    final serviceBreakdown = (json['service_breakdown'] as Map<String, dynamic>?)?.map(
+      (key, value) => MapEntry(key, (value as num).toDouble()),
+    ) ?? {};
+    final peakHours = json['peak_hours'] as Map<String, dynamic>;
+    final health = json['operational_health'] as Map<String, dynamic>;
+
+    // Format growth text with + or - sign
+    String formatGrowth(dynamic value) {
+      final numValue = (value as num).toDouble();
+      if (numValue >= 0) {
+        return '+${numValue.toStringAsFixed(1)}%';
+      } else {
+        return '${numValue.toStringAsFixed(1)}%';
+      }
+    }
+
+    // Generate trend data (simplified - using current metrics)
+    // In a real scenario, backend should provide historical trend data
+    final revenue = (metrics['revenue_this_period'] as num).toInt();
+    final jobs = (metrics['jobs_done'] as num).toInt();
+    
+    // Generate labels based on range
+    List<String> labels;
+    if (rangeString == 'monthly') {
+      labels = ['Minggu 1', 'Minggu 2', 'Minggu 3', 'Minggu 4'];
+    } else if (rangeString == 'weekly') {
+      labels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+    } else {
+      labels = ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00'];
+    }
+
+    // Simplified trend (distribute revenue evenly for now)
+    final revenueInMillions = revenue / 1000000;
+    List<double> revenueTrend = List.generate(
+      labels.length,
+      (i) => (revenueInMillions / labels.length) * (0.8 + (i * 0.05)),
+    );
+    List<double> jobsTrend = List.generate(
+      labels.length,
+      (i) => ((jobs / labels.length) * (0.8 + (i * 0.05))),
+    );
+
+    // Peak hour visualization data
+    final peakRange = peakHours['peak_range'] as String;
+    List<String> peakHourLabels = ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00'];
+    List<double> peakHourBars = List.generate(8, (i) {
+      // Highlight the peak hours
+      if (peakRange.contains('${8 + (i * 2)}:00')) {
+        return 80.0 + (i % 3) * 5;
+      }
+      return 30.0 + (i % 4) * 10;
+    });
+
+    return ReportData(
+      serviceBreakdown: serviceBreakdown,
+      revenueTrend: revenueTrend,
+      jobsTrend: jobsTrend,
+      labels: labels,
+      jobsDone: (metrics['jobs_done'] as num).toInt(),
+      occupancy: (metrics['occupancy'] as num).toInt(),
+      avgRating: (metrics['avg_rating'] as num).toDouble(),
+      revenueThisPeriod: (metrics['revenue_this_period'] as num).toInt(),
+      revenueGrowthText: formatGrowth(growth['revenue']),
+      jobsGrowthText: formatGrowth(growth['jobs']),
+      occupancyGrowthText: formatGrowth(growth['occupancy']),
+      ratingGrowthText: formatGrowth(growth['rating']),
+      avgQueueBars: List.generate(7, (i) => (health['avg_queue'] as num).toDouble() * (0.8 + (i * 0.1))),
+      peakHourBars: peakHourBars,
+      peakHourLabels: peakHourLabels,
+      avgQueue: (health['avg_queue'] as num).toInt(),
+      peakRange: peakRange,
+      efficiency: (health['efficiency'] as num).toInt(),
+    );
+  }
+
+
   ReportData forRange(TimeRange r) {
     if (r == TimeRange.monthly) return this;
 
