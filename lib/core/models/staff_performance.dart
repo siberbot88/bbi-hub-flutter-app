@@ -1,63 +1,62 @@
-import 'package:bengkel_online_flutter/core/models/service.dart';
 
-/// Model untuk performance metrics setiap staff
+enum StaffRole {
+  seniorMechanic,
+  juniorMechanic,
+  admin,
+}
+
 class StaffPerformance {
-  final String staffId;
-  final String staffName;
-  final String role;
-  final String? photoUrl;
-  
-  // Metrics
-  final int totalJobsCompleted;
-  final num totalRevenue;
-  final int activeJobs;
-  
-  // Detail jobs
-  final List<ServiceModel> inProgressJobs;
-  final List<ServiceModel> completedJobs;
+  final String name;
+  final StaffRole role;
+  final String avatarUrl;
+  final int jobsDone;
+  final int jobsInProgress;
+  final int estimatedRevenue; // in rupiah
 
-  StaffPerformance({
-    required this.staffId,
-    required this.staffName,
+  const StaffPerformance({
+    required this.name,
     required this.role,
-    this.photoUrl,
-    required this.totalJobsCompleted,
-    required this.totalRevenue,
-    required this.activeJobs,
-    required this.inProgressJobs,
-    required this.completedJobs,
+    required this.avatarUrl,
+    required this.jobsDone,
+    required this.jobsInProgress,
+    required this.estimatedRevenue,
   });
 
-  /// Calculate completion rate percentage
-  double get completionRate {
-    final total = totalJobsCompleted + activeJobs;
-    if (total == 0) return 0;
-    return (totalJobsCompleted / total) * 100;
-  }
+  factory StaffPerformance.fromJson(Map<String, dynamic> json) {
+    // Parse role from string
+    StaffRole parseRole(String roleStr) {
+      switch (roleStr.toLowerCase()) {
+        case 'mechanic':
+        case 'seniormechanic': // Handles potential variations
+          return StaffRole.seniorMechanic; // Defaulting to senior for now or add logic
+        case 'juniormechanic':
+          return StaffRole.juniorMechanic;
+        case 'admin':
+          return StaffRole.admin;
+        default:
+          return StaffRole.seniorMechanic;
+      }
+    }
 
-  /// Average revenue per completed job
-  num get averageRevenuePerJob {
-    if (totalJobsCompleted == 0) return 0;
-    return totalRevenue / totalJobsCompleted;
-  }
-
-  /// Empty performance (for staff with no data)
-  factory StaffPerformance.empty({
-    required String staffId,
-    required String staffName,
-    required String role,
-    String? photoUrl,
-  }) {
     return StaffPerformance(
-      staffId: staffId,
-      staffName: staffName,
-      role: role,
-      photoUrl: photoUrl,
-      totalJobsCompleted: 0,
-      totalRevenue: 0,
-      activeJobs: 0,
-      inProgressJobs: [],
-      completedJobs: [],
+      name: json['name'] ?? 'Unknown',
+      role: parseRole(json['role'] ?? 'mechanic'),
+      avatarUrl: json['avatar_url'] ?? '',
+      jobsDone: json['jobs_done'] ?? 0,
+      jobsInProgress: json['jobs_in_progress'] ?? 0,
+      estimatedRevenue: json['estimated_revenue'] ?? 0,
     );
+  }
+
+  // Helper for role display name
+  String get roleDisplayName {
+    switch (role) {
+      case StaffRole.seniorMechanic:
+        return 'Senior Mekanik';
+      case StaffRole.juniorMechanic:
+        return 'Junior Mekanik';
+      case StaffRole.admin:
+        return 'Admin';
+    }
   }
 }

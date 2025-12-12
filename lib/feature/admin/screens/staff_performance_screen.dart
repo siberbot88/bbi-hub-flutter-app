@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/models/staff_performance.dart';
-// import 'dart:math' as math; // Unused
-import '../../admin/repositories/staff_performance_repository.dart'; // Point to existing repo
+import 'dart:math' as math;
 
 // --- App Theme Constants (Local for portability) ---
 class AppTheme {
@@ -77,6 +76,8 @@ class AppTheme {
   );
 }
 
+import '../../repositories/staff_performance_repository.dart';
+
 class StaffPerformanceScreen extends StatefulWidget {
   const StaffPerformanceScreen({Key? key}) : super(key: key);
 
@@ -85,7 +86,7 @@ class StaffPerformanceScreen extends StatefulWidget {
 }
 
 class _StaffPerformanceScreenState extends State<StaffPerformanceScreen> {
-  DateRange _selectedRange = DateRange.today; // Ensure DateRange is accessible
+  DateRange _selectedRange = DateRange.today;
   final StaffPerformanceRepository _repository = StaffPerformanceRepository();
   
   List<StaffPerformance> _staffList = [];
@@ -167,7 +168,12 @@ class _StaffPerformanceScreenState extends State<StaffPerformanceScreen> {
           ],
         ),
       ),
-
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {},
+        backgroundColor: AppTheme.primaryRed,
+        elevation: 4,
+        child: const Icon(Icons.add_rounded, size: 32),
+      ),
     );
   }
 
@@ -265,6 +271,10 @@ class _StaffPerformanceScreenState extends State<StaffPerformanceScreen> {
                 icon: Icons.chevron_left_rounded, 
                 onTap: () => Navigator.maybePop(context)
               ),
+              _buildCircleButton(
+                icon: Icons.more_horiz_rounded, 
+                onTap: () {}
+              ),
             ],
           ),
           const SizedBox(height: 20),
@@ -310,8 +320,7 @@ class _StaffPerformanceScreenState extends State<StaffPerformanceScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Overview Tim', style: AppTheme.sectionTitle),
-            // Text('${_staffList.length} Staff Aktif', style: AppTheme.textSecondary.hasColor ? GoogleFonts.poppins(color: AppTheme.textSecondary) : null), // Fix color null safety if needed
-             Text('${_staffList.length} Staff Aktif', style: AppTheme.staffRole),
+            Text('${_staffList.length} Staff Aktif', style: AppTheme.textSecondary.hasColor ? GoogleFonts.poppins(color: AppTheme.textSecondary) : null),
           ],
         ),
         TextButton.icon(
@@ -359,9 +368,9 @@ class _StaffPerformanceScreenState extends State<StaffPerformanceScreen> {
             borderRadius: BorderRadius.circular(20),
             boxShadow: isSelected ? [
               BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
               ) 
             ] : [],
           ),
@@ -378,10 +387,6 @@ class _StaffPerformanceScreenState extends State<StaffPerformanceScreen> {
     );
   }
 }
-
-// Ensure DateRange enum is available if not filtered from repo import
-// Assuming DateRange is in repository file or needs to be defined
-enum DateRange { today, week, month }
 
 class StaffPerformanceCard extends StatelessWidget {
   final StaffPerformance staff;

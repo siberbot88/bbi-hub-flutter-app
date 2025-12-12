@@ -75,8 +75,9 @@ class User {
       subStatus = sub['status']?.toString();
       
       // Parse Plan Name
-      if (sub['subscription_plan'] is Map<String, dynamic>) {
-        subPlanName = sub['subscription_plan']['name']?.toString();
+      final planData = sub['plan'] ?? sub['subscription_plan'];
+      if (planData is Map<String, dynamic>) {
+        subPlanName = planData['name']?.toString();
       }
       
       // Parse Expiry
