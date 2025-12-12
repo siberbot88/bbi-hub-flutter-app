@@ -11,6 +11,9 @@ class User {
   final List<Workshop>? workshops;
   final Employment? employment;
   final bool mustChangePassword;
+  final String? subscriptionStatus; // 'active', 'pending', expired, null
+  final String? subscriptionPlanName;
+  final DateTime? subscriptionExpiredAt;
 
   User({
     required this.id,
@@ -22,6 +25,9 @@ class User {
     this.workshops,
     this.employment,
     this.mustChangePassword = false,
+    this.subscriptionStatus,
+    this.subscriptionPlanName,
+    this.subscriptionExpiredAt,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -59,6 +65,29 @@ class User {
       }
     }
 
+    // Parse subscription status & details
+    String? subStatus;
+    String? subPlanName;
+    DateTime? subExpiredAt;
+
+    if (json['owner_subscription'] is Map<String, dynamic>) {
+      final sub = json['owner_subscription'];
+      subStatus = sub['status']?.toString();
+      
+      // Parse Plan Name
+      if (sub['subscription_plan'] is Map<String, dynamic>) {
+        subPlanName = sub['subscription_plan']['name']?.toString();
+      }
+      
+      // Parse Expiry
+      if (sub['expires_at'] != null) {
+        subExpiredAt = DateTime.tryParse(sub['expires_at'].toString());
+      }
+    } else if (json['subscription_status'] is String) {
+       // Fallback flattened
+       subStatus = json['subscription_status'];
+    }
+
     // Parse must_change_password dengan aman
     bool parseMustChange(dynamic v) {
       if (v is bool) return v;
@@ -81,6 +110,9 @@ class User {
       employment: parsedEmployment,
       mustChangePassword: parseMustChange(
           json['must_change_password'] ?? json['mustChangePassword']),
+      subscriptionStatus: subStatus,
+      subscriptionPlanName: subPlanName,
+      subscriptionExpiredAt: subExpiredAt,
     );
   }
 
@@ -94,4 +126,6 @@ class User {
     }
     return null;
   }
+  
+  bool get isPremium => subscriptionStatus == 'active';
 }

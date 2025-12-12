@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../theme/app_theme.dart';
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/models/user.dart';
+import '../../../core/services/auth_provider.dart';
 
 class UnderlineCurvePainter extends CustomPainter {
   final Color color;
@@ -35,12 +41,14 @@ class UnderlineCurvePainter extends CustomPainter {
 class PremiumMembershipScreen extends StatefulWidget {
   const PremiumMembershipScreen({
     super.key,
-    required this.onViewMembershipPackages,
-    required this.onContinueFreeVersion,
+    this.onViewMembershipPackages,
+    this.onContinueFreeVersion,
+    this.isViewOnly = false,
   });
 
-  final VoidCallback onViewMembershipPackages;
-  final VoidCallback onContinueFreeVersion;
+  final VoidCallback? onViewMembershipPackages;
+  final VoidCallback? onContinueFreeVersion;
+  final bool isViewOnly;
 
   @override
   State<PremiumMembershipScreen> createState() => _PremiumMembershipScreenState();
@@ -57,10 +65,16 @@ class _PremiumMembershipScreenState extends State<PremiumMembershipScreen>
     super.initState();
     _scaleController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 300), // Slower for "lazy" feel
+      reverseDuration: const Duration(milliseconds: 200),
     );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.98).animate(
-      CurvedAnimation(parent: _scaleController, curve: Curves.easeOut),
+
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
+      CurvedAnimation(
+        parent: _scaleController,
+        curve: Curves.easeOutQuart, // Smooth lazy curve
+        reverseCurve: Curves.easeInQuart,
+      ),
     );
   }
 
@@ -72,443 +86,481 @@ class _PremiumMembershipScreenState extends State<PremiumMembershipScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Set status bar styling based on theme
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primaryColor = Theme.of(context).colorScheme.primary;
+    SystemChrome.setSystemUIOverlayStyle(
+      isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+    );
 
+    final backgroundColor = isDark ? const Color(0xFF1E1E1E) : AppColors.backgroundWhite;
+    final primaryColor = AppColors.primaryRed; 
+    
+    // Check Subscription Status
+    final auth = context.watch<AuthProvider>();
+    final isPremium = auth.user?.isPremium ?? false;
+
+    // IF PREMIUM: Show Active Subscription View
+    if (isPremium && !widget.isViewOnly) {
+       return Scaffold(
+         backgroundColor: backgroundColor,
+         appBar: AppBar(
+           backgroundColor: backgroundColor,
+           elevation: 0,
+            leading: IconButton(
+              icon: Icon(Icons.arrow_back, color: isDark ? Colors.white : Colors.black),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+           title: Text('Langganan Saya', style: AppTextStyles.heading4(color: isDark ? Colors.white : Colors.black)),
+           centerTitle: true,
+         ),
+         body: _buildActiveSubscriptionView(context, auth.user!),
+       );
+    }
+
+    // IF NOT PREMIUM or ViewOnly: Show Upgrade UI
     return Scaffold(
+      backgroundColor: backgroundColor,
       body: SafeArea(
-        child: Center(
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 430),
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  // 1. Premium Access Tag
-                  _buildPremiumTag(primaryColor),
-
-                  // 2. Hero / Dashboard Illustration
-                  _buildHeroImage(isDark),
-
-                  // 3. Headline
-                  _buildHeadline(context, isDark, primaryColor),
-
-                  // 4. Benefits Cards
-                  _buildBenefitsSection(isDark, primaryColor),
-
-                  // 5. Footer CTA
-                  _buildFooterCTA(context, isDark, primaryColor),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPremiumTag(Color primaryColor) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 24, bottom: 8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        decoration: BoxDecoration(
-          color: primaryColor.withAlpha((0.05 * 255).round()),
-          border: Border.all(
-            color: primaryColor.withAlpha((0.1 * 255).round()),
-            width: 1,
-          ),
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Text(
-          'PREMIUM ACCESS',
-          style: GoogleFonts.poppins(
-            fontSize: 11,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.5,
-            color: primaryColor,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeroImage(bool isDark) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-      child: TweenAnimationBuilder<double>(
-        tween: Tween(begin: 0.9, end: 1.0),
-        duration: const Duration(milliseconds: 600),
-        curve: Curves.easeOut,
-        builder: (context, scale, child) {
-          return Transform.scale(
-            scale: scale,
-            child: child,
-          );
-        },
-        child: AspectRatio(
-          aspectRatio: 4 / 3,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: isDark
-                    ? [Colors.grey[800]!, AppTheme.backgroundDark]
-                    : [Colors.white, AppTheme.backgroundLight],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha((0.08 * 255).round()),
-                  blurRadius: 30,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(24),
-              child: Stack(
-                children: [
-                  // Gambar utama
-                  Image.network(
-                    'https://lh3.googleusercontent.com/aida-public/AB6AXuAGKONxdobdx_XHt7f9SuDG3exKUhQ6yOHh67i_AdYBX4MW6dKEwdk2YDNp4Nxdrnk4iu78dj1_RBSSQM4_bPim_DcDZ3i_r1qnXQhot3uPXy3UO4DaFjcq7xy_zo-rl5kcscE_TD-NFMnLcRW-WaAUw1qmfsb1arliq5roPdWEX06FNBhFgv-AuXGWl6sNBEIMsoUltlwczJeSxfdJo9k1ypQTmvvAPS1b5h0rni887K7t4XUYGDq0ijlvctSuE8uBK6MziuMzSjA',
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: double.infinity,
-                  ),
-                  // Fade effect di bawah
-                  Positioned(
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    height: 150,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.transparent,
-                            isDark
-                                ? AppTheme.backgroundDark
-                                : AppTheme.backgroundLight,
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    if (!widget.isViewOnly) ...[
+                      // Header nav
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            IconButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              icon: Icon(
+                                Icons.close_rounded,
+                                color: isDark ? Colors.white : AppColors.textPrimary,
+                              ),
+                              splashRadius: 24,
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: primaryColor.withAlpha(25),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                'PRO',
+                                style: AppTextStyles.labelBold(color: primaryColor),
+                              ),
+                            ),
                           ],
                         ),
                       ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeadline(BuildContext context, bool isDark, Color primaryColor) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-      child: Column(
-        children: [
-          // Judul dengan underline dekoratif
-          RichText(
-            textAlign: TextAlign.center,
-            text: TextSpan(
-              style: AppTheme.heading(context: context, fontSize: 30),
-              children: [
-                const TextSpan(text: 'Kelola Bengkel\n'),
-                WidgetSpan(
-                  alignment: PlaceholderAlignment.baseline,
-                  baseline: TextBaseline.alphabetic,
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Text(
-                        'Lebih Cerdas',
-                        style: AppTheme.heading(
-                          context: context,
-                          fontSize: 30,
-                          color: primaryColor,
-                        ),
-                      ),
-                      // Garis melengkung dekoratif
-                      Positioned(
-                        bottom: -4,
-                        left: 0,
-                        right: 0,
-                        child: CustomPaint(
-                          size: const Size(double.infinity, 8),
-                          painter: UnderlineCurvePainter(
-                            color: primaryColor.withAlpha((0.2 * 255).round()),
-                          ),
-                        ),
-                      ),
                     ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          
-          const SizedBox(height: 12),
-          
-          // Deskripsi
-          SizedBox(
-            width: 280,
-            child: Text(
-              'Tingkatkan efisiensi, pantau profit, dan kontrol akses tim Anda.',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.manrope(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: isDark ? Colors.grey[400] : Colors.grey[500],
-                height: 1.5,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildBenefitsSection(bool isDark, Color primaryColor) {
-    final benefits = [
-      {
-        'icon': Icons.show_chart,
-        'title': 'Analitik Canggih',
-        'subtitle': 'Pantau performa bengkel secara real-time.',
-      },
-      {
-        'icon': Icons.smart_toy_outlined,
-        'title': 'Otomatisasi Penuh',
-        'subtitle': 'Hemat waktu dengan fitur admin otomatis.',
-      },
-      {
-        'icon': Icons.groups_2_outlined,
-        'title': 'Akses Multi-Peran',
-        'subtitle': 'Kontrol penuh untuk Pemilik, Admin, dan Mekanik.',
-      },
-    ];
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        children: benefits.map((benefit) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: _buildBenefitCard(
-              icon: benefit['icon'] as IconData,
-              title: benefit['title'] as String,
-              subtitle: benefit['subtitle'] as String,
-              isDark: isDark,
-              primaryColor: primaryColor,
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  Widget _buildBenefitCard({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required bool isDark,
-    required Color primaryColor,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? AppTheme.cardDark : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha((0.04 * 255).round()),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Icon container
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: isDark 
-                  ? primaryColor.withAlpha((0.1 * 255).round())
-                  : primaryColor.withAlpha((0.05 * 255).round()),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              icon,
-              color: primaryColor,
-              size: 26,
-            ),
-          ),
-          
-          const SizedBox(width: 16),
-          
-          // Text
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.poppins(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : const Color(0xFF1A0E0E),
-                    height: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: GoogleFonts.manrope(
-                    fontSize: 13,
-                    color: isDark ? Colors.grey[400] : Colors.grey[500],
-                    height: 1.4,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFooterCTA(BuildContext context, bool isDark, Color primaryColor) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Colors.transparent,
-            isDark
-                ? AppTheme.backgroundDark
-                : AppTheme.backgroundLight,
-          ],
-        ),
-      ),
-      child: Column(
-        children: [
-          // Tombol utama dengan efek shimmer dan scale
-          GestureDetector(
-            onTapDown: (_) {
-              setState(() => _isPressed = true);
-              _scaleController.forward();
-            },
-            onTapUp: (_) {
-              setState(() => _isPressed = false);
-              _scaleController.reverse();
-              widget.onViewMembershipPackages();
-            },
-            onTapCancel: () {
-              setState(() => _isPressed = false);
-              _scaleController.reverse();
-            },
-            child: ScaleTransition(
-              scale: _scaleAnimation,
-              child: Container(
-                height: 56,
-                decoration: BoxDecoration(
-                  color: primaryColor,
-                  borderRadius: BorderRadius.circular(18),
-                  boxShadow: [
-                    BoxShadow(
-                      color: primaryColor.withAlpha((0.3 * 255).round()),
-                      blurRadius: 15,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Stack(
-                  children: [
-                    // Shimmer effect
-                    if (!_isPressed)
-                      TweenAnimationBuilder<double>(
-                        tween: Tween(begin: -1.0, end: 2.0),
-                        duration: const Duration(milliseconds: 1500),
-                        builder: (context, value, child) {
-                          return Positioned.fill(
-                            child: Transform.translate(
-                              offset: Offset(value * 200, 0),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      Colors.transparent,
-                                      Colors.white.withAlpha((0.2 * 255).round()),
-                                      Colors.transparent,
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
+                    // Hero Image - Fixed Height
+                    Container(
+                      height: 250,
+                      width: double.infinity,
+                      margin: const EdgeInsets.only(top: 10, bottom: 20),
+                      child: Image.asset(
+                        'assets/image/premium_hero.png',
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Center(
+                            child: Icon(Icons.workspace_premium, size: 80, color: Colors.amber[300]),
                           );
                         },
-                        onEnd: () {
-                          if (mounted) setState(() {});
-                        },
                       ),
-                    
-                    // Button content
-                    Center(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                    ),
+
+                    // Title Section
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Column(
                         children: [
                           Text(
-                            'Lihat Paket Membership',
-                            style: GoogleFonts.poppins(
-                              fontSize: 17,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                              letterSpacing: 0.3,
-                            ),
+                            'Upgrade ke Premium',
+                            textAlign: TextAlign.center,
+                            style: AppTextStyles.heading2(
+                              color: isDark ? Colors.white : AppColors.textPrimary,
+                            ).copyWith(height: 1.2),
                           ),
-                          const SizedBox(width: 8),
-                          const Icon(
-                            Icons.arrow_forward_rounded,
-                            color: Colors.white,
-                            size: 22,
+                          const SizedBox(height: 8),
+                          Stack(
+                            children: [
+                              Positioned(
+                                bottom: -2, // Lowered slightly so it doesn't strike through
+                                left: 0,
+                                right: 0,
+                                child: CustomPaint(
+                                  painter: UnderlineCurvePainter(
+                                    color: primaryColor.withAlpha(40), 
+                                  ),
+                                  size: const Size(double.infinity, 12),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                                child: Text(
+                                  'Untung Lebih Banyak!',
+                                  textAlign: TextAlign.center,
+                                  style: AppTextStyles.heading2(
+                                    color: primaryColor,
+                                  ).copyWith(height: 1.2),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
                     ),
+
+                    AppSpacing.verticalSpaceMD,
+
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Text(
+                        'Nikmati fitur eksklusif untuk memaksimalkan\npertumbuhan bengkel Anda.',
+                        textAlign: TextAlign.center,
+                        style: AppTextStyles.bodyMedium(
+                          color: isDark ? Colors.grey[300] : AppColors.textSecondary,
+                        ).copyWith(height: 1.5),
+                      ),
+                    ),
+
+                    AppSpacing.verticalSpaceXL,
+
+                    // Benefits List
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(
+                        children: [
+                          _buildBenefitRow(
+                            context,
+                            icon: Icons.analytics_outlined,
+                            title: 'Analisis Bisnis Mendalam',
+                            subtitle: 'Pantau performa bengkel dengan grafik detail.',
+                            isLast: false,
+                          ),
+                          _buildBenefitRow(
+                            context,
+                            icon: Icons.people_outline_rounded,
+                            title: 'Manajemen Staff Tanpa Batas',
+                            subtitle: 'Kelola tim dan jadwal kerja lebih efisien.',
+                            isLast: false,
+                          ),
+                          _buildBenefitRow(
+                            context,
+                            icon: Icons.print_outlined,
+                            title: 'Cetak Laporan Otomatis',
+                            subtitle: 'Export laporan keuangan dalam sekali klik.',
+                            isLast: true,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    AppSpacing.verticalSpaceXXL,
                   ],
                 ),
               ),
             ),
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // Tombol sekunder
-          TextButton(
-            onPressed: widget.onContinueFreeVersion,
-            style: TextButton.styleFrom(
-              minimumSize: const Size(double.infinity, 40),
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-            ),
-            child: Text(
-              'Lanjut pakai versi gratis',
-              style: GoogleFonts.manrope(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: isDark ? Colors.grey[400] : Colors.grey[500],
-                letterSpacing: 0.3,
+            
+            // Bottom Buttons (Fixed at bottom)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: backgroundColor,
+                
+              ),
+              child: Column(
+                children: [
+                   // CTA Button with Scale Animation
+                  GestureDetector(
+                    onTapDown: (_) {
+                      setState(() => _isPressed = true);
+                      _scaleController.forward();
+                    },
+                    onTapUp: (_) {
+                      setState(() => _isPressed = false);
+                      _scaleController.reverse();
+                      widget.onViewMembershipPackages?.call();
+                    },
+                    onTapCancel: () {
+                      setState(() => _isPressed = false);
+                      _scaleController.reverse();
+                    },
+                    child: ScaleTransition(
+                      scale: _scaleAnimation,
+                      child: Container(
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: primaryColor,
+                          borderRadius: AppRadius.radiusXL,
+                          boxShadow: [
+                            BoxShadow(
+                              color: primaryColor.withAlpha(80),
+                              blurRadius: 15,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Lihat Paket Membership',
+                                style: AppTextStyles.button(), 
+                              ),
+                              AppSpacing.horizontalSpaceSM,
+                              const Icon(
+                                Icons.arrow_forward_rounded,
+                                color: Colors.white,
+                                size: 22,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  
+                  AppSpacing.verticalSpaceSM,
+                  
+                  // Secondary Button
+                  TextButton(
+                    onPressed: () {
+                      if (widget.onContinueFreeVersion != null) {
+                        widget.onContinueFreeVersion!();
+                      } else {
+                        Navigator.of(context).pop();
+                      }
+                    },
+                    style: TextButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 40),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      splashFactory: InkRipple.splashFactory,
+                    ),
+                    child: Text(
+                      'Lanjut pakai versi gratis',
+                      style: AppTextStyles.labelBold(
+                        color: isDark ? Colors.grey[400] : AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActiveSubscriptionView(BuildContext context, User user) {
+     final primaryColor = AppColors.primaryRed;
+     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+     // Format Date
+     String formattedDate = '30 Hari'; // Default fallback
+     if (user.subscriptionExpiredAt != null) {
+        final date = user.subscriptionExpiredAt!;
+        formattedDate = "${date.day}/${date.month}/${date.year}";
+     } else {
+        // Fallback for old data or lifetime plans
+        formattedDate = "Aktif Selamanya"; // Or "30 Hari" depending on context
+     }
+
+     return Padding(
+       padding: const EdgeInsets.all(20.0),
+       child: Column(
+         crossAxisAlignment: CrossAxisAlignment.stretch,
+         children: [
+           Container(
+             padding: const EdgeInsets.all(24),
+             decoration: BoxDecoration(
+               gradient: LinearGradient(
+                 colors: [
+                   isDark ? const Color(0xFF2C2C2C) : Colors.white,
+                   isDark ? const Color(0xFF222222) : const Color(0xFFF8F9FA),
+                 ],
+                 begin: Alignment.topLeft,
+                 end: Alignment.bottomRight
+               ),
+               borderRadius: BorderRadius.circular(24),
+               boxShadow: [
+                  BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, 10))
+               ],
+               border: Border.all(color: Colors.amber.withOpacity(0.5), width: 1)
+             ),
+             child: Column(
+               children: [
+                 const Icon(Icons.verified, color: Colors.amber, size: 48),
+                 const SizedBox(height: 16),
+                 Text('Paket Aktif',
+                  style: AppTextStyles.labelBold(color: Colors.grey),
+                 ),
+                 const SizedBox(height: 8),
+                 Text(
+                   user.subscriptionPlanName ?? 'Premium Plan',
+                   style: AppTextStyles.heading2(color: isDark ? Colors.white : Colors.black87),
+                   textAlign: TextAlign.center,
+                 ),
+                 const SizedBox(height: 24),
+                 Divider(color: Colors.grey.withOpacity(0.2)),
+                 const SizedBox(height: 24),
+                 Row(
+                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                   children: [
+                     Text('Masa Berlaku', style: AppTextStyles.bodyMedium(color: Colors.grey)),
+                     Text(formattedDate, style: AppTextStyles.heading5(color: isDark ? Colors.white : Colors.black87)),
+                   ],
+                 ),
+                  const SizedBox(height: 12),
+                 Row(
+                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                   children: [
+                     Text('Status', style: AppTextStyles.bodyMedium(color: Colors.grey)),
+                     Container(
+                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                       decoration: BoxDecoration(
+                         color: Colors.green.withOpacity(0.1),
+                         borderRadius: BorderRadius.circular(20)
+                       ),
+                       child: Text('AKTIF', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 12)),
+                     )
+                   ],
+                 )
+               ],
+             ),
+           ),
+           
+           const SizedBox(height: 32),
+           Padding(
+             padding: const EdgeInsets.symmetric(horizontal: 8),
+             child: Text(
+               "Keuntungan Paket Anda:",
+                style: AppTextStyles.heading4(color: isDark ? Colors.white : Colors.black87),
+             ),
+           ),
+            const SizedBox(height: 16),
+             // Benefits List Reused
+             _buildBenefitRow(
+               context,
+               icon: Icons.analytics_outlined,
+               title: 'Analisis Bisnis Mendalam',
+               subtitle: 'Akses penuh ke semua grafik performa bengkel.',
+               isLast: false,
+             ),
+             _buildBenefitRow(
+               context,
+               icon: Icons.people_outline_rounded,
+               title: 'Manajemen Staff Tanpa Batas',
+               subtitle: 'Tidak ada batasan jumlah karyawan.',
+               isLast: false,
+             ),
+             _buildBenefitRow(
+               context,
+               icon: Icons.print_outlined,
+               title: 'Laporan Keuangan Prioritas',
+               subtitle: 'Export data kapan saja tanpa batasan.',
+               isLast: true,
+             ),
+
+           const Spacer(),
+           Text(
+             "Ingin mengubah paket?",
+             textAlign: TextAlign.center,
+             style: AppTextStyles.bodyMedium(color: Colors.grey),
+           ),
+           const SizedBox(height: 16),
+           ElevatedButton(
+             onPressed: widget.onViewMembershipPackages, // Re-use callback to show packages
+             style: ElevatedButton.styleFrom(
+               backgroundColor: primaryColor,
+               padding: const EdgeInsets.symmetric(vertical: 16),
+               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))
+             ),
+             child: Text('Perpanjang / Ganti Paket', style: AppTextStyles.button(color: Colors.white)),
+           ),
+            const SizedBox(height: 32),
+         ],
+       ),
+     );
+  }
+
+  Widget _buildBenefitRow(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required bool isLast,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = AppColors.primaryRed;
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
+      child: Container(
+        padding: AppSpacing.paddingMD,
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF2C2C2C) : Colors.white,
+          borderRadius: AppRadius.radiusLG,
+          border: Border.all(
+            color: isDark ? Colors.transparent : Colors.grey.withAlpha(20),
           ),
-        ],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(10), // Softer shadow
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: primaryColor.withAlpha(isDark ? 30 : 15),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                color: primaryColor,
+                size: 20,
+              ),
+            ),
+            AppSpacing.horizontalSpaceMD,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: AppTextStyles.heading5(
+                      color: isDark ? Colors.white : AppColors.textPrimary,
+                    ).copyWith(fontSize: 15),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: AppTextStyles.bodySmall(
+                      color: isDark ? Colors.grey[400] : AppColors.textSecondary,
+                    ).copyWith(height: 1.3),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

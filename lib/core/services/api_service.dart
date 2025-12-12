@@ -798,6 +798,42 @@ class ApiService {
     }
   }
 
+  /* ================= OWNER SUBSCRIPTION ================ */
+
+  // Checkout Subscription
+  Future<Map<String, dynamic>> checkoutSubscription({
+    required String planId,
+    required String billingCycle,
+  }) async {
+    try {
+      final uri = Uri.parse('${_baseUrl}owner/subscription/checkout');
+      final headers = await _getAuthHeaders();
+      final body = jsonEncode({
+        'plan_id': planId,
+        'billing_cycle': billingCycle,
+      });
+
+      _debugRequest('CHECKOUT_SUB', uri, headers, body);
+      final res = await http.post(uri, headers: headers, body: body);
+      _debugResponse('CHECKOUT_SUB', res);
+
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        final json = _tryDecodeJson(res.body);
+        if (json is Map<String, dynamic> && json['data'] != null) {
+          return json['data'];
+        }
+      }
+
+      final json = _tryDecodeJson(res.body);
+      if (json is Map<String, dynamic>) {
+        throw Exception(_getErrorMessage(json));
+      }
+      throw Exception('Checkout gagal (HTTP ${res.statusCode}).');
+    } catch (e) {
+      throw Exception('Gagal checkout: ${e.toString().replaceFirst("Exception: ", "")}');
+    }
+  }
+
   Future<void> updateServiceStatus(String id, String status) async {
     try {
       final uri = Uri.parse('${_baseUrl}owners/services/$id');
