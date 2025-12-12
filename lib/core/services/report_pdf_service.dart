@@ -227,7 +227,7 @@ class ReportPdfService {
                   _tableCell('${week.jobs} Order'),
                   _tableCell('Rp ${_formatCurrency((week.revenue / week.jobs).round())}'),
                 ],
-              )).toList(),
+              )),
               // Total row
               pw.TableRow(
                 decoration: const pw.BoxDecoration(color: PdfColor.fromInt(0xFFFFF3E0)),
@@ -366,7 +366,7 @@ class ReportPdfService {
                 style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold)),
             ],
           ),
-        )).toList(),
+        )),
       ],
     );
   }
@@ -437,7 +437,7 @@ class ReportPdfService {
                 pw.Expanded(child: pw.Text(item, style: const pw.TextStyle(fontSize: 10))),
               ],
             ),
-          )).toList(),
+          )),
         ],
       ],
     );

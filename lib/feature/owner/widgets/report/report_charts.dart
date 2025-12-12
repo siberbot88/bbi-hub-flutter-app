@@ -56,8 +56,8 @@ class ReportCharts {
           show: true,
           gradient: LinearGradient(
             colors: [
-              color.withOpacity(0.2), // Start transparent
-              color.withOpacity(0.0), // Fade out
+              color.withValues(alpha: 0.2), // Start transparent
+              color.withValues(alpha: 0.0), // Fade out
             ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,

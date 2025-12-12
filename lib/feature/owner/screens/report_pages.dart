@@ -1,4 +1,3 @@
-import 'package:bengkel_online_flutter/feature/owner/screens/list_work.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -27,7 +26,6 @@ class _ReportPageState extends State<ReportPage> {
   TimeRange _range = TimeRange.monthly;
   ReportData? _data;
   bool _isLoading = true;
-  String? _errorMessage;
   final _analyticsRepo = AnalyticsRepository();
 
   @override
@@ -41,7 +39,6 @@ class _ReportPageState extends State<ReportPage> {
   Future<void> _loadAnalytics() async {
     setState(() {
       _isLoading = true;
-      _errorMessage = null;
     });
 
     try {
@@ -56,7 +53,6 @@ class _ReportPageState extends State<ReportPage> {
       });
     } catch (e) {
       setState(() {
-        _errorMessage = e.toString();
         _isLoading = false;
         // Fallback to seed data on error
         _data = ReportData.seed();
@@ -233,7 +229,7 @@ class _ReportPageState extends State<ReportPage> {
                   style: GoogleFonts.poppins(
                     fontSize: 14, // Matches AppTheme.headingSubtitle
                     fontWeight: FontWeight.w500,
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                   ),
                 ),
               ],
@@ -245,7 +241,7 @@ class _ReportPageState extends State<ReportPage> {
           Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.2), // Matches StaffPerformanceScreen dark transparent
+              color: Colors.black.withValues(alpha: 0.2), // Matches StaffPerformanceScreen dark transparent
               borderRadius: BorderRadius.circular(30),
             ),
             child: Row(
@@ -268,7 +264,7 @@ class _ReportPageState extends State<ReportPage> {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.15),
+          color: Colors.white.withValues(alpha: 0.15),
           shape: BoxShape.circle,
         ),
         child: Icon(icon, color: Colors.white, size: 24),
@@ -295,7 +291,7 @@ class _ReportPageState extends State<ReportPage> {
             borderRadius: BorderRadius.circular(24),
             boxShadow: isSelected ? [
                BoxShadow(
-                 color: Colors.black.withOpacity(0.1), 
+                 color: Colors.black.withValues(alpha: 0.1), 
                  blurRadius: 4, 
                  offset: const Offset(0, 2)
                )
@@ -306,7 +302,7 @@ class _ReportPageState extends State<ReportPage> {
             style: GoogleFonts.poppins(
               fontSize: 13,
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-              color: isSelected ? kPrimaryRed : Colors.white.withOpacity(0.9),
+              color: isSelected ? kPrimaryRed : Colors.white.withValues(alpha: 0.9),
             ),
           ),
         ),
@@ -376,7 +372,7 @@ class _ReportPageState extends State<ReportPage> {
          color: Colors.white,
          borderRadius: BorderRadius.circular(24),
          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15, offset: const Offset(0, 4)),
+            BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 15, offset: const Offset(0, 4)),
          ],
       ),
       child: Column(
@@ -436,7 +432,7 @@ class _ReportPageState extends State<ReportPage> {
          color: Colors.white,
          borderRadius: BorderRadius.circular(24),
          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15, offset: const Offset(0, 4)),
+            BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 15, offset: const Offset(0, 4)),
          ],
       ),
       child: Column(
@@ -479,7 +475,7 @@ class _ReportPageState extends State<ReportPage> {
          color: Colors.white,
          borderRadius: BorderRadius.circular(24),
          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15, offset: const Offset(0, 4)),
+            BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 15, offset: const Offset(0, 4)),
          ],
       ),
       child: Column(
@@ -523,7 +519,7 @@ class _ReportPageState extends State<ReportPage> {
          color: Colors.white,
          borderRadius: BorderRadius.circular(24),
          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15, offset: const Offset(0, 4)),
+            BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 15, offset: const Offset(0, 4)),
          ],
       ),
       child: Column(
@@ -570,7 +566,7 @@ class _ReportPageState extends State<ReportPage> {
       decoration: BoxDecoration(
         boxShadow: [
            BoxShadow(
-             color: kPrimaryRed.withOpacity(0.4),
+             color: kPrimaryRed.withValues(alpha: 0.4),
              blurRadius: 12,
              offset: const Offset(0, 6)
            )
