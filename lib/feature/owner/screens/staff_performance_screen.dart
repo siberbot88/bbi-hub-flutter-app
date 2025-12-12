@@ -6,8 +6,8 @@ import '../../admin/repositories/staff_performance_repository.dart'; // Point to
 
 // --- App Theme Constants (Local for portability) ---
 class AppTheme {
-  static const Color primaryRed = Color(0xFFE53935);
-  static const Color primaryRedDark = Color(0xFFD32F2F); 
+  static const Color primaryRed = Color(0xFFB70F0F); // Darker red to match Staff Management
+  static const Color primaryRedDark = Color(0xFF9B0D0D); // Even darker for gradient 
   static const Color background = Color(0xFFF5F5F5);
   static const Color cardColor = Colors.white;
   static const Color textPrimary = Color(0xFF212121);

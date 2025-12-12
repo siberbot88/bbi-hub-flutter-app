@@ -1,6 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class ReportKpiCard extends StatelessWidget {
+  final IconData icon;
+  final String title; // The large value (Rp 64.7jt)
+  final String subtitle; // e.g., "Pendapatan bulan ini"
+  final String growthText; // "+12.5%"
+  final VoidCallback onTap;
+  final Color? iconBgColor; // Optional custom color for icon bg
+  final Color? iconColor;
+
   const ReportKpiCard({
     super.key,
     required this.icon,
@@ -8,126 +17,96 @@ class ReportKpiCard extends StatelessWidget {
     required this.subtitle,
     required this.growthText,
     required this.onTap,
+    this.iconBgColor,
+    this.iconColor,
   });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final String growthText;
-  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final w = (MediaQuery.of(context).size.width - 16 * 2 - 14) / 2;
-    final radius = BorderRadius.circular(20);
+    // Check if growth is positive or negative for color
+    final bool isPositive = !growthText.contains('−') && !growthText.contains('-');
+    final Color badgeColor = isPositive ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE);
+    final Color badgeText = isPositive ? const Color(0xFF2E7D32) : const Color(0xFFC62828);
 
-    return SizedBox(
-      width: w,
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: radius,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: radius,
-          child: Container(
-            height: 120,
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF7A0F0F), Color(0xFFB01212)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 15,
+                offset: const Offset(0, 4),
               ),
-              borderRadius: radius,
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x14000000),
-                  blurRadius: 12,
-                  offset: Offset(0, 6),
-                )
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.trending_up_rounded,
-                            color: Colors.white,
-                            size: 14,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            growthText,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header: Icon + Badge
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: iconBgColor ?? const Color(0xFFFFF0F1), // Default soft red
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      icon,
+                      size: 18,
+                      color: iconColor ?? const Color(0xFFE53935), // Default primary red
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: badgeColor,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      growthText,
+                      style: GoogleFonts.poppins(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: badgeText,
                       ),
                     ),
-                  ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              
+              // Value
+              Text(
+                title,
+                style: GoogleFonts.poppins(
+                  fontSize: 18, // Slightly smaller to fit grid
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF212121),
                 ),
-                const SizedBox(height: 6),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(icon, color: Colors.white),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            subtitle,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              
+              const SizedBox(height: 4),
+              // Subtitle
+              Text(
+                subtitle,
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF757575),
                 ),
-              ],
-            ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ),
         ),
       ),
