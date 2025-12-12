@@ -2,7 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:bengkel_online_flutter/core/services/api_service.dart';
 import 'package:bengkel_online_flutter/core/models/service.dart';
 
-/// Provider untuk Work Order / Service
+/// Provider untuk Work Order / Service (OWNER base)
+/// Admin akan extend ini lewat AdminServiceProvider.
 class ServiceProvider extends ChangeNotifier {
   final ApiService _api = ApiService();
 
@@ -53,11 +54,47 @@ class ServiceProvider extends ChangeNotifier {
     return List.unmodifiable(list);
   }
 
+  /* =================== HOOKS UNTUK SUBCLASS =================== */
+
+  /// Hook yang boleh dioverride oleh subclass (misal: AdminServiceProvider)
+  /// Default: pakai endpoint owners/services (via fetchServicesRaw).
+  @protected
+  Future<Map<String, dynamic>> performFetchServicesRaw({
+    String? status,
+    bool includeExtras = true,
+    String? workshopUuid,
+    String? code,
+    String? dateFrom,
+    String? dateTo,
+    int page = 1,
+    int perPage = 10,
+  }) {
+    return _api.fetchServicesRaw(
+      status: status ?? _statusFilter,
+      includeExtras: includeExtras,
+      workshopUuid: workshopUuid,
+      code: code,
+      dateFrom: dateFrom,
+      dateTo: dateTo,
+      page: page,
+      perPage: perPage,
+    );
+  }
+
+  /// Hook detail: default pakai owners/services/{id}
+  @protected
+  Future<ServiceModel> performFetchServiceDetail(String id) {
+    return _api.fetchServiceDetail(id);
+  }
+
   /* =================== Actions =================== */
 
   /// Ganti filter status. Sekarang akan reset ke page 1 dan fetch lagi.
-  Future<void> setStatusFilter(String? status,
-      {bool fetch = true, String? workshopUuid}) async {
+  Future<void> setStatusFilter(
+      String? status, {
+        bool fetch = true,
+        String? workshopUuid,
+      }) async {
     _statusFilter = status;
     notifyListeners();
     if (fetch) {
@@ -91,7 +128,14 @@ class ServiceProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final res = await _api.fetchServicesRaw(
+      if (kDebugMode) {
+        print(
+          '[ServiceProvider($runtimeType)] fetchServices '
+              'page=$page, status=$status, ws=$workshopUuid',
+        );
+      }
+
+      final res = await performFetchServicesRaw(
         status: status ?? _statusFilter,
         includeExtras: includeExtras,
         workshopUuid: workshopUuid,
@@ -114,9 +158,18 @@ class ServiceProvider extends ChangeNotifier {
       _currentPage = _parseInt(res['current_page'], fallback: page);
       _totalPages = _parseInt(res['last_page'], fallback: 1);
       _perPage = _parseInt(res['per_page'], fallback: perPage ?? _perPage);
+
+      if (kDebugMode) {
+        print(
+          '[ServiceProvider($runtimeType)] loaded items=${_items.length}, '
+              'currentPage=$_currentPage / $_totalPages',
+        );
+      }
     } catch (e) {
       _lastError = e.toString();
-      if (kDebugMode) print('fetchServices error: $e');
+      if (kDebugMode) {
+        print('[ServiceProvider($runtimeType)] fetchServices error: $e');
+      }
     } finally {
       _loading = false;
       notifyListeners();
@@ -144,7 +197,11 @@ class ServiceProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final detail = await _api.fetchServiceDetail(id);
+      if (kDebugMode) {
+        print('[ServiceProvider($runtimeType)] fetchDetail id=$id');
+      }
+
+      final detail = await performFetchServiceDetail(id);
       _selected = detail;
 
       // sinkronkan dengan list kalau sudah ada
@@ -158,7 +215,9 @@ class ServiceProvider extends ChangeNotifier {
       return detail;
     } catch (e) {
       _lastError = e.toString();
-      if (kDebugMode) print('fetchDetail error: $e');
+      if (kDebugMode) {
+        print('[ServiceProvider($runtimeType)] fetchDetail error: $e');
+      }
       return null;
     } finally {
       _loading = false;
@@ -175,6 +234,10 @@ class ServiceProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      if (kDebugMode) {
+        print('[ServiceProvider($runtimeType)] updateStatus id=$id -> $status');
+      }
+
       await _api.updateServiceStatus(id, status);
 
       // Update lokal secara optimis
@@ -229,6 +292,9 @@ class ServiceProvider extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       _lastError = e.toString();
+      if (kDebugMode) {
+        print('[ServiceProvider($runtimeType)] updateStatus error: $e');
+      }
       notifyListeners();
       rethrow;
     }
@@ -250,6 +316,10 @@ class ServiceProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      if (kDebugMode) {
+        print('[ServiceProvider($runtimeType)] createDummy "$name"');
+      }
+
       final created = await _api.createServiceDummy(
         workshopUuid: workshopUuid,
         customerUuid: customerUuid,
@@ -266,6 +336,9 @@ class ServiceProvider extends ChangeNotifier {
       return created;
     } catch (e) {
       _lastError = e.toString();
+      if (kDebugMode) {
+        print('[ServiceProvider($runtimeType)] createDummy error: $e');
+      }
       notifyListeners();
       rethrow;
     }
@@ -298,4 +371,3 @@ class ServiceProvider extends ChangeNotifier {
     return fallback;
   }
 }
-

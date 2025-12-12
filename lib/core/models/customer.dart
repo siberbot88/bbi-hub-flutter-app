@@ -22,4 +22,7 @@ class Customer {
       address: (json['address'] ?? json['alamat'])?.toString(),
     );
   }
+
+  // Getter compatibility
+  String? get phoneNumber => phone;
 }

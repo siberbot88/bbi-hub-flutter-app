@@ -330,7 +330,7 @@ class ApiService {
       if (token == null) throw Exception('Token not found');
 
       final request = http.MultipartRequest('POST', uri);
-      
+
       // Method spoofing untuk Laravel
       request.fields['_method'] = 'PUT';
 
@@ -357,7 +357,7 @@ class ApiService {
 
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
-      
+
       _debugResponse('UPDATE_WORKSHOP', response);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -509,7 +509,7 @@ class ApiService {
       // Handle pagination structure: { "data": { "data": [...] } }
       if (decoded is Map<String, dynamic>) {
         final dataWrapper = decoded['data'];
-        
+
         // Case 1: Pagination wrapper
         if (dataWrapper is Map<String, dynamic> && dataWrapper.containsKey('data')) {
           final list = dataWrapper['data'];
@@ -520,7 +520,7 @@ class ApiService {
                 .toList();
           }
         }
-        
+
         // Case 2: Direct list (fallback)
         if (dataWrapper is List) {
           return dataWrapper
@@ -1099,4 +1099,234 @@ class ApiService {
       throw Exception('Gagal cek status: ${e.toString()}');
     }
   }
+  /* ==================== ADMIN SERVICES ===================== */
+  /// Versi admin: ambil list service dengan pagination
+  /// endpoint: GET /v1/admins/services
+  Future<Map<String, dynamic>> adminFetchServicesRaw({
+    int page = 1,
+    int perPage = 10,
+    String? status,
+    String? workshopUuid,
+    String? code,
+    String? dateFrom,
+    String? dateTo,
+  }) async {
+    try {
+      final params = <String, String>{
+        'page': page.toString(),
+        'per_page': perPage.toString(),
+      };
+
+      if (status != null && status.isNotEmpty) {
+        params['status'] = status;
+      }
+      if (workshopUuid != null && workshopUuid.isNotEmpty) {
+        params['workshop_uuid'] = workshopUuid;
+      }
+      if (code != null && code.isNotEmpty) params['code'] = code;
+      if (dateFrom != null && dateFrom.isNotEmpty) {
+        params['date_from'] = dateFrom;
+      }
+      if (dateTo != null && dateTo.isNotEmpty) {
+        params['date_to'] = dateTo;
+      }
+
+      final uri = Uri.parse('${_baseUrl}admins/services')
+          .replace(queryParameters: params);
+      final headers = await _getAuthHeaders();
+
+      _debugRequest('ADMIN_FETCH_SERVICES_RAW', uri, headers, null);
+      final res = await http.get(uri, headers: headers);
+      _debugResponse('ADMIN_FETCH_SERVICES_RAW', res);
+
+      if (!(res.statusCode == 200 || res.statusCode == 201)) {
+        final j = _tryDecodeJson(res.body);
+        if (j is Map<String, dynamic>) {
+          throw Exception(_getErrorMessage(j));
+        }
+        throw Exception(
+            'Gagal mengambil data service (ADMIN) (HTTP ${res.statusCode}).');
+      }
+
+      if (!_isJsonResponse(res)) {
+        throw Exception('Respon (ADMIN) bukan JSON.');
+      }
+
+      final j = _tryDecodeJson(res.body);
+      if (j is Map<String, dynamic>) {
+        return j;
+      }
+
+      throw Exception('Respon layanan (ADMIN) tidak valid.');
+    } catch (e) {
+      throw Exception('Gagal mengambil data service (ADMIN): '
+          '${e.toString().replaceFirst("Exception: ", "")}');
+    }
+  }
+
+  /// Versi admin: ambil detail service
+  /// endpoint: GET /v1/admins/services/{id}
+  Future<ServiceModel> adminFetchServiceDetail(String id) async {
+    try {
+      final uri = Uri.parse('${_baseUrl}admins/services/$id');
+      final headers = await _getAuthHeaders();
+
+      _debugRequest('ADMIN_SERVICE_DETAIL', uri, headers, null);
+      final res = await http.get(uri, headers: headers);
+      _debugResponse('ADMIN_SERVICE_DETAIL', res);
+
+      if (!(res.statusCode == 200 || res.statusCode == 201)) {
+        final j = _tryDecodeJson(res.body);
+        if (j is Map<String, dynamic>) {
+          throw Exception(_getErrorMessage(j));
+        }
+        throw Exception(
+            'Gagal mengambil detail service (ADMIN) (HTTP ${res.statusCode}).');
+      }
+
+      if (!_isJsonResponse(res)) throw Exception('Respon (ADMIN) bukan JSON.');
+
+      final j = _tryDecodeJson(res.body);
+
+      final map = (j is Map && j['data'] is Map)
+          ? Map<String, dynamic>.from(j['data'])
+          : Map<String, dynamic>.from(j as Map);
+
+      return ServiceModel.fromJson(map);
+    } catch (e) {
+      throw Exception('Gagal mengambil detail service (ADMIN): '
+          '${e.toString().replaceFirst("Exception: ", "")}');
+    }
+  }
+
+  /// Versi admin: hapus service
+  /// endpoint: DELETE /v1/admins/services/{id}
+  Future<void> adminDeleteService(String id) async {
+    try {
+      final uri = Uri.parse('${_baseUrl}admins/services/$id');
+      final headers = await _getAuthHeaders();
+
+      _debugRequest('ADMIN_DELETE_SERVICE', uri, headers, null);
+      final res = await http.delete(uri, headers: headers);
+      _debugResponse('ADMIN_DELETE_SERVICE', res);
+
+      if (!(res.statusCode == 200 || res.statusCode == 204)) {
+        final j = _tryDecodeJson(res.body);
+        if (j is Map<String, dynamic>) {
+          throw Exception(_getErrorMessage(j));
+        }
+        throw Exception(
+            'Gagal menghapus service (ADMIN) (HTTP ${res.statusCode}).');
+      }
+    } catch (e) {
+      throw Exception('Gagal menghapus service (ADMIN): '
+          '${e.toString().replaceFirst("Exception: ", "")}');
+    }
+  }
+
+  /// ADMIN FLOW: Accept service
+  /// endpoint: POST /v1/admins/services/{id}/accept
+  Future<void> adminAcceptService(
+      String id, {
+        String? mechanicUuid,
+      }) async {
+    try {
+      final uri = Uri.parse('${_baseUrl}admins/services/$id/accept');
+      final headers = await _getAuthHeaders();
+
+      final bodyMap = <String, dynamic>{};
+      if (mechanicUuid != null && mechanicUuid.isNotEmpty) {
+        bodyMap['mechanic_uuid'] = mechanicUuid;
+      }
+      final body = jsonEncode(bodyMap);
+
+      _debugRequest('ADMIN_ACCEPT_SERVICE', uri, headers, bodyMap.isEmpty ? null : body);
+      final res = await http.post(uri, headers: headers, body: bodyMap.isEmpty ? null : body);
+      _debugResponse('ADMIN_ACCEPT_SERVICE', res);
+
+      if (!(res.statusCode == 200 || res.statusCode == 201 || res.statusCode == 204)) {
+        final j = _tryDecodeJson(res.body);
+        if (j is Map<String, dynamic>) {
+          throw Exception(_getErrorMessage(j));
+        }
+        throw Exception(
+            'Gagal accept service (ADMIN) (HTTP ${res.statusCode}).');
+      }
+    } catch (e) {
+      throw Exception('Gagal accept service (ADMIN): '
+          '${e.toString().replaceFirst("Exception: ", "")}');
+    }
+  }
+
+  /// ADMIN FLOW: Decline service
+  /// endpoint: POST /v1/admins/services/{id}/decline
+  Future<void> adminDeclineService(
+      String id, {
+        required String reason,
+        String? reasonDescription,
+      }) async {
+    try {
+      final uri = Uri.parse('${_baseUrl}admins/services/$id/decline');
+      final headers = await _getAuthHeaders();
+
+      final bodyMap = <String, dynamic>{
+        'reason': reason,
+        if (reasonDescription != null && reasonDescription.isNotEmpty)
+          'reason_description': reasonDescription,
+      };
+      final body = jsonEncode(bodyMap);
+
+      _debugRequest('ADMIN_DECLINE_SERVICE', uri, headers, body);
+      final res = await http.post(uri, headers: headers, body: body);
+      _debugResponse('ADMIN_DECLINE_SERVICE', res);
+
+      if (!(res.statusCode == 200 || res.statusCode == 201 || res.statusCode == 204)) {
+        final j = _tryDecodeJson(res.body);
+        if (j is Map<String, dynamic>) {
+          throw Exception(_getErrorMessage(j));
+        }
+        throw Exception(
+            'Gagal decline service (ADMIN) (HTTP ${res.statusCode}).');
+      }
+    } catch (e) {
+      throw Exception('Gagal decline service (ADMIN): '
+          '${e.toString().replaceFirst("Exception: ", "")}');
+    }
+  }
+
+  /// ADMIN FLOW: Assign mechanic ke service
+  /// endpoint: POST /v1/admins/services/{id}/assign-mechanic
+  Future<void> adminAssignMechanic(
+      String id, {
+        required String mechanicUuid,
+      }) async {
+    try {
+      final uri =
+      Uri.parse('${_baseUrl}admins/services/$id/assign-mechanic');
+      final headers = await _getAuthHeaders();
+
+      final bodyMap = <String, dynamic>{
+        'mechanic_uuid': mechanicUuid,
+      };
+      final body = jsonEncode(bodyMap);
+
+      _debugRequest('ADMIN_ASSIGN_MECHANIC', uri, headers, body);
+      final res = await http.post(uri, headers: headers, body: body);
+      _debugResponse('ADMIN_ASSIGN_MECHANIC', res);
+
+      if (!(res.statusCode == 200 || res.statusCode == 201 || res.statusCode == 204)) {
+        final j = _tryDecodeJson(res.body);
+        if (j is Map<String, dynamic>) {
+          throw Exception(_getErrorMessage(j));
+        }
+        throw Exception(
+            'Gagal assign mekanik (ADMIN) (HTTP ${res.statusCode}).');
+      }
+    } catch (e) {
+      throw Exception('Gagal assign mekanik (ADMIN): '
+          '${e.toString().replaceFirst("Exception: ", "")}');
+    }
+  }
+
+
 }

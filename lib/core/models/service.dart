@@ -35,10 +35,11 @@ class ServiceModel {
   /// Estimasi selesai (optional)
   final DateTime? estimatedTime;
 
-  /// Status utama service: pending/accept/in progress/completed/cancelled
+  /// Status utama service:
+  /// pending / in progress / completed / menunggu pembayaran / lunas / cancelled
   final String status;
 
-  /// status penerimaan (opsional, dari kolom `acceptance_status`)
+  /// status penerimaan (dari kolom `acceptance_status`)
   final String? acceptanceStatus;
 
   /// Waktu saat service di-accept (admin)
@@ -51,13 +52,14 @@ class ServiceModel {
   final String? customerUuid;
   final String? workshopUuid;
   final String? vehicleId;
+  final String? mechanicUuid; // <--- dari kolom mechanic_uuid
 
   // relasi
   final Customer? customer;
   final Vehicle? vehicle;
   final String? workshopName;
 
-  // teknisi (opsional)
+  // teknisi (opsional, dari relasi `mechanic`)
   final MechanicRef? mechanic;
 
   // item transaksi (sparepart/jasa tambahan)
@@ -70,6 +72,7 @@ class ServiceModel {
   final String? categoryName;
 
   final String? reason;
+  final String? reasonDescription; // <--- dari kolom reason_description
   final String? feedbackMechanic;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -89,6 +92,7 @@ class ServiceModel {
     this.customerUuid,
     this.workshopUuid,
     this.vehicleId,
+    this.mechanicUuid,
     this.customer,
     this.vehicle,
     this.workshopName,
@@ -97,6 +101,7 @@ class ServiceModel {
     this.note,
     this.categoryName,
     this.reason,
+    this.reasonDescription,
     this.feedbackMechanic,
     this.createdAt,
     this.updatedAt,
@@ -111,10 +116,19 @@ class ServiceModel {
     }
 
     String? vehicleId() {
-      if (json['vehicle_id'] != null) return json['vehicle_id'].toString();
-      if (json['vehicleId'] != null) return json['vehicleId'].toString();
+      if (json['vehicle_uuid'] != null) {
+        return json['vehicle_uuid'].toString();
+      }
+      if (json['vehicle_id'] != null) {
+        return json['vehicle_id'].toString();
+      }
+      if (json['vehicleId'] != null) {
+        return json['vehicleId'].toString();
+      }
       final v = json['vehicle'];
-      if (v is Map && v['id'] != null) return v['id'].toString();
+      if (v is Map && v['id'] != null) {
+        return v['id'].toString();
+      }
       return null;
     }
 
@@ -161,6 +175,7 @@ class ServiceModel {
       customerUuid: json['customer_uuid']?.toString(),
       workshopUuid: json['workshop_uuid']?.toString(),
       vehicleId: vehicleId(),
+      mechanicUuid: json['mechanic_uuid']?.toString(),
 
       customer: (json['customer'] is Map)
           ? Customer.fromJson(
@@ -190,6 +205,7 @@ class ServiceModel {
       (json['category_service'] ?? json['category_name'])?.toString(),
 
       reason: json['reason']?.toString(),
+      reasonDescription: json['reason_description']?.toString(),
       feedbackMechanic: json['feedback_mechanic']?.toString(),
       createdAt: parseDT(json['created_at']),
       updatedAt: parseDT(json['updated_at']),
@@ -262,6 +278,7 @@ class ServiceModel {
       if (customerUuid != null) 'customer_uuid': customerUuid,
       if (workshopUuid != null) 'workshop_uuid': workshopUuid,
       if (vehicleId != null) 'vehicle_id': vehicleId,
+      if (mechanicUuid != null) 'mechanic_uuid': mechanicUuid,
       if (includeRelations && workshopName != null)
         'workshop': {'name': workshopName},
       if (mechanic != null) 'mechanic': mechanic!.toJson(),
@@ -273,6 +290,8 @@ class ServiceModel {
       if (note != null) 'note': note,
       if (categoryName != null) 'category_service': categoryName,
       if (reason != null) 'reason': reason,
+      if (reasonDescription != null)
+        'reason_description': reasonDescription,
       if (feedbackMechanic != null) 'feedback_mechanic': feedbackMechanic,
       if (createdAt != null) 'created_at': createdAt!.toIso8601String(),
       if (updatedAt != null) 'updated_at': updatedAt!.toIso8601String(),
@@ -286,25 +305,25 @@ class ServiceModel {
   }
 
   // ===== Display Getters untuk UI (Type-safe) =====
-  
+
   /// Display: customer name
   String get displayCustomerName => customer?.name ?? '-';
-  
+
   /// Display: vehicle plate number
   String get displayVehiclePlate => vehicle?.plateNumber ?? '-';
-  
+
   /// Display: vehicle brand
   String get displayVehicleBrand => vehicle?.brand ?? '-';
-  
+
   /// Display: vehicle model
   String get displayVehicleModel => vehicle?.model ?? '-';
-  
-  /// Display: vehicle name  
+
+  /// Display: vehicle name
   String get displayVehicleName => vehicle?.name ?? displayVehicleModel;
-  
+
   /// Display: workshop name
   String get displayWorkshopName => workshopName ?? '-';
-  
+
   /// Combined search string for efficient searching (lowercase)
   String get searchKeywords {
     final parts = <String>[
@@ -320,4 +339,8 @@ class ServiceModel {
     ];
     return parts.where((e) => e.isNotEmpty).join(' | ').toLowerCase();
   }
+
+  // Getters for compatibility
+  String? get complaint => description;
+  String? get request => description;
 }
