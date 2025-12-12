@@ -267,6 +267,47 @@ class _PremiumMembershipScreenState extends State<PremiumMembershipScreen>
                             ),
                           ],
                         ),
+                        child: Center(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Lihat Paket Membership',
+                                style: AppTextStyles.button(), 
+                              ),
+                              AppSpacing.horizontalSpaceSM,
+                              const Icon(
+                                Icons.arrow_forward_rounded,
+                                color: Colors.white,
+                                size: 22,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  
+                  AppSpacing.verticalSpaceSM,
+                  
+                  // Secondary Button
+                  TextButton(
+                    onPressed: () {
+                      if (widget.onContinueFreeVersion != null) {
+                        widget.onContinueFreeVersion!();
+                      } else {
+                        Navigator.of(context).pop();
+                      }
+                    },
+                    style: TextButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 40),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      splashFactory: InkRipple.splashFactory,
+                    ),
+                    child: Text(
+                      'Lanjut pakai versi gratis',
+                      style: AppTextStyles.labelBold(
+                        color: isDark ? Colors.grey[400] : AppColors.textSecondary,
                       ),
 
                       AppSpacing.verticalSpaceXXL,
