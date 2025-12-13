@@ -1,17 +1,30 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../reject_dialog.dart';
 import '../accept_dialog.dart';
 import '../../screens/service_detail.dart';
 import 'service_helpers.dart';
+import 'package:provider/provider.dart';
+import 'package:bengkel_online_flutter/feature/admin/providers/admin_service_provider.dart';
+import 'package:bengkel_online_flutter/core/models/service.dart';
 
 class ServiceCard extends StatelessWidget {
-  final Map<String, dynamic> task;
+  final ServiceModel service;
 
-  const ServiceCard({super.key, required this.task});
+  const ServiceCard({super.key, required this.service});
 
   @override
   Widget build(BuildContext context) {
+    // Helper accessors
+    final customerName = service.displayCustomerName;
+    final vehicleName = service.displayVehicleName;
+    final plate = service.displayVehiclePlate;
+    final category = service.vehicle?.category ?? service.vehicle?.type ?? "Unknown";
+    final scheduledDate = service.scheduledDate ?? DateTime.now();
+    final serviceName = service.name;
+    final id = service.id;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
@@ -33,33 +46,41 @@ class ServiceCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               CircleAvatar(
-                radius: 18,
-                backgroundImage: NetworkImage(
-                    "https://i.pravatar.cc/150?img=${task['id']}"),
+                radius: 20,
+                backgroundColor: AppColors.primaryRed.withValues(alpha: 0.1),
+                child: Text(
+                  _getInitials(customerName),
+                  style: AppTextStyles.labelBold(color: AppColors.primaryRed),
+                ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(task['name'],
-                        style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.w600, fontSize: 14)),
-                    Text("ID: ${task['id']}",
-                        style: GoogleFonts.poppins(
-                            fontSize: 12, color: Colors.grey[600])),
+                    Text(customerName,
+                        style: AppTextStyles.labelBold()),
+                    Text("ID: $id",
+                        style: AppTextStyles.caption()),
                   ],
                 ),
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(ServiceHelpers.formatDate(task['date'] as DateTime),
-                      style: GoogleFonts.poppins(
-                          fontSize: 12, color: Colors.grey[700])),
-                  Text("Scheduled : 7 September 2025",
-                      style: GoogleFonts.poppins(
-                          fontSize: 12, color: Colors.grey[600])),
+                  Text(ServiceHelpers.formatDate(scheduledDate),
+                      style: AppTextStyles.caption(color: AppColors.textPrimary)),
+                  // Jika mau menampilkan info scheduled spesifik
+                  Container(
+                    margin: const EdgeInsets.only(top: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.statusPending.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text("Scheduled",
+                        style: AppTextStyles.caption(color: AppColors.statusPending).copyWith(fontSize: 10, fontWeight: FontWeight.bold)),
+                  ),
                 ],
               )
             ],
@@ -69,25 +90,21 @@ class ServiceCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  task['service'],
-                  style: GoogleFonts.poppins(
-                      fontSize: 16, fontWeight: FontWeight.bold),
+                  serviceName,
+                  style: AppTextStyles.heading5(),
                 ),
               ),
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: _getVehicleBgColor(task['vehicleCategory'])
-                      .withAlpha(51), // 0.2 * 255
+                  color: _getVehicleBgColor(category)
+                      .withValues(alpha: 0.2), 
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  task['vehicleCategory'] ?? "Unknown",
-                  style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: _getVehicleTextColor(task['vehicleCategory'])),
+                  category,
+                  style: AppTextStyles.caption(color: _getVehicleTextColor(category)).copyWith(fontWeight: FontWeight.w600),
                 ),
               )
             ],
@@ -102,16 +119,26 @@ class ServiceCard extends StatelessWidget {
                 children: [
                   Text("Plat Nomor",
                       style:
-                          GoogleFonts.poppins(fontSize: 12, color: Colors.grey)),
-                  Text(task['plate'],
-                      style: GoogleFonts.poppins(
-                          fontSize: 15, fontWeight: FontWeight.w600)),
+                          AppTextStyles.caption()),
+                  Text(plate,
+                      style: AppTextStyles.bodyMedium(color: AppColors.textPrimary).copyWith(fontWeight: FontWeight.w600)),
                   const SizedBox(height: 10),
                   Row(
                     children: [
                       Builder(
                         builder: (ctx) => ElevatedButton(
-                          onPressed: () => showRejectDialog(ctx),
+                          onPressed: () => showRejectDialog(
+                            ctx,
+                            onConfirm: (reason, desc) {
+                              context
+                                  .read<AdminServiceProvider>()
+                                  .declineServiceAsAdmin(
+                                    service.id,
+                                    reason: reason,
+                                    reasonDescription: desc,
+                                  );
+                            },
+                          ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.red.shade700,
                             padding: const EdgeInsets.symmetric(
@@ -122,17 +149,20 @@ class ServiceCard extends StatelessWidget {
                           ),
                           child: Text(
                             "Tolak",
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
+                            style: AppTextStyles.buttonSmall(color: Colors.white),
                           ),
                         ),
                       ),
                       const SizedBox(width: 8),
                       ElevatedButton(
-                        onPressed: () => showAcceptDialog(context),
+                        onPressed: () => showAcceptDialog(
+                          context,
+                          onConfirm: () {
+                            context
+                                .read<AdminServiceProvider>()
+                                .acceptServiceAsAdmin(service.id);
+                          },
+                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green.shade700,
                           padding: const EdgeInsets.symmetric(
@@ -143,11 +173,7 @@ class ServiceCard extends StatelessWidget {
                         ),
                         child: Text(
                           "Terima",
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
+                          style: AppTextStyles.buttonSmall(color: Colors.white),
                         ),
                       ),
                     ],
@@ -159,17 +185,16 @@ class ServiceCard extends StatelessWidget {
                 children: [
                   Text("Type Motor",
                       style:
-                          GoogleFonts.poppins(fontSize: 12, color: Colors.grey)),
-                  Text(task['motor'],
-                      style: GoogleFonts.poppins(
-                          fontSize: 15, fontWeight: FontWeight.bold)),
+                          AppTextStyles.caption()),
+                  Text(vehicleName,
+                      style: AppTextStyles.bodyMedium().copyWith(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
                   ElevatedButton(
                     onPressed: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (_) => ServiceDetailPage(task: task)),
+                            builder: (_) => ServiceDetailPage(service: service)),
                       );
                     },
                     style: ElevatedButton.styleFrom(
@@ -179,11 +204,7 @@ class ServiceCard extends StatelessWidget {
                     ),
                     child: Text(
                       "Detail",
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
+                      style: AppTextStyles.buttonSmall(color: Colors.white),
                     ),
                   ),
                 ],
@@ -215,5 +236,18 @@ class ServiceCard extends StatelessWidget {
       default:
         return Colors.black87;
     }
+  }
+
+  String _getInitials(String name) {
+    if (name.isEmpty) return "?";
+    final parts = name.trim().split(' ');
+    if (parts.isEmpty) return "?";
+    
+    if (parts.length == 1) {
+      return parts[0].substring(0, 1).toUpperCase(); // Just first letter if 1 word
+    }
+    
+    // Take first letter of first 2 words
+    return (parts[0][0] + parts[1][0]).toUpperCase();
   }
 }

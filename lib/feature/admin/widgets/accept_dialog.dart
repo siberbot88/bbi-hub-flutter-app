@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-void showAcceptDialog(BuildContext context) {
+void showAcceptDialog(BuildContext context, {required VoidCallback onConfirm}) {
   showDialog(
     context: context,
     builder: (context) {
@@ -48,7 +48,7 @@ void showAcceptDialog(BuildContext context) {
                     child: ElevatedButton(
                       onPressed: () {
                         Navigator.pop(context); // Tutup popup
-                        // TODO: aksi terima service disini
+                        onConfirm();
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,

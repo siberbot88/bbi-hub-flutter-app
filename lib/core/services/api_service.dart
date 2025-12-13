@@ -338,7 +338,7 @@ class ApiService {
       if (token == null) throw Exception('Token not found');
 
       final request = http.MultipartRequest('POST', uri);
-      
+
       // Method spoofing untuk Laravel
       request.fields['_method'] = 'PUT';
 
@@ -374,7 +374,7 @@ class ApiService {
 
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
-      
+
       _debugResponse('UPDATE_WORKSHOP', response);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -526,7 +526,7 @@ class ApiService {
       // Handle pagination structure: { "data": { "data": [...] } }
       if (decoded is Map<String, dynamic>) {
         final dataWrapper = decoded['data'];
-        
+
         // Case 1: Pagination wrapper
         if (dataWrapper is Map<String, dynamic> && dataWrapper.containsKey('data')) {
           final list = dataWrapper['data'];
@@ -537,7 +537,7 @@ class ApiService {
                 .toList();
           }
         }
-        
+
         // Case 2: Direct list (fallback)
         if (dataWrapper is List) {
           return dataWrapper
