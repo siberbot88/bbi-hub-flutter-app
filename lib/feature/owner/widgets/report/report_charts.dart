@@ -10,7 +10,10 @@ class ReportCharts {
     required List<double> seriesB,
     required Color colorB,
   }) {
-    final maxY = [...seriesA, ...seriesB].reduce(max) * 1.2;
+    // Ensure maxY is never zero to prevent interval errors
+    final allValues = [...seriesA, ...seriesB];
+    final maxValue = allValues.isEmpty ? 0 : allValues.reduce(max);
+    final maxY = maxValue == 0 ? 10.0 : maxValue * 1.2; // Minimum 10 if no data
 
     SideTitles bottomTitles() => SideTitles(
           showTitles: true,
@@ -73,7 +76,7 @@ class ReportCharts {
         show: true,
         drawVerticalLine: true,
         verticalInterval: 1, // Draw vertical lines for each point
-        horizontalInterval: maxY / 4,
+        horizontalInterval: max(1.0, maxY / 4), // Ensure minimum interval of 1
         getDrawingVerticalLine: (value) => FlLine(
           color: const Color(0xFFEEEEEE),
           strokeWidth: 1,
@@ -136,7 +139,10 @@ class ReportCharts {
     required List<String> labels,
     required Color color,
   }) {
-    final maxY = values.reduce(max) * 1.2;
+    // Ensure maxY is never zero to prevent interval errors
+    final allValues = values.isEmpty ? [0.0] : values;
+    final maxValue = allValues.reduce(max);
+    final maxY = maxValue == 0 ? 10.0 : maxValue * 1.2; // Minimum 10 if no data
 
     return BarChartData(
       maxY: maxY,
@@ -144,7 +150,7 @@ class ReportCharts {
       gridData: FlGridData(
         show: true,
         drawVerticalLine: false,
-        horizontalInterval: maxY / 4,
+        horizontalInterval: max(1.0, maxY / 4), // Ensure minimum interval of 1
         getDrawingHorizontalLine: (value) => FlLine(
           color: const Color(0xFFF5F5F5),
           strokeWidth: 1,

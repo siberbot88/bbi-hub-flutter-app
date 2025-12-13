@@ -118,26 +118,42 @@ class ReportData {
     }
 
     // Simplified trend (distribute revenue evenly for now)
-    final revenueInMillions = revenue / 1000000;
+    // Ensure minimum values to prevent chart interval errors
+    final revenueInMillions = revenue == 0 ? 0.0 : revenue / 1000000;
+    final safeJobs = jobs == 0 ? 0 : jobs;
+    
     List<double> revenueTrend = List.generate(
       labels.length,
       (i) => (revenueInMillions / labels.length) * (0.8 + (i * 0.05)),
     );
     List<double> jobsTrend = List.generate(
       labels.length,
-      (i) => ((jobs / labels.length) * (0.8 + (i * 0.05))),
+      (i) => ((safeJobs / labels.length) * (0.8 + (i * 0.05))),
     );
 
     // Peak hour visualization data
     final peakRange = peakHours['peak_range'] as String;
+    final hourlyDist = peakHours['hourly_distribution'] as Map<String, dynamic>?;
+    
     List<String> peakHourLabels = ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00'];
-    List<double> peakHourBars = List.generate(8, (i) {
-      // Highlight the peak hours
-      if (peakRange.contains('${8 + (i * 2)}:00')) {
-        return 80.0 + (i % 3) * 5;
-      }
-      return 30.0 + (i % 4) * 10;
-    });
+    List<double> peakHourBars;
+    
+    if (hourlyDist != null && hourlyDist.isNotEmpty) {
+      // Use REAL data from backend
+      peakHourBars = peakHourLabels.map((label) {
+        final count = hourlyDist[label];
+        return count != null ? (count as num).toDouble() : 0.0;
+      }).toList();
+    } else {
+      // Fallback to seed-like data if backend returns empty
+      peakHourBars = List.generate(8, (i) {
+        // Highlight the peak hours
+        if (peakRange.contains('${8 + (i * 2)}:00')) {
+          return 80.0 + (i % 3) * 5;
+        }
+        return 30.0 + (i % 4) * 10;
+      });
+    }
 
     return ReportData(
       serviceBreakdown: serviceBreakdown,

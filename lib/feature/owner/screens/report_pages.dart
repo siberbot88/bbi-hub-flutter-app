@@ -54,8 +54,8 @@ class _ReportPageState extends State<ReportPage> {
     } catch (e) {
       setState(() {
         _isLoading = false;
-        // Fallback to seed data on error
-        _data = ReportData.seed();
+        // Don't fallback to seed - show actual error/empty state
+        _data = null;
       });
       
       // Show error snackbar
@@ -398,16 +398,44 @@ class _ReportPageState extends State<ReportPage> {
           const SizedBox(height: 24),
           SizedBox(
             height: 200,
-            child: LineChart(
-              ReportCharts.lineChartData(
-                labels: d.labels,
-                seriesA: d.revenueTrend, // Pendapatan
-                colorA: const Color(0xFF7C3AED), // Purple
-                seriesB: d.jobsTrend, // Pekerjaan
-                colorB: const Color(0xFF3B82F6), // Blue
-              ),
-              duration: const Duration(milliseconds: 400),
-            ),
+            child: () {
+              // Check if data is empty (all zeros)
+              final hasData = d.revenueTrend.any((v) => v > 0) || d.jobsTrend.any((v) => v > 0);
+              
+              if (!hasData) {
+                // Show empty state placeholder
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.insert_chart_outlined, size: 48, color: Colors.grey[300]),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Belum ada data transaksi',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Grafik akan muncul setelah ada transaksi',
+                        style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                      ),
+                    ],
+                  ),
+                );
+              }
+              
+              // Show chart if data exists
+              return LineChart(
+                ReportCharts.lineChartData(
+                  labels: d.labels,
+                  seriesA: d.revenueTrend, // Pendapatan
+                  colorA: const Color(0xFF7C3AED), // Purple
+                  seriesB: d.jobsTrend, // Pekerjaan
+                  colorB: const Color(0xFF3B82F6), // Blue
+                ),
+                duration: const Duration(milliseconds: 400),
+              );
+            }(),
           ),
         ],
       ),
