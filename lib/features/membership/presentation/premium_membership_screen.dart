@@ -267,6 +267,23 @@ class _PremiumMembershipScreenState extends State<PremiumMembershipScreen>
                             ),
                           ],
                         ),
+                        child: Center(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Lihat Paket Membership',
+                                style: AppTextStyles.button(), 
+                              ),
+                              AppSpacing.horizontalSpaceSM,
+                              const Icon(
+                                Icons.arrow_forward_rounded,
+                                color: Colors.white,
+                                size: 22,
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
 
                       AppSpacing.verticalSpaceXXL,

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:bengkel_online_flutter/feature/admin/providers/admin_service_provider.dart';
 import 'package:bengkel_online_flutter/feature/admin/screens/homepage.dart';
 import 'package:bengkel_online_flutter/feature/admin/screens/service_page.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -37,6 +38,8 @@ import 'package:bengkel_online_flutter/feature/owner/widgets/bottom_nav_owner.da
 import 'package:bengkel_online_flutter/feature/owner/screens/voucher_page.dart';
 import 'package:bengkel_online_flutter/feature/owner/screens/list_voucher_page.dart';
 
+
+
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
@@ -51,6 +54,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => EmployeeProvider()),
         ChangeNotifierProvider(create: (_) => ServiceProvider()),
+        ChangeNotifierProvider(create: (_) => AdminServiceProvider()),
       ],
       child: const MyApp(),
     ),

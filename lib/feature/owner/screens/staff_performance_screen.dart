@@ -78,7 +78,7 @@ class AppTheme {
 }
 
 class StaffPerformanceScreen extends StatefulWidget {
-  const StaffPerformanceScreen({super.key});
+  const StaffPerformanceScreen({Key? key}) : super(key: key);
 
   @override
   State<StaffPerformanceScreen> createState() => _StaffPerformanceScreenState();
@@ -159,7 +159,6 @@ class _StaffPerformanceScreenState extends State<StaffPerformanceScreen> {
           ],
         ),
       ),
-
     );
   }
 

@@ -2,24 +2,33 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../widgets/custom_header.dart';
 import '../widgets/assign_dialog.dart';
-import 'package:flutter_svg/flutter_svg.dart';          
+import 'package:flutter_svg/flutter_svg.dart';   
+import 'package:provider/provider.dart';
+import 'package:bengkel_online_flutter/feature/admin/providers/admin_service_provider.dart';
+import 'package:bengkel_online_flutter/core/models/service.dart';
+import 'package:intl/intl.dart';          
 
 
 class ServicePendingDetail extends StatelessWidget {
-  final Map<String, dynamic> task;
+  final ServiceModel service;
 
-  const ServicePendingDetail({super.key, required this.task});
+  const ServicePendingDetail({super.key, required this.service});
 
   @override
   Widget build(BuildContext context) {
-    final DateTime? orderDate = task['date'] is DateTime ? task['date'] : null;
     const mainColor = Color(0xFFDC2626);
-
-    // 🔹 Tentukan jenis kendaraan
-    final String motorType =
-        (task['motorType']?.toString().toLowerCase() ?? "motor") == "mobil"
-            ? "MOBIL"
-            : "SEPEDA MOTOR";
+    
+    // Helpers
+    final id = service.id;
+    final customerName = service.displayCustomerName;
+    final scheduledDate = service.scheduledDate;
+    final vehicleName = service.displayVehicleName;
+    final plate = service.displayVehiclePlate;
+    final category = service.vehicle?.category ?? service.vehicle?.type ?? "Unknown";
+    final phone = service.customer?.phoneNumber ?? '-';
+    final address = service.customer?.address ?? '-';
+    final desc = service.complaint ?? service.request ?? service.description ?? '-';
+    final status = service.status;
 
     return Scaffold(
       appBar: const CustomHeader(
@@ -27,46 +36,74 @@ class ServicePendingDetail extends StatelessWidget {
         showBack: true,
       ),
       backgroundColor: mainColor,
-
       
-   // ✅ Tombol sticky di bawah
-bottomNavigationBar: SafeArea(
-  child: Container(
-    color: Colors.white, // 🔹 Background belakang tombol
-    padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-    child: SizedBox(
-      width: double.infinity,
-      height: 58,
-      child: ElevatedButton.icon(
-        onPressed: () {
-          showTechnicianSelectDialog(context);
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: mainColor, // 🔹 Warna tombol merah (#DC2626)
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
-          ),
-          elevation: 4,
-          shadowColor: Colors.black.withAlpha(38),
-        ),
-        icon: SvgPicture.asset(
-          'assets/icons/assign.svg', // 🔹 Ikon SVG lokal
-          height: 22,
-          width: 22,
-          colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
-        ),
-        label: Text(
-          "Tetapkan Mekanik",
-          style: GoogleFonts.poppins(
-            fontSize: 15,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+       // ✅ Tombol sticky di bawah
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          color: Colors.white, // 🔹 Background belakang tombol
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          child: SizedBox(
+            width: double.infinity,
+            height: 58,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                showTechnicianSelectDialog(
+                  context,
+                  onConfirm: (mechanicUuid, mechanicName) {
+                    context.read<AdminServiceProvider>().assignMechanicAsAdmin(
+                      service.id,
+                      mechanicUuid,
+                    ).then((_) {
+                       ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              "Service berhasil diassign ke $mechanicName",
+                              style: GoogleFonts.poppins(),
+                            ),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                        Navigator.pop(context); // Close detail on success
+                    }).catchError((e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              "Gagal assign: $e",
+                              style: GoogleFonts.poppins(),
+                            ),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                    });
+                  },
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: mainColor, // 🔹 Warna tombol merah (#DC2626)
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                elevation: 4,
+                shadowColor: Colors.black.withAlpha(38),
+              ),
+              icon: SvgPicture.asset(
+                'assets/icons/assign.svg', // 🔹 Ikon SVG lokal
+                height: 22,
+                width: 22,
+                colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+              ),
+              label: Text(
+                "Tetapkan Mekanik",
+                style: GoogleFonts.poppins(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
           ),
         ),
       ),
-    ),
-  ),
-),
 
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -94,7 +131,7 @@ bottomNavigationBar: SafeArea(
                   CircleAvatar(
                     radius: 22,
                     backgroundImage: NetworkImage(
-                      "https://i.pravatar.cc/150?img=${task['id']}",
+                      "https://i.pravatar.cc/150?img=$id",
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -103,14 +140,14 @@ bottomNavigationBar: SafeArea(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          task['user'] ?? "-",
+                          customerName,
                           style: GoogleFonts.poppins(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         Text(
-                          "ID: ${task['id']}",
+                          "ID: $id",
                           style: GoogleFonts.poppins(
                             fontSize: 13,
                             color: Colors.grey,
@@ -130,7 +167,7 @@ bottomNavigationBar: SafeArea(
                         ),
                       ),
                       Text(
-                        orderDate != null ? _formatDate(orderDate) : "-",
+                        scheduledDate != null ? _formatDate(scheduledDate) : "-",
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -163,7 +200,7 @@ bottomNavigationBar: SafeArea(
               // 🔹 Detail Kendaraan
               _detailRow(
                 "Jenis Kendaraan",
-                motorType,
+                category,
                 custom: Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
@@ -172,7 +209,7 @@ bottomNavigationBar: SafeArea(
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    motorType,
+                    category,
                     style: GoogleFonts.poppins(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -181,15 +218,15 @@ bottomNavigationBar: SafeArea(
                   ),
                 ),
               ),
-              _detailRow("Model Kendaraan", task['motor']),
+              _detailRow("Model Kendaraan", vehicleName),
               _detailRow(
                 "Penjadwalan",
-                "${task['time']} : ${orderDate != null ? _formatDate(orderDate) : '-'}",
+                scheduledDate != null ? _formatDate(scheduledDate) : '-',
               ),
-              _detailRow("Plat Nomor", task['plate']),
+              _detailRow("Plat Nomor", plate),
               _detailRow(
                 "Status",
-                task['status'],
+                status,
                 custom: Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
@@ -198,7 +235,7 @@ bottomNavigationBar: SafeArea(
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    (task['status'] ?? "PENDING").toString().toUpperCase(),
+                    (status ?? "PENDING").toString().toUpperCase(),
                     style: GoogleFonts.poppins(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -207,10 +244,10 @@ bottomNavigationBar: SafeArea(
                   ),
                 ),
               ),
-              _detailRow("No. Telepon", "08956733xxx"),
+              _detailRow("No. Telepon", phone),
               _detailRow(
                 "Alamat",
-                "Jl. Medokan Ayu No.13, Kecamatan Gunung Anyar",
+                address,
               ),
 
               const SizedBox(height: 18),
@@ -222,7 +259,7 @@ bottomNavigationBar: SafeArea(
                 style: GoogleFonts.poppins(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
-                    color: Colors.black87,  
+                  color: Colors.black87,  
                 ),
               ),
              ),
@@ -236,7 +273,7 @@ bottomNavigationBar: SafeArea(
                   color: mainColor.withAlpha(13),
                 ),
                 child: Text(
-                  task['desc'] ?? "Penggantian bantalan rem lengkap dan kalibrasi sistem untuk unit excavator",
+                  desc,
                   style: GoogleFonts.poppins(fontSize: 14),
                 ),
               ),

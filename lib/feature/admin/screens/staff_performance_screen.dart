@@ -126,6 +126,15 @@ class _StaffPerformanceScreenState extends State<StaffPerformanceScreen> {
   }
 
 
+  // Reload when tab changes
+  void _onRangeChanged(DateRange range) {
+    if (_selectedRange != range) {
+      setState(() {
+        _selectedRange = range;
+      });
+      _fetchData();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
