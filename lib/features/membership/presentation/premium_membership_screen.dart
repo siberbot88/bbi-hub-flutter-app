@@ -59,7 +59,7 @@ class _PremiumMembershipScreenState extends State<PremiumMembershipScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _scaleController;
   late Animation<double> _scaleAnimation;
-  bool _isPressed = false;
+  bool _isPressed = false; // Used for animation state tracking
 
   @override
   void initState() {
@@ -285,30 +285,6 @@ class _PremiumMembershipScreenState extends State<PremiumMembershipScreen>
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                  
-                  AppSpacing.verticalSpaceSM,
-                  
-                  // Secondary Button
-                  TextButton(
-                    onPressed: () {
-                      if (widget.onContinueFreeVersion != null) {
-                        widget.onContinueFreeVersion!();
-                      } else {
-                        Navigator.of(context).pop();
-                      }
-                    },
-                    style: TextButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 40),
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      splashFactory: InkRipple.splashFactory,
-                    ),
-                    child: Text(
-                      'Lanjut pakai versi gratis',
-                      style: AppTextStyles.labelBold(
-                        color: isDark ? Colors.grey[400] : AppColors.textSecondary,
-                      ),
 
                       AppSpacing.verticalSpaceXXL,
                     ],
@@ -446,9 +422,9 @@ class _PremiumMembershipScreenState extends State<PremiumMembershipScreen>
                    ),
                    borderRadius: BorderRadius.circular(24),
                    boxShadow: [
-                      BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, 10))
+                      BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 20, offset: const Offset(0, 10))
                    ],
-                   border: Border.all(color: Colors.amber.withOpacity(0.5), width: 1)
+                   border: Border.all(color: Colors.amber.withValues(alpha: 0.5), width: 1)
                  ),
                  child: Column(
                    children: [
@@ -464,7 +440,7 @@ class _PremiumMembershipScreenState extends State<PremiumMembershipScreen>
                        textAlign: TextAlign.center,
                      ),
                      const SizedBox(height: 24),
-                     Divider(color: Colors.grey.withOpacity(0.2)),
+                     Divider(color: Colors.grey.withValues(alpha: 0.2)),
                      const SizedBox(height: 24),
                      Row(
                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -481,7 +457,7 @@ class _PremiumMembershipScreenState extends State<PremiumMembershipScreen>
                          Container(
                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                            decoration: BoxDecoration(
-                             color: Colors.green.withOpacity(0.1),
+                             color: Colors.green.withValues(alpha: 0.1),
                              borderRadius: BorderRadius.circular(20)
                            ),
                            child: Text('AKTIF', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 12)),
@@ -633,18 +609,22 @@ class _PremiumMembershipScreenState extends State<PremiumMembershipScreen>
 
 
   Future<void> _refreshStatus() async {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final authProvider = context.read<AuthProvider>();
+    
     try {
       final api = ApiService();
       await api.checkSubscriptionStatus();
       if (!mounted) return;
-      await context.read<AuthProvider>().checkLoginStatus();
+      await authProvider.checkLoginStatus();
+      if (!mounted) return;
       
-      ScaffoldMessenger.of(context).showSnackBar(
+      scaffoldMessenger.showSnackBar(
         const SnackBar(content: Text('Status langganan diperbarui'), backgroundColor: Colors.green),
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      scaffoldMessenger.showSnackBar(
         SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
       );
     }
@@ -687,26 +667,30 @@ class _PremiumMembershipScreenState extends State<PremiumMembershipScreen>
                       builder: (_) => const Center(child: CircularProgressIndicator())
                     );
                     
+                    final navigator = Navigator.of(context);
+                    final scaffoldMessenger = ScaffoldMessenger.of(context);
+                    final authProvider = context.read<AuthProvider>();
+                    
                     try {
                       final api = ApiService();
                       await api.cancelSubscription();
                       
                       if (!mounted) return;
-                      Navigator.pop(context); // Close loading
+                      navigator.pop(); // Close loading
                       
                       // Refresh user data
-                      await context.read<AuthProvider>().checkLoginStatus();
+                      await authProvider.checkLoginStatus();
                       
                       if (!mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      scaffoldMessenger.showSnackBar(
                         const SnackBar(content: Text('Langganan berhasil dibatalkan'), backgroundColor: Colors.green),
                       );
-                      Navigator.pop(context); // Close Premium Screen
+                      navigator.pop(); // Close Premium Screen
                       
                     } catch (e) {
                       if (!mounted) return;
-                      Navigator.pop(context); // Close loading
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      navigator.pop(); // Close loading
+                      scaffoldMessenger.showSnackBar(
                         SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
                       );
                     }

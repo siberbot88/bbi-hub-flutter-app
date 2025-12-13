@@ -167,7 +167,7 @@ class _MembershipSelectionScreenState extends State<MembershipSelectionScreen> {
           color: isSelected ? Colors.white : Colors.transparent,
           borderRadius: BorderRadius.circular(50),
           boxShadow: isSelected
-              ? [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))]
+              ? [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(0, 2))]
               : null,
         ),
         child: Stack(
@@ -226,7 +226,7 @@ class _MembershipSelectionScreenState extends State<MembershipSelectionScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             offset: const Offset(0, -4),
             blurRadius: 10,
           ),
@@ -316,7 +316,7 @@ class _MembershipSelectionScreenState extends State<MembershipSelectionScreen> {
               boxShadow: isPremium && isSelected
                   ? [
                       BoxShadow(
-                        color: AppColors.primaryRed.withOpacity(0.1),
+                        color: AppColors.primaryRed.withValues(alpha: 0.1),
                         blurRadius: 15,
                         offset: const Offset(0, 4),
                       )
@@ -427,7 +427,7 @@ class _MembershipSelectionScreenState extends State<MembershipSelectionScreen> {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primaryRed.withOpacity(0.3),
+                      color: AppColors.primaryRed.withValues(alpha: 0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),
