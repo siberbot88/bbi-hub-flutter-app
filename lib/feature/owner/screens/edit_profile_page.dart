@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/custom_alert.dart';
 import '../../../../core/models/workshop.dart';
+import '../../../../core/services/api_service.dart';
+import '../../../../core/services/auth_provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class EditProfilePage extends StatefulWidget {
   final Workshop workshop;
@@ -18,39 +23,122 @@ class EditProfilePage extends StatefulWidget {
 
 class _EditProfilePageState extends State<EditProfilePage> {
   final _formKey = GlobalKey<FormState>();
-  final _emailC = TextEditingController(text: "");
-  final _usernameC = TextEditingController(text: "");
-  final _fullNameC = TextEditingController(text: "");
+  
+  // Workshop Fields
+  late TextEditingController _nameC;
+  late TextEditingController _phoneC;
+  late TextEditingController _emailC;
+  late TextEditingController _addressC;
+  late TextEditingController _mapsUrlC;
+  late TextEditingController _descriptionC;
+  late TextEditingController _openingTimeC;
+  late TextEditingController _closingTimeC;
+  
+  bool _isActive = true;
+  bool _isLoading = false;
 
-  ImageProvider? _pickedImage;
+  File? _pickedImageFile;
+  final ImagePicker _picker = ImagePicker();
+
+  @override
+  void initState() {
+    super.initState();
+    final w = widget.workshop;
+    _nameC = TextEditingController(text: w.name);
+    _phoneC = TextEditingController(text: w.phone);
+    _emailC = TextEditingController(text: w.email);
+    _addressC = TextEditingController(text: w.address);
+    _mapsUrlC = TextEditingController(text: w.mapsUrl ?? '');
+    _descriptionC = TextEditingController(text: w.description ?? '');
+    _openingTimeC = TextEditingController(text: w.openingTime);
+    _closingTimeC = TextEditingController(text: w.closingTime);
+    _isActive = w.isActive;
+  }
 
   @override
   void dispose() {
+    _nameC.dispose();
+    _phoneC.dispose();
     _emailC.dispose();
-    _usernameC.dispose();
-    _fullNameC.dispose();
+    _addressC.dispose();
+    _mapsUrlC.dispose();
+    _descriptionC.dispose();
+    _openingTimeC.dispose();
+    _closingTimeC.dispose();
     super.dispose();
   }
 
-  // Placeholder pemilihan gambar (tanpa dependency).
-  void _pickImageMock() {
-    // Demo: pakai gambar mockup yang kamu punya
-    setState(() {
-      _pickedImage = const AssetImage("assets/image/profil_image.png");
-      // kalau mau benar2 pilih dari gallery/camera, tinggal ganti
-      // dengan image_picker / file_picker.
-    });
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        setState(() {
+          _pickedImageFile = File(image.path);
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal mengambil gambar: $e')),
+      );
+    }
   }
 
-  void _save() {
+  Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
-    CustomAlert.show(
-      context,
-      title: "Berhasil",
-      message: "Profil disimpan",
-      type: AlertType.success,
-    );
-    Navigator.pop(context);
+    
+    setState(() => _isLoading = true);
+
+    try {
+      final apiService = ApiService();
+      
+      await apiService.updateWorkshop(
+        id: widget.workshop.id,
+        name: _nameC.text.trim(),
+        description: _descriptionC.text.trim(),
+        address: _addressC.text.trim(),
+        phone: _phoneC.text.trim(),
+        email: _emailC.text.trim(),
+        mapsUrl: _mapsUrlC.text.trim(),
+        openingTime: _openingTimeC.text.trim(),
+        closingTime: _closingTimeC.text.trim(),
+        operationalDays: widget.workshop.operationalDays, // Preserve logic for now, or add UI later
+        isActive: _isActive,
+        photo: _pickedImageFile,
+        // Optional fields preserved if user didn't edit them
+        city: widget.workshop.city, 
+        province: widget.workshop.province,
+        country: widget.workshop.country,
+        postalCode: widget.workshop.postalCode,
+      );
+
+      if (!mounted) return;
+
+      // Reflex UI update via AuthProvider
+      await context.read<AuthProvider>().checkLoginStatus();
+
+      if (!mounted) return;
+      
+      CustomAlert.show(
+        context,
+        title: "Berhasil",
+        message: "Data workshop berhasil diperbarui",
+        type: AlertType.success,
+      );
+      Navigator.pop(context);
+
+    } catch (e) {
+      if (!mounted) return;
+      CustomAlert.show(
+        context,
+        title: "Gagal",
+        message: e.toString(),
+        type: AlertType.error,
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
@@ -62,7 +150,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         elevation: 0,
         centerTitle: true,
         title: Text(
-          "Edit Profil",
+          "Edit Workshop",
           style: AppTextStyles.heading4(color: Colors.white),
         ),
         leading: IconButton(
@@ -83,8 +171,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
           key: _formKey,
           child: Column(
             children: [
+               // Workshop Photo (Optional)
               _buildImagePicker(),
               AppSpacing.verticalSpaceXL,
+              
+              // Workshop Info Card
               Container(
                 padding: AppSpacing.paddingLG,
                 decoration: BoxDecoration(
@@ -101,32 +192,95 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 child: Column(
                   children: [
                     _LabeledField(
-                      label: "Email",
+                      label: "Nama Bengkel",
+                      controller: _nameC,
+                      prefixIcon: Icons.store_mall_directory_outlined,
+                    ),
+                    AppSpacing.verticalSpaceLG,
+                    _LabeledField(
+                      label: "Email Workshop",
                       controller: _emailC,
                       keyboardType: TextInputType.emailAddress,
                       prefixIcon: Icons.email_outlined,
+                      readOnly: true, // Typically email is hard to change or managed elsewhere
                     ),
                     AppSpacing.verticalSpaceLG,
                     _LabeledField(
-                      label: "Username",
-                      controller: _usernameC,
-                      prefixIcon: Icons.person_outline,
+                      label: "Nomor Telepon",
+                      controller: _phoneC,
+                      keyboardType: TextInputType.phone,
+                      prefixIcon: Icons.phone_outlined,
+                    ),
+                    AppSpacing.verticalSpaceLG,
+                     _LabeledField(
+                      label: "Alamat Lengkap",
+                      controller: _addressC,
+                      prefixIcon: Icons.location_on_outlined,
+                      maxLines: 2,
                     ),
                     AppSpacing.verticalSpaceLG,
                     _LabeledField(
-                      label: "Nama Lengkap",
-                      controller: _fullNameC,
-                      prefixIcon: Icons.person_add_alt,
+                      label: "Google Maps URL",
+                      controller: _mapsUrlC,
+                      keyboardType: TextInputType.url,
+                      prefixIcon: Icons.map_outlined,
+                      maxLines: 1,
+                    ),
+                    AppSpacing.verticalSpaceLG,
+                     _LabeledField(
+                      label: "Deskripsi",
+                      controller: _descriptionC,
+                      prefixIcon: Icons.description_outlined,
+                      maxLines: 3,
                     ),
                   ],
                 ),
               ),
+              AppSpacing.verticalSpaceLG,
+
+              // Operational Card
+              Container(
+                padding: AppSpacing.paddingLG,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: AppRadius.radiusXL,
+                  boxShadow: [
+                     BoxShadow(color: AppColors.shadow, blurRadius: 10, offset: const Offset(0, 4)),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Jam Operasional", style: AppTextStyles.label(color: AppColors.textPrimary)),
+                    AppSpacing.verticalSpaceMD,
+                    Row(
+                      children: [
+                        Expanded(child: _LabeledField(label: "Buka", controller: _openingTimeC, prefixIcon: Icons.access_time)),
+                        const SizedBox(width: 16),
+                        Expanded(child: _LabeledField(label: "Tutup", controller: _closingTimeC, prefixIcon: Icons.access_time_filled)),
+                      ],
+                    ),
+                    AppSpacing.verticalSpaceLG,
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text("Status Bengkel (Buka)", style: AppTextStyles.bodyMedium(color: AppColors.textPrimary)),
+                      subtitle: Text("Matikan jika bengkel sedang libur/tutup sementara", style: AppTextStyles.bodySmall(color: AppColors.textHint)),
+                      value: _isActive, 
+                      activeColor: AppColors.primaryRed,
+                      onChanged: (val) {
+                        setState(() => _isActive = val);
+                      },
+                    )
+                  ],
+                ),
+              ),
+
               const SizedBox(height: 40),
               SizedBox(
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: _save,
+                  onPressed: _isLoading ? null : _save,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryRed,
                     foregroundColor: Colors.white,
@@ -136,7 +290,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     elevation: 4,
                     shadowColor: AppColors.primaryRed.withAlpha(100),
                   ),
-                  child: Text(
+                  child: _isLoading 
+                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) 
+                    : Text(
                     "SIMPAN PERUBAHAN",
                     style: AppTextStyles.button(),
                   ),
@@ -154,7 +310,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       child: Stack(
         children: [
           GestureDetector(
-            onTap: _pickImageMock,
+            onTap: _pickImage,
             child: Container(
               width: 120,
               height: 120,
@@ -169,12 +325,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     offset: const Offset(0, 5),
                   ),
                 ],
-                image: _pickedImage != null
-                    ? DecorationImage(image: _pickedImage!, fit: BoxFit.cover)
-                    : null,
+                image: _pickedImageFile != null
+                    ? DecorationImage(image: FileImage(_pickedImageFile!), fit: BoxFit.cover)
+                    : (widget.workshop.photo != null)
+                      ? DecorationImage(image: NetworkImage(widget.workshop.photo!), fit: BoxFit.cover)
+                      : null,
               ),
-              child: _pickedImage == null
-                  ? const Icon(Icons.person_rounded, size: 60, color: Colors.grey)
+              child: (_pickedImageFile == null && widget.workshop.photo == null)
+                  ? const Icon(Icons.store_rounded, size: 60, color: Colors.grey)
                   : null,
             ),
           ),
@@ -182,7 +340,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             bottom: 0,
             right: 0,
             child: GestureDetector(
-              onTap: _pickImageMock,
+              onTap: _pickImage,
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
@@ -212,12 +370,16 @@ class _LabeledField extends StatelessWidget {
   final TextEditingController controller;
   final TextInputType? keyboardType;
   final IconData? prefixIcon;
+  final int maxLines;
+  final bool readOnly;
 
   const _LabeledField({
     required this.label,
     required this.controller,
     this.keyboardType,
     this.prefixIcon,
+    this.maxLines = 1,
+    this.readOnly = false,
   });
 
   @override
@@ -230,13 +392,15 @@ class _LabeledField extends StatelessWidget {
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
+          maxLines: maxLines,
+          readOnly: readOnly,
           validator: (v) => (v == null || v.isEmpty) ? "Tidak boleh kosong" : null,
           decoration: InputDecoration(
             prefixIcon: prefixIcon != null
                 ? Icon(prefixIcon, color: AppColors.primaryRed)
                 : null,
             filled: true,
-            fillColor: AppColors.backgroundLight,
+            fillColor: readOnly ? Colors.grey[100] : AppColors.backgroundLight,
             hintText: "Masukkan $label",
             hintStyle: AppTextStyles.bodyMedium(color: AppColors.textHint),
             contentPadding: AppSpacing.paddingMD,
@@ -257,7 +421,7 @@ class _LabeledField extends StatelessWidget {
               borderSide: const BorderSide(color: AppColors.error, width: 1.5),
             ),
           ),
-          style: AppTextStyles.bodyMedium(),
+          style: AppTextStyles.bodyMedium(color: readOnly ? Colors.grey[600] : null),
         ),
       ],
     );

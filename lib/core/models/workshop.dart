@@ -74,6 +74,19 @@ class Workshop {
       return DateTime.tryParse(value);
     }
 
+    // Helper untuk sanitize URL localhost ke 10.0.2.2 (untuk Android Emulator)
+    String? sanitizeUrl(String? url) {
+      if (url == null) return null;
+      // Basic check, ideally check standard platform logic but this is safe enough for typical dev setup
+      if (url.contains('localhost')) {
+        return url.replaceAll('localhost', '10.0.2.2');
+      }
+      if (url.contains('127.0.0.1')) {
+        return url.replaceAll('127.0.0.1', '10.0.2.2');
+      }
+      return url;
+    }
+
     try {
       return Workshop(
         id: json['id'] as String? ?? 'unknown_workshop_id',
@@ -84,7 +97,7 @@ class Workshop {
         address: json['address'] as String? ?? '',
         phone: json['phone'] as String? ?? '',
         email: json['email'] as String? ?? '',
-        photo: json['photo'] as String?,
+        photo: sanitizeUrl(json['photo'] as String?),
         city: json['city'] as String? ?? '',
         province: json['province'] as String? ?? '',
         country: json['country'] as String? ?? '',
