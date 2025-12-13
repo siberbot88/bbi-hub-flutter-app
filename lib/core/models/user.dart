@@ -11,9 +11,15 @@ class User {
   final List<Workshop>? workshops;
   final Employment? employment;
   final bool mustChangePassword;
-  final String? subscriptionStatus; // 'active', 'pending', expired, null
+  final String? subscriptionStatus; // 'active', 'pending', expired, 'trial', null
   final String? subscriptionPlanName;
   final DateTime? subscriptionExpiredAt;
+  
+  // Trial fields
+  final DateTime? trialEndsAt;
+  final bool trialUsed;
+  final int? trialDaysRemaining;
+  final bool hasPremiumAccess;
 
   User({
     required this.id,
@@ -28,6 +34,10 @@ class User {
     this.subscriptionStatus,
     this.subscriptionPlanName,
     this.subscriptionExpiredAt,
+    this.trialEndsAt,
+    this.trialUsed = false,
+    this.trialDaysRemaining,
+    this.hasPremiumAccess = false,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -100,6 +110,14 @@ class User {
       return false;
     }
 
+    // Parse trial information
+    DateTime? trialEnds;
+    if (json['trial_ends_at'] != null) {
+      try {
+        trialEnds = DateTime.parse(json['trial_ends_at'].toString());
+      } catch (_) {}
+    }
+
     return User(
       id: (json['id'] ?? '').toString(),
       name: (json['name'] ?? '').toString(),
@@ -111,9 +129,15 @@ class User {
       employment: parsedEmployment,
       mustChangePassword: parseMustChange(
           json['must_change_password'] ?? json['mustChangePassword']),
-      subscriptionStatus: subStatus,
+      subscriptionStatus: json['subscription_status'] ?? subStatus,
       subscriptionPlanName: subPlanName,
       subscriptionExpiredAt: subExpiredAt,
+      
+      // Trial data
+      trialEndsAt: trialEnds,
+      trialUsed: json['trial_used'] ?? false,
+      trialDaysRemaining: json['trial_days_remaining'],
+      hasPremiumAccess: json['has_premium_access'] ?? false,
     );
   }
 
@@ -128,5 +152,16 @@ class User {
     return null;
   }
   
-  bool get isPremium => subscriptionStatus == 'active';
+  // Membership/Subscription helpers
+  
+  // Check if user is in trial
+  bool get isInTrial {
+    if (trialEndsAt == null) return false;
+    return trialEndsAt!.isAfter(DateTime.now());
+  }
+  
+  // Premium access includes both paid subscription AND trial
+  bool get isPremium => hasPremiumAccess || subscriptionStatus == 'active' || isInTrial;
+  
+  String? get membershipStatus => subscriptionStatus; // Alias for backward compatibility
 }
