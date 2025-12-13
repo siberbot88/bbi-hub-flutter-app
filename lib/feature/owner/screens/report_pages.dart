@@ -9,6 +9,9 @@ import '../widgets/report/report_health_matrix.dart';
 import '../widgets/report/report_kpi_card.dart';
 import '../../../core/services/report_pdf_service.dart';
 import '../../../core/repositories/analytics_repository.dart';
+import '../../../core/widgets/premium_feature_lock.dart';
+import '../../../core/services/auth_provider.dart';
+import 'package:provider/provider.dart';
 
 // --- Colors ---
 const Color kPrimaryRed = Color(0xFFB70F0F); // Darker red to match Staff Management
@@ -27,6 +30,12 @@ class _ReportPageState extends State<ReportPage> {
   ReportData? _data;
   bool _isLoading = true;
   final _analyticsRepo = AnalyticsRepository();
+  
+  // Check if user has premium membership (using robust getter)
+  bool get _isPremium {
+    final auth = context.read<AuthProvider>();
+    return auth.user?.isPremium ?? false;
+  }
 
   @override
   void initState() {
@@ -36,7 +45,22 @@ class _ReportPageState extends State<ReportPage> {
     _loadAnalytics();
   }
 
+  @override
+  void dispose() {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    super.dispose();
+  }
+
   Future<void> _loadAnalytics() async {
+    // 1. Cek premium access sebelum fetch
+    if (!_isPremium) {
+      setState(() {
+        _isLoading = false;
+        _data = null; 
+      });
+      return;
+    }
+
     setState(() {
       _isLoading = true;
     });
@@ -47,37 +71,87 @@ class _ReportPageState extends State<ReportPage> {
       
       final data = await _analyticsRepo.getAnalyticsWithAuth(range: rangeString);
       
-      setState(() {
-        _data = data;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _data = data;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
+      if (!mounted) return;
+
       setState(() {
         _isLoading = false;
-        // Don't fallback to seed - show actual error/empty state
         _data = null;
       });
-      
-      // Show error snackbar
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gagal memuat data: ${e.toString()}'),
-            backgroundColor: Colors.red,
-            action: SnackBarAction(
-              label: 'Coba Lagi',
-              textColor: Colors.white,
-              onPressed: _loadAnalytics,
-            ),
-          ),
-        );
+
+      // Force refresh login status if we hit a permission error (stale state)
+      if (e.toString().contains('403') || e.toString().contains('Unauthorized')) {
+         context.read<AuthProvider>().checkLoginStatus();
       }
+      
+      // Suppress 403 errors (Premium access required)
+      if (e.toString().contains('403')) {
+        return;
+      }
+      
+      // Show error snackbar for other errors
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal memuat data: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          action: SnackBarAction(
+            label: 'Coba Lagi',
+            textColor: Colors.white,
+            onPressed: _loadAnalytics,
+          ),
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading || _data == null) {
+    // Listen to AuthProvider changes
+    final auth = context.watch<AuthProvider>();
+    final isPremium = auth.user?.isPremium ?? false;
+
+    // Auto-fetch if we just became premium and have no data
+    if (isPremium && _data == null && !_isLoading) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _loadAnalytics();
+      });
+    }
+
+    // 1. Check Premium Lock first
+    if (!isPremium) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(
+            'Laporan',
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          centerTitle: true,
+          backgroundColor: kPrimaryRed,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.maybePop(context),
+          ),
+        ),
+        body: const PremiumFeatureLock(
+           featureName: 'Laporan & Analitik',
+           featureDescription: 'Dapatkan wawasan bisnis mendalam, grafik tren pendapatan, dan efisiensi bengkel dengan BBI HUB Premium.',
+           child: Center(child: Icon(Icons.analytics_outlined, size: 80, color: Colors.black12)),
+        ),
+      );
+    }
+
+    // 2. Loading State
+    if (_isLoading) {
       return Scaffold(
         backgroundColor: kPrimaryRed,
         body: Column(
@@ -102,6 +176,14 @@ class _ReportPageState extends State<ReportPage> {
           ],
         ),
       );
+    }
+
+    // 3. Error / Empty State (Safety fallback)
+    if (_data == null) {
+        return Scaffold(
+          appBar: AppBar(title: const Text('Laporan'), backgroundColor: kPrimaryRed),
+          body: const Center(child: Text("Gagal memuat data.")),
+        );
     }
 
     final d = _data!;

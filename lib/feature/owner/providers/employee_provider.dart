@@ -23,8 +23,15 @@ class EmployeeProvider extends ChangeNotifier {
       // Atau jika user implement infinite scroll nanti, logic ini bisa diubah.
       _items = list;
     } catch (e) {
-      _lastError = e.toString();
-      debugPrint('fetchOwnerEmployees error: $e');
+      if (e.toString().contains('403')) {
+        // Suppress 403 errors (Premium access required)
+        _items = [];
+        _lastError = null; // Don't expose error to UI
+        debugPrint('fetchOwnerEmployees: blocked by premium check (403)');
+      } else {
+        _lastError = e.toString();
+        debugPrint('fetchOwnerEmployees error: $e');
+      }
     } finally {
       _loading = false;
       notifyListeners();

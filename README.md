@@ -382,7 +382,7 @@ Widget getHomeScreen(String role) {
 ## 📸 Screenshots
 
 ### Owner Dashboard
-![Dashboard](<img width="291" height="651" alt="image" src="https://github.com/user-attachments/assets/1061d318-0b3a-4fe9-96d3-e5f9734259f2" />)
+![Dashboard](docs/screenshots/dashboard.png)
 *Real-time analytics with revenue, jobs, and occupancy metrics*
 
 ### Analytics Report
@@ -390,11 +390,11 @@ Widget getHomeScreen(String role) {
 *Interactive charts with line graphs and peak hour visualization*
 
 ### Staff Management
-![Staff](<img width="289" height="650" alt="image" src="https://github.com/user-attachments/assets/85431830-dfd2-44ce-a0b4-dea42b5fad4c" />)
+![Staff](docs/screenshots/staff_management.png)
 *Employee management with performance tracking*
 
 ### Premium Membership
-![Membership](<img width="289" height="649" alt="image" src="https://github.com/user-attachments/assets/9b1b1699-072c-4398-9237-d0efd89c5d71" />)
+![Membership](docs/screenshots/membership.png)
 *Subscription management with Midtrans payment integration*
 
 ---
@@ -451,6 +451,5 @@ For support, email support@bbihub.com or create an issue in the repository.
 - **BBI Hub Team** - For continuous support and feedback
 
 ---
-
 
 **Built with ❤️ by BBI Hub Development Team**

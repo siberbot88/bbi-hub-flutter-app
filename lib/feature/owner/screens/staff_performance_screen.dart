@@ -3,6 +3,9 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/models/staff_performance.dart';
 // import 'dart:math' as math; // Unused
 import '../../admin/repositories/staff_performance_repository.dart'; // Point to existing repo
+import 'package:provider/provider.dart';
+import '../../../core/services/auth_provider.dart';
+import '../../../core/widgets/premium_feature_lock.dart';
 
 // --- App Theme Constants (Local for portability) ---
 class AppTheme {
@@ -127,6 +130,33 @@ class _StaffPerformanceScreenState extends State<StaffPerformanceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // 0. Check Premium Locked
+    final auth = Provider.of<AuthProvider>(context);
+    final isPremium = auth.user?.isPremium ?? false;
+
+    // Auto-fetch if we just became premium and have no data (and no error)
+    if (isPremium && _staffList.isEmpty && _error == null && !_isLoading) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _fetchData();
+      });
+    }
+
+    if (!isPremium) {
+       return Scaffold(
+         backgroundColor: AppTheme.background,
+         appBar: AppBar(
+            title: Text('Kinerja Staff', style: AppTheme.headingTitle.copyWith(fontSize: 20)),
+             backgroundColor: AppTheme.primaryRed,
+             elevation: 0,
+         ),
+         body: const PremiumFeatureLock(
+           featureName: 'Kinerja Staff',
+           featureDescription: 'Pantau performa mekanik, jumlah pekerjaan, dan estimasi pendapatan mereka secara real-time.',
+           child: Center(child: Icon(Icons.people_outline, size: 80, color: Colors.black12)),
+         ),
+       );
+    }
+
     return Scaffold(
       backgroundColor: AppTheme.primaryRed, 
       body: SafeArea(
