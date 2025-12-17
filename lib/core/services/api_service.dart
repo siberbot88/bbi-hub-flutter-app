@@ -1329,4 +1329,87 @@ class ApiService {
   }
 
 
+  /// Versi admin: ambil list employee (mekanik)
+  /// endpoint: GET /v1/admins/employees
+  Future<List<Employment>> adminFetchEmployees({
+    int page = 1, 
+    int perPage = 15,
+    String? search,
+    String? role, // Optional: if backend supports it
+  }) async {
+    try {
+      final queryParams = <String, String>{
+        'page': page.toString(),
+        'per_page': perPage.toString(),
+      };
+      if (search != null && search.isNotEmpty) {
+        queryParams['search'] = search;
+      }
+      if (role != null && role.isNotEmpty) {
+        queryParams['role'] = role;
+      }
+
+      final uri = Uri.parse('${_baseUrl}admins/employees').replace(queryParameters: queryParams);
+      final headers = await _getAuthHeaders();
+
+      _debugRequest('ADMIN_FETCH_EMPLOYEES', uri, headers, null);
+      final res = await http.get(uri, headers: headers);
+      _debugResponse('ADMIN_FETCH_EMPLOYEES', res);
+
+      if (res.statusCode == 401) {
+        throw Exception('Akses ditolak. Silakan login kembali.');
+      }
+
+      final ok = res.statusCode == 200 || res.statusCode == 201;
+      if (!ok) {
+        final j = _tryDecodeJson(res.body);
+        if (j is Map<String, dynamic>) {
+           throw Exception(_getErrorMessage(j));
+        }
+        throw Exception(
+            'Gagal mengambil data employee (ADMIN). Status: ${res.statusCode}');
+      }
+
+      if (!_isJsonResponse(res)) throw Exception('Respon bukan JSON.');
+
+      final decoded = _tryDecodeJson(res.body);
+
+      // Handle pagination structure: { "data": { "data": [...] } }
+      if (decoded is Map<String, dynamic>) {
+        final dataWrapper = decoded['data'];
+
+        // Case 1: Pagination wrapper
+        if (dataWrapper is Map<String, dynamic> && dataWrapper.containsKey('data')) {
+          final list = dataWrapper['data'];
+          if (list is List) {
+            return list
+                .whereType<Map<String, dynamic>>()
+                .map((e) => Employment.fromJson(e))
+                .toList();
+          }
+        }
+
+        // Case 2: Direct list (fallback)
+        if (dataWrapper is List) {
+          return dataWrapper
+              .whereType<Map<String, dynamic>>()
+              .map((e) => Employment.fromJson(e))
+              .toList();
+        }
+      }
+
+      // If decoded is List (old structure fallback)
+      if (decoded is List) {
+         return decoded
+            .whereType<Map<String, dynamic>>()
+            .map((e) => Employment.fromJson(e))
+            .toList();
+      }
+
+      return <Employment>[];
+    } catch (e) {
+      throw Exception('Gagal mengambil data employee (ADMIN): '
+          '${e.toString().replaceFirst("Exception: ", "")}');
+    }
+  }
 }

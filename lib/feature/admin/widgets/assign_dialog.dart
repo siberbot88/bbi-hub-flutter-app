@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:bengkel_online_flutter/feature/admin/providers/admin_service_provider.dart';
-import 'package:bengkel_online_flutter/feature/owner/providers/employee_provider.dart';
 import 'package:bengkel_online_flutter/core/models/employment.dart';
 
 /// 🔹 Popup pertama: pilih teknisi
@@ -49,18 +48,42 @@ class _TechnicianSelectContentState extends State<TechnicianSelectContent> {
 
   Future<void> _fetchMechanics() async {
     try {
-      final employeeProvider = context.read<EmployeeProvider>();
-      await employeeProvider.fetchOwnerEmployees(page: 1);
-      final employees = employeeProvider.items;
+      final adminProvider = context.read<AdminServiceProvider>();
+      // Fetch mechanics/employees via Admin API
+      // Fetch mechanics/employees via Admin API
+      // Use larger perPage to get more candidates since backend might not filter by role default
+      final employees = await adminProvider.fetchEmployees(
+        page: 1, 
+        perPage: 100,
+        role: 'mechanic', // Attempt backend filter if supported
+      );
       
       // Filter for mechanics if role is available, otherwise show all or filter by jobdesk/specialist
-      // For now, let's assume all employees can be assigned or filter if role contains 'mechanic' or 'teknisi'
       setState(() {
         mechanics = employees.where((e) {
              final r = e.role.toLowerCase();
              final j = (e.jobdesk ?? '').toLowerCase();
-             return r.contains('mechanic') || r.contains('teknisi') || r.contains('mekanik') || 
-                    j.contains('mechanic') || j.contains('teknisi') || j.contains('mekanik');
+             
+             // Check strict role names
+             final isRoleMatch = r.contains('mechanic') || r.contains('teknisi') || r.contains('mekanik');
+             final isJobMatch = j.contains('mechanic') || j.contains('teknisi') || j.contains('mekanik');
+             
+             // Check via User.hasRole helper (exact match or contains)
+             final user = e.user;
+             bool isHasRoleMatch = false;
+             if (user != null) {
+                // Check common role variations
+                if (user.hasRole('mechanic') || user.hasRole('teknisi') || user.hasRole('mekanik')) {
+                  isHasRoleMatch = true;
+                }
+                // Check Case Insensitive match just in case hasRole is strict
+                final userRole = user.role.toLowerCase();
+                 if (userRole.contains('mechanic') || userRole.contains('teknisi') || userRole.contains('mekanik')) {
+                  isHasRoleMatch = true;
+                }
+             }
+
+             return isRoleMatch || isJobMatch || isHasRoleMatch;
         }).toList();
         
         // Fallback: if empty, maybe roles are not set correctly, show all for debugging?
@@ -125,7 +148,7 @@ class _TechnicianSelectContentState extends State<TechnicianSelectContent> {
             value: selectedTechnicianUuid,
             items: mechanics.map((e) {
               return DropdownMenuItem(
-                value: e.userUuid, // Using userUuid as mechanic identifier
+                value: e.id, // Use ID (Employment ID) to match exists:employments,id
                 child: Text(
                   e.name,
                   style: GoogleFonts.poppins(fontSize: 14),
@@ -135,7 +158,7 @@ class _TechnicianSelectContentState extends State<TechnicianSelectContent> {
             onChanged: (val) {
               setState(() {
                 selectedTechnicianUuid = val;
-                selectedTechnicianName = mechanics.firstWhere((e) => e.userUuid == val).name;
+                selectedTechnicianName = mechanics.firstWhere((e) => e.id == val).name;
               });
             },
             decoration: InputDecoration(

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:bengkel_online_flutter/core/services/api_service.dart';
 import 'package:bengkel_online_flutter/core/models/service.dart';
 import 'package:bengkel_online_flutter/core/providers/service_provider.dart';
+import 'package:bengkel_online_flutter/core/models/employment.dart';
 
 /// Provider khusus ADMIN
 /// Extend ServiceProvider supaya:
@@ -139,5 +140,19 @@ class AdminServiceProvider extends ServiceProvider {
       if (kDebugMode) print('deleteServiceAsAdmin error: $e');
       rethrow;
     }
+  }
+  /// ADMIN: Fetch Employee List
+  Future<List<Employment>> fetchEmployees({
+    int page = 1, 
+    int perPage = 15,
+    String? search,
+    String? role,
+  }) {
+    return _adminApi.adminFetchEmployees(
+      page: page, 
+      perPage: perPage,
+      search: search,
+      role: role,
+    );
   }
 }

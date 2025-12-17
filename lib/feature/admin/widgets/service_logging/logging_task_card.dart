@@ -153,24 +153,31 @@ class LoggingTaskCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                      radius: 14,
-                      backgroundImage: NetworkImage(
-                          "https://i.pravatar.cc/150?img=${service.id}")),
-                  const SizedBox(width: 8),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(service.displayCustomerName,
-                          style: AppTextStyles.labelBold()),
-                      Text("ID: ${service.id}",
-                          style: AppTextStyles.caption()),
-                    ],
-                  ),
-                ],
+              Expanded(
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                        radius: 14,
+                        backgroundImage: NetworkImage(
+                            "https://i.pravatar.cc/150?img=${service.id}")),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(service.displayCustomerName,
+                              style: AppTextStyles.labelBold(),
+                              overflow: TextOverflow.ellipsis),
+                          Text("ID: ${service.id}",
+                              style: AppTextStyles.caption(),
+                              overflow: TextOverflow.ellipsis),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               actionButton,
             ],
           ),

@@ -10,6 +10,8 @@ import '../widgets/service/service_tab_selector.dart';
 import '../widgets/service/service_calendar_section.dart';
 import '../widgets/service/service_card.dart';
 import '../widgets/service/service_helpers.dart';
+import '../widgets/service/service_summary_boxes.dart';
+import '../widgets/service/service_filter_tabs.dart';
 
 import 'package:bengkel_online_flutter/feature/admin/providers/admin_service_provider.dart';
 import 'package:bengkel_online_flutter/core/models/service.dart';
@@ -27,15 +29,12 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
   int displayedMonth = DateTime.now().month;
   int displayedYear = DateTime.now().year;
   int selectedDay = DateTime.now().day;
-  String selectedFilter = "All";
+  String selectedFilter = "Semua";
   int selectedTab = 0; // 0 = Scheduled, 1 = Logging
 
   DateTime get selectedDate =>
       DateTime(displayedYear, displayedMonth, selectedDay);
       
-  /// Strict filter: Hanya menampilkan service dengan acceptance_status == 'pending'
-  /// Ini adalah permintaan baru/request yang BELUM di-accept/decline.
-
   @override
   void initState() {
     super.initState();
@@ -45,32 +44,17 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
   }
 
   void _fetchData() {
-
-
-    
     final auth = context.read<AuthProvider>();
     final workshopUuid = auth.user?.workshopUuid;
     final dateStr = DateFormat('yyyy-MM-dd').format(selectedDate);
     
+    // Fetch ALL services for the date
     context.read<AdminServiceProvider>().fetchServices(
       dateFrom: dateStr,
       dateTo: dateStr,
-      status: 'pending', // Sesuai request: acceptance_status pending
       workshopUuid: workshopUuid,
+      // Removed status: 'pending' to get all services for stats and filtering
     );
-  }
-
-  bool _matchesFilterKey(ServiceModel s, String filterKey) {
-    if (filterKey == 'All') return true;
-    return s.status.toLowerCase() == filterKey.toLowerCase();
-  }
-
-  // Karena sudah difilter di API, local filtering schedule date bisa disederhanakan 
-  // atau tetap dipertahankan sebagai dual-check.
-  // Namun, request user: "menampilkan service berdasarkan tanggal yang dipilih"
-  // Kalau API sudah return services di tanggal itu, maka list sudah sesuai.
-  List<ServiceModel> _getScheduledServices(List<ServiceModel> all) {
-    return all;
   }
 
   void _prevMonth() {
@@ -130,9 +114,14 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
   }
 
   Widget _buildScheduledTab(AdminServiceProvider provider) {
+    /*
     if (provider.loading) {
       return const Center(child: CircularProgressIndicator());
     }
+    */
+    // We don't block UI on loading because calendar needs to be visible or at least structure
+    // But for now let's keep it simple or just show loading in the list area if needed.
+    // Provider loading might be global for the list.
 
     if (provider.error != null) {
       return Center(
@@ -143,7 +132,26 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
       );
     }
 
-    final scheduled = _getScheduledServices(provider.items);
+    final allServices = provider.items;
+
+    // Calculate Stats
+    // All: Total services for the date
+    final allCount = allServices.length;
+    // Menunggu (Pending): acceptance_status == "pending"
+    final pendingCount = allServices.where((s) => (s.acceptanceStatus ?? '').toLowerCase() == 'pending').length;
+    // Terima (Accepted): acceptance_status == "accepted"
+    final acceptedCount = allServices.where((s) => (s.acceptanceStatus ?? '').toLowerCase() == 'accepted').length;
+
+    // Filter List
+    final filteredServices = allServices.where((s) {
+      final status = (s.acceptanceStatus ?? '').toLowerCase();
+      if (selectedFilter == 'Semua') return true;
+      if (selectedFilter == 'Menunggu') return status == 'pending';
+      if (selectedFilter == 'Terima') return status == 'accepted';
+      if (selectedFilter == 'Tolak') return status == 'declined' || status == 'rejected';
+      return true;
+    }).toList();
+
 
     return SingleChildScrollView(
       padding:  const EdgeInsets.only(bottom: 80),
@@ -151,6 +159,14 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 16),
+          // Add Summary Boxes
+          ServiceSummaryBoxes(
+            all: allCount,
+            accepted: acceptedCount,
+            pending: pendingCount,
+          ),
+          const SizedBox(height: 12),
+          
           ServiceCalendarSection(
             displayedMonth: displayedMonth,
             displayedYear: displayedYear,
@@ -162,27 +178,42 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
               _fetchData();
             },
           ),
-          const SizedBox(height: 12),
+          
+          const SizedBox(height: 20),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: scheduled.isEmpty
-                ? Center(
-              child: Text(
-                "No scheduled tasks",
-                style: AppTextStyles.bodyMedium(color: AppColors.textSecondary),
-              ),
-            )
-                : Column(
-              // Strict Filter: Only show services where acceptance_status is 'pending'
-              // This is the "Inbox" / "Request" list for new orders.
-              children: scheduled.where((s) {
-                 final acceptStatus = (s.acceptanceStatus ?? '').toLowerCase();
-                 // Show strict pending only
-                 return acceptStatus == 'pending';
-              }).map((s) {
-                return ServiceCard(service: s);
-              }).toList(),
-            ),
+            child: Text("Daftar Penjadwalan", style: AppTextStyles.heading4()),
+          ),
+          const SizedBox(height: 12),
+          
+          // Add Filter Tabs
+           ServiceFilterTabs(
+            selectedFilter: selectedFilter,
+            onFilterChanged: (filter) =>
+                setState(() => selectedFilter = filter),
+          ),
+          
+          const SizedBox(height: 12),
+          
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: provider.loading 
+                ? const Center(child: CircularProgressIndicator()) 
+                : filteredServices.isEmpty
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Text(
+                          "Tidak ada tugas yang sesuai.",
+                          style: AppTextStyles.bodyMedium(color: AppColors.textSecondary),
+                        ),
+                      ),
+                    )
+                  : Column(
+                      children: filteredServices.map((s) {
+                        return ServiceCard(service: s);
+                      }).toList(),
+                    ),
           ),
         ],
       ),

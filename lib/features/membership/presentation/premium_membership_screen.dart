@@ -267,26 +267,24 @@ class _PremiumMembershipScreenState extends State<PremiumMembershipScreen>
                             ),
                           ],
                         ),
-                        child: Center(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Lihat Paket Membership',
-                                style: AppTextStyles.button(), 
-                              ),
-                              AppSpacing.horizontalSpaceSM,
-                              const Icon(
-                                Icons.arrow_forward_rounded,
-                                color: Colors.white,
-                                size: 22,
-                              ),
-                            ],
-                          ),
+                      ),
+                      Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Lihat Paket Membership',
+                              style: AppTextStyles.button(), 
+                            ),
+                            AppSpacing.horizontalSpaceSM,
+                            const Icon(
+                              Icons.arrow_forward_rounded,
+                              color: Colors.white,
+                              size: 22,
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                  ),
                   
                   AppSpacing.verticalSpaceSM,
                   
@@ -309,10 +307,12 @@ class _PremiumMembershipScreenState extends State<PremiumMembershipScreen>
                       style: AppTextStyles.labelBold(
                         color: isDark ? Colors.grey[400] : AppColors.textSecondary,
                       ),
-
-                      AppSpacing.verticalSpaceXXL,
-                    ],
+                    ),
                   ),
+
+                  AppSpacing.verticalSpaceXXL,
+                ],
+              ),
                 ),
               ),
             ),

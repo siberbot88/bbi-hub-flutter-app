@@ -123,24 +123,49 @@ class ServiceCard extends StatelessWidget {
                   Text(plate,
                       style: AppTextStyles.bodyMedium(color: AppColors.textPrimary).copyWith(fontWeight: FontWeight.w600)),
                   const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Builder(
-                        builder: (ctx) => ElevatedButton(
-                          onPressed: () => showRejectDialog(
-                            ctx,
-                            onConfirm: (reason, desc) {
+                  if ((service.acceptanceStatus ?? 'pending').toLowerCase() == 'pending')
+                    Row(
+                      children: [
+                        Builder(
+                          builder: (ctx) => ElevatedButton(
+                            onPressed: () => showRejectDialog(
+                              ctx,
+                              onConfirm: (reason, desc) {
+                                context
+                                    .read<AdminServiceProvider>()
+                                    .declineServiceAsAdmin(
+                                      service.id,
+                                      reason: reason,
+                                      reasonDescription: desc,
+                                    );
+                              },
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red.shade700,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                            ),
+                            child: Text(
+                              "Tolak",
+                              style: AppTextStyles.buttonSmall(color: Colors.white),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          onPressed: () => showAcceptDialog(
+                            context,
+                            onConfirm: () {
                               context
                                   .read<AdminServiceProvider>()
-                                  .declineServiceAsAdmin(
-                                    service.id,
-                                    reason: reason,
-                                    reasonDescription: desc,
-                                  );
+                                  .acceptServiceAsAdmin(service.id);
                             },
                           ),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red.shade700,
+                            backgroundColor: Colors.green.shade700,
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 20, vertical: 12),
                             shape: RoundedRectangleBorder(
@@ -148,36 +173,32 @@ class ServiceCard extends StatelessWidget {
                             ),
                           ),
                           child: Text(
-                            "Tolak",
+                            "Terima",
                             style: AppTextStyles.buttonSmall(color: Colors.white),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                        onPressed: () => showAcceptDialog(
-                          context,
-                          onConfirm: () {
-                            context
-                                .read<AdminServiceProvider>()
-                                .acceptServiceAsAdmin(service.id);
-                          },
+                      ],
+                    )
+                  else if ((service.acceptanceStatus ?? '').toLowerCase() == 'accepted')
+                     Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.green),
                         ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green.shade700,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
+                        child: Text("Diterima", style: AppTextStyles.caption(color: Colors.green).copyWith(fontWeight: FontWeight.bold)),
+                     )
+                  else if ((service.acceptanceStatus ?? '').toLowerCase() == 'declined' || (service.acceptanceStatus ?? '').toLowerCase() == 'rejected')
+                     Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.red),
                         ),
-                        child: Text(
-                          "Terima",
-                          style: AppTextStyles.buttonSmall(color: Colors.white),
-                        ),
-                      ),
-                    ],
-                  )
+                        child: Text("Ditolak", style: AppTextStyles.caption(color: Colors.red).copyWith(fontWeight: FontWeight.bold)),
+                     )
                 ],
               ),
               Column(
