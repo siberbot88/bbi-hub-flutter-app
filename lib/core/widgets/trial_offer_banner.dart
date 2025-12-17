@@ -16,8 +16,8 @@ class TrialOfferBanner extends StatelessWidget {
     final auth = Provider.of<AuthProvider>(context);
     final user = auth.user;
 
-    // Only show if NOT in trial and trial NOT used
-    if (user == null || user.isInTrial || user.trialUsed) {
+    // Only show if user is NOT premium (no active membership, trial, or used trial)
+    if (user == null || user.isPremium || user.trialUsed) {
       return const SizedBox.shrink();
     }
 

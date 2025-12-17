@@ -59,6 +59,7 @@ class _PremiumMembershipScreenState extends State<PremiumMembershipScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _scaleController;
   late Animation<double> _scaleAnimation;
+  final ScrollController _scrollController = ScrollController(); // Added
   bool _isPressed = false; // Used for animation state tracking
 
   @override
@@ -82,6 +83,7 @@ class _PremiumMembershipScreenState extends State<PremiumMembershipScreen>
   @override
   void dispose() {
     _scaleController.dispose();
+    _scrollController.dispose(); // Added
     super.dispose();
   }
 
@@ -267,25 +269,46 @@ class _PremiumMembershipScreenState extends State<PremiumMembershipScreen>
                             ),
                           ],
                         ),
-                        child: Center(
+                      ),
+                      const SizedBox(height: 32),
+
+                      // CTA Button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 54,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            _scrollController.animateTo(
+                              _scrollController.position.maxScrollExtent,
+                              duration: const Duration(seconds: 1),
+                              curve: Curves.easeInOutQuart,
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryRed,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            elevation: 8,
+                            shadowColor: AppColors.primaryRed.withAlpha(102), // 0.4
+                          ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
                                 'Lihat Paket Membership',
-                                style: AppTextStyles.button(), 
+                                style: AppTextStyles.button(),
                               ),
                               AppSpacing.horizontalSpaceSM,
                               const Icon(
                                 Icons.arrow_forward_rounded,
                                 color: Colors.white,
-                                size: 22,
                               ),
                             ],
                           ),
                         ),
                       ),
-
+                      
                       AppSpacing.verticalSpaceXXL,
                     ],
                   ),

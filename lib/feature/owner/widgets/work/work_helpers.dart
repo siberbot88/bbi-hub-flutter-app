@@ -80,6 +80,28 @@ String formatDate(DateTime? dt) {
   return '$tgl - $hh:$mm';
 }
 
+String formatDateShort(DateTime? dt) {
+  if (dt == null) return '-';
+  const bulan = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'Mei',
+    'Jun',
+    'Jul',
+    'Agu',
+    'Sep',
+    'Okt',
+    'Nov',
+    'Des'
+  ];
+  final hh = dt.hour.toString().padLeft(2, '0');
+  final mm = dt.minute.toString().padLeft(2, '0');
+  return '${dt.day} ${bulan[dt.month - 1]} • $hh:$mm';
+}
+
+
 String formatRupiah(num nominal) {
   final s = nominal.toInt().toString();
   final buf = StringBuffer();

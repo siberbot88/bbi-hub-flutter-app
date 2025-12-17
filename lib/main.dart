@@ -12,6 +12,8 @@ import 'package:bengkel_online_flutter/core/screens/loading_gate.dart';
 import 'package:bengkel_online_flutter/core/screens/login.dart' as login_screen;
 
 import 'package:bengkel_online_flutter/core/screens/registers/register.dart';
+import 'package:bengkel_online_flutter/feature/auth/screens/forgot_password_page.dart' as forgot_pass;
+import 'package:bengkel_online_flutter/feature/auth/screens/reset_password_page.dart' as reset_pass;
 
 import 'package:bengkel_online_flutter/core/screens/splash_screen.dart';
 import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
@@ -157,6 +159,8 @@ class _MyAppState extends State<MyApp> {
         "/owner/profile": (context) => owner_profil.ProfilePageOwner(),
         "/voucher": (context) => const VoucherPage(),
         "/voucher/list": (context) => const ListVoucherPage(),
+        "/forgot-password": (context) => const forgot_pass.ForgotPasswordPage(),
+        "/reset-password": (context) => const reset_pass.ResetPasswordPage(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/list') {

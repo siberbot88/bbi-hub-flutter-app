@@ -189,7 +189,7 @@ class ReportPdfService {
             children: [
               _financialSummaryItem('Total Pendapatan', 'Rp ${_formatCurrency(data.revenueThisPeriod)}', PdfColors.green),
               _financialSummaryItem('Total Pekerjaan', '${data.jobsDone} Order', PdfColors.blue),
-              _financialSummaryItem('Rata-rata/Pekerjaan', 'Rp ${_formatCurrency((data.revenueThisPeriod / data.jobsDone).round())}', PdfColors.orange),
+              _financialSummaryItem('Rata-rata/Pekerjaan', 'Rp ${_formatCurrency(_safeDivide(data.revenueThisPeriod, data.jobsDone))}', PdfColors.orange),
             ],
           ),
         ),
@@ -225,7 +225,7 @@ class ReportPdfService {
                   _tableCell(week.label),
                   _tableCell('Rp ${_formatCurrency(week.revenue)}'),
                   _tableCell('${week.jobs} Order'),
-                  _tableCell('Rp ${_formatCurrency((week.revenue / week.jobs).round())}'),
+                  _tableCell('Rp ${_formatCurrency(_safeDivide(week.revenue, week.jobs))}'),
                 ],
               )),
               // Total row
@@ -235,7 +235,7 @@ class ReportPdfService {
                   _tableCell('TOTAL', isHeader: true),
                   _tableCell('Rp ${_formatCurrency(data.revenueThisPeriod)}', isHeader: true),
                   _tableCell('${data.jobsDone} Order', isHeader: true),
-                  _tableCell('Rp ${_formatCurrency((data.revenueThisPeriod / data.jobsDone).round())}', isHeader: true),
+                  _tableCell('Rp ${_formatCurrency(_safeDivide(data.revenueThisPeriod, data.jobsDone))}', isHeader: true),
                 ],
               ),
             ],
@@ -333,6 +333,17 @@ class ReportPdfService {
   }
 
   static pw.Widget _buildServiceSection(ReportData data) {
+    if (data.serviceBreakdown.isEmpty) {
+      return pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          _sectionTitle('Breakdown Jenis Service'),
+          pw.SizedBox(height: 12),
+          pw.Text('Belum ada data service pada periode ini.', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
+        ],
+      );
+    }
+
     final breakdown = data.serviceBreakdown;
     final topService = breakdown.entries.reduce((a, b) => a.value > b.value ? a : b);
     
@@ -639,6 +650,11 @@ class ReportPdfService {
   static double _parseGrowth(String growthText) {
     final cleaned = growthText.replaceAll('%', '').replaceAll('+', '').replaceAll('−', '-').trim();
     return double.tryParse(cleaned.replaceAll(',', '.')) ?? 0;
+  }
+
+  static int _safeDivide(int numerator, int denominator) {
+    if (denominator == 0) return 0;
+    return (numerator / denominator).round();
   }
 
   static ({

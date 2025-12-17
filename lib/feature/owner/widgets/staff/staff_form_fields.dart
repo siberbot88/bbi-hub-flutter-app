@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 const Color staffPrimaryColor = Color(0xFFD72B1C);
@@ -8,7 +7,7 @@ class StaffTextField extends StatelessWidget {
   final TextEditingController controller;
   final String label;
   final String hint;
-  final String iconPath;
+  final IconData icon;
   final int maxLines;
   final TextInputType? keyboardType;
 
@@ -17,7 +16,7 @@ class StaffTextField extends StatelessWidget {
     required this.controller,
     required this.label,
     required this.hint,
-    required this.iconPath,
+    required this.icon,
     this.maxLines = 1,
     this.keyboardType,
   });
@@ -37,14 +36,10 @@ class StaffTextField extends StatelessWidget {
         ),
         hintText: hint,
         hintStyle: GoogleFonts.poppins(color: Colors.grey),
-        prefixIcon: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: SvgPicture.asset(
-            iconPath,
-            width: 20,
-            height: 20,
-            colorFilter: const ColorFilter.mode(Colors.red, BlendMode.srcIn),
-          ),
+        prefixIcon: Icon(
+          icon,
+          color: staffPrimaryColor,
+          size: 20,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -97,14 +92,10 @@ class StaffRoleDropdown extends StatelessWidget {
           fontSize: 14,
           fontWeight: FontWeight.w500,
         ),
-        prefixIcon: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: SvgPicture.asset(
-            "assets/svg/user.svg",
-            width: 20,
-            height: 20,
-            colorFilter: const ColorFilter.mode(Colors.red, BlendMode.srcIn),
-          ),
+        prefixIcon: const Icon(
+          Icons.badge_outlined,
+          color: staffPrimaryColor,
+          size: 20,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
