@@ -6,7 +6,7 @@
     "files.autoSave": "afterDelay",
     "files.autoSaveDelay": 1000,
     "terminal.integrated.defaultProfile.windows": "PowerShell",
-    "workbench.colorTheme": "Visual Studio Dark",
+    "workbench.colorTheme": "Winter is Coming (Dark Black - No Italics)",
     "workbench.iconTheme": "vscode-icons",
     "java.configuration.updateBuildConfiguration": "interactive"
 }

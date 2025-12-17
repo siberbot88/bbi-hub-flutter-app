@@ -13,7 +13,7 @@ class LoggingFilterTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tabs = ["All", "Pending", "In Progress", "Completed"];
+    final tabs = ["All", "Pending", "In Progress", "Completed", "Lunas"];
     return SizedBox(
       height: 40,
       child: ListView.separated(

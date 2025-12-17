@@ -141,14 +141,16 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
     final pendingCount = allServices.where((s) => (s.acceptanceStatus ?? '').toLowerCase() == 'pending').length;
     // Terima (Accepted): acceptance_status == "accepted"
     final acceptedCount = allServices.where((s) => (s.acceptanceStatus ?? '').toLowerCase() == 'accepted').length;
-
+    
     // Filter List
     final filteredServices = allServices.where((s) {
-      final status = (s.acceptanceStatus ?? '').toLowerCase();
+      final acceptance = (s.acceptanceStatus ?? '').toLowerCase();
+      // final status = (s.status).toLowerCase();
+      
       if (selectedFilter == 'Semua') return true;
-      if (selectedFilter == 'Menunggu') return status == 'pending';
-      if (selectedFilter == 'Terima') return status == 'accepted';
-      if (selectedFilter == 'Tolak') return status == 'declined' || status == 'rejected';
+      if (selectedFilter == 'Menunggu') return acceptance == 'pending';
+      if (selectedFilter == 'Terima') return acceptance == 'accepted';
+      if (selectedFilter == 'Tolak') return acceptance == 'declined' || acceptance == 'rejected';
       return true;
     }).toList();
 

@@ -9,18 +9,34 @@ class InvoiceCustomerHeader extends StatelessWidget {
     required this.task,
   });
 
+  String _getInitials(String name) {
+    if (name.isEmpty) return "?";
+    final parts = name.trim().split(' ');
+    if (parts.isEmpty) return "?";
+    if (parts.length == 1) return parts[0].substring(0, 1).toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+
   @override
   Widget build(BuildContext context) {
     final DateTime? orderDate =
         task['date'] is DateTime ? task['date'] : null;
+
+    final userName = task['user'] ?? "Prabowo";
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         CircleAvatar(
           radius: 20,
-          backgroundImage: NetworkImage(
-            "https://i.pravatar.cc/150?img=${task['id'] ?? 1}",
+          backgroundColor: Colors.blue.shade50,
+          child: Text(
+            _getInitials(userName),
+            style: GoogleFonts.poppins(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Colors.blue.shade700,
+            ),
           ),
         ),
         const SizedBox(width: 10),

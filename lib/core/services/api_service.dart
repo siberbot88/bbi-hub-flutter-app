@@ -1164,6 +1164,86 @@ class ApiService {
     }
   }
 
+  /// Versi admin: create service (misal untuk On-the-site / Walk-in)
+  /// endpoint: POST /v1/admins/services
+  Future<ServiceModel> adminCreateService({
+    required String workshopUuid,
+    String? customerUuid,
+    String? vehicleUuid, // jika kendaraan sudah ada
+    // Informasi manual (walk-in):
+    String? customerName,
+    String? customerPhone,
+    String? customerEmail,
+    String? vehiclePlate,
+    String? vehicleBrand,
+    String? vehicleModel,
+    int? vehicleYear,
+    int? vehicleOdometer,
+    
+    required String name,
+    String? description,
+    num? price,
+    String? categoryName,
+    required DateTime scheduledDate,
+    DateTime? estimatedTime,
+    String status = 'pending', // pending mechanic
+  }) async {
+    try {
+      final uri = Uri.parse('${_baseUrl}admins/services');
+      final headers = await _getAuthHeaders();
+      
+      final bodyMap = {
+        'workshop_uuid': workshopUuid,
+        'name': name,
+        'scheduled_date': scheduledDate.toIso8601String(),
+        'status': status,
+      };
+      
+      if (customerUuid != null) bodyMap['customer_uuid'] = customerUuid;
+      if (vehicleUuid != null) bodyMap['vehicle_uuid'] = vehicleUuid;
+      if (description != null) bodyMap['description'] = description;
+      if (price != null) bodyMap['price'] = price;
+      if (estimatedTime != null) bodyMap['estimated_time'] = estimatedTime.toIso8601String();
+      if (categoryName != null) bodyMap['category_service'] = categoryName;
+
+      // Fields tambahan untuk walk-in (jika backend support create customer/vehicle on the fly)
+      if (customerName != null) bodyMap['customer_name'] = customerName;
+      if (customerPhone != null) bodyMap['customer_phone'] = customerPhone;
+      if (customerEmail != null) bodyMap['customer_email'] = customerEmail;
+      
+      if (vehiclePlate != null) bodyMap['vehicle_plate'] = vehiclePlate;
+      if (vehicleBrand != null) bodyMap['vehicle_brand'] = vehicleBrand;
+      if (vehicleModel != null) bodyMap['vehicle_model'] = vehicleModel;
+      if (vehicleYear != null) bodyMap['vehicle_year'] = vehicleYear; 
+      if (vehicleOdometer != null) bodyMap['vehicle_odometer'] = vehicleOdometer;
+
+      final body = jsonEncode(bodyMap);
+
+      _debugRequest('ADMIN_CREATE_SERVICE', uri, headers, body);
+      final res = await http.post(uri, headers: headers, body: body);
+      _debugResponse('ADMIN_CREATE_SERVICE', res);
+
+      if (!(res.statusCode == 200 || res.statusCode == 201)) {
+        final j = _tryDecodeJson(res.body);
+        if (j is Map<String, dynamic>) {
+          throw Exception(_getErrorMessage(j));
+        }
+        throw Exception('Gagal membuat service ADMIN (HTTP ${res.statusCode}).');
+      }
+
+      if (!_isJsonResponse(res)) throw Exception('Respon bukan JSON.');
+      final j = _tryDecodeJson(res.body);
+
+      final map = (j is Map && j['data'] is Map)
+          ? j['data'] as Map<String, dynamic>
+          : j as Map<String, dynamic>;
+
+      return ServiceModel.fromJson(map);
+    } catch (e) {
+      throw Exception('Gagal membuat service (ADMIN): ${e.toString().replaceFirst("Exception: ", "")}');
+    }
+  }
+
   /// Versi admin: ambil detail service
   /// endpoint: GET /v1/admins/services/{id}
   Future<ServiceModel> adminFetchServiceDetail(String id) async {
@@ -1196,6 +1276,30 @@ class ApiService {
     } catch (e) {
       throw Exception('Gagal mengambil detail service (ADMIN): '
           '${e.toString().replaceFirst("Exception: ", "")}');
+    }
+  }
+
+  /// Versi admin: update status service
+  /// endpoint: PATCH /v1/admins/services/{id}
+  Future<void> adminUpdateServiceStatus(String id, String status) async {
+    try {
+      final uri = Uri.parse('${_baseUrl}admins/services/$id');
+      final headers = await _getAuthHeaders();
+      final body = jsonEncode({'status': status});
+
+      _debugRequest('ADMIN_UPDATE_SERVICE', uri, headers, body);
+      final res = await http.patch(uri, headers: headers, body: body);
+      _debugResponse('ADMIN_UPDATE_SERVICE', res);
+
+      if (!(res.statusCode == 200 || res.statusCode == 204)) {
+        final j = _tryDecodeJson(res.body);
+        if (j is Map<String, dynamic>) {
+          throw Exception(_getErrorMessage(j));
+        }
+        throw Exception('Gagal update status (ADMIN) (HTTP ${res.statusCode}).');
+      }
+    } catch (e) {
+      throw Exception('Gagal update status (ADMIN): ${e.toString().replaceFirst("Exception: ", "")}');
     }
   }
 
@@ -1331,85 +1435,92 @@ class ApiService {
 
   /// Versi admin: ambil list employee (mekanik)
   /// endpoint: GET /v1/admins/employees
+
+
+  // Helper/Wrapper to fetch users as employments if admins/employee fails
+  // Overwriting the previous method body
+  // Helper/Wrapper to fetch users as employments
   Future<List<Employment>> adminFetchEmployees({
     int page = 1, 
     int perPage = 15,
     String? search,
-    String? role, // Optional: if backend supports it
+    String? role,
+    String? workshopUuid,
   }) async {
     try {
       final queryParams = <String, String>{
         'page': page.toString(),
         'per_page': perPage.toString(),
       };
-      if (search != null && search.isNotEmpty) {
-        queryParams['search'] = search;
-      }
-      if (role != null && role.isNotEmpty) {
-        queryParams['role'] = role;
+      if (search != null && search.isNotEmpty) queryParams['search'] = search;
+      if (role != null && role.isNotEmpty) queryParams['role'] = role;
+      
+      // Determine URI
+      Uri uri;
+      if (workshopUuid != null && workshopUuid.isNotEmpty) {
+         // Strategy A: Specific Workshop Employees
+         // Try: admins/workshops/{id}/employees
+         uri = Uri.parse('${_baseUrl}admins/workshops/$workshopUuid/employees').replace(queryParameters: queryParams);
+      } else {
+         // Strategy B: Users List (Fallback)
+         uri = Uri.parse('${_baseUrl}admins/users').replace(queryParameters: queryParams);
       }
 
-      final uri = Uri.parse('${_baseUrl}admins/employees').replace(queryParameters: queryParams);
       final headers = await _getAuthHeaders();
 
-      _debugRequest('ADMIN_FETCH_EMPLOYEES', uri, headers, null);
+      _debugRequest('ADMIN_FETCH_EMP', uri, headers, null);
       final res = await http.get(uri, headers: headers);
-      _debugResponse('ADMIN_FETCH_EMPLOYEES', res);
+      _debugResponse('ADMIN_FETCH_EMP', res);
 
-      if (res.statusCode == 401) {
-        throw Exception('Akses ditolak. Silakan login kembali.');
-      }
-
+      if (res.statusCode == 401) throw Exception('Akses ditolak (401).');
+      
       final ok = res.statusCode == 200 || res.statusCode == 201;
       if (!ok) {
-        final j = _tryDecodeJson(res.body);
-        if (j is Map<String, dynamic>) {
-           throw Exception(_getErrorMessage(j));
-        }
-        throw Exception(
-            'Gagal mengambil data employee (ADMIN). Status: ${res.statusCode}');
+         // Attempt to parse error message
+         String serverMsg = '';
+         try {
+            final j = jsonDecode(res.body);
+            if (j is Map<String, dynamic>) serverMsg = _getErrorMessage(j);
+         } catch (_) {}
+         
+         final msg = serverMsg.isNotEmpty ? serverMsg : 'HTTP ${res.statusCode}';
+         throw Exception('Gagal ambil data ($msg) di ${uri.path}');
       }
-
-      if (!_isJsonResponse(res)) throw Exception('Respon bukan JSON.');
 
       final decoded = _tryDecodeJson(res.body);
-
-      // Handle pagination structure: { "data": { "data": [...] } }
+      List<dynamic> list = [];
+      
       if (decoded is Map<String, dynamic>) {
-        final dataWrapper = decoded['data'];
-
-        // Case 1: Pagination wrapper
-        if (dataWrapper is Map<String, dynamic> && dataWrapper.containsKey('data')) {
-          final list = dataWrapper['data'];
-          if (list is List) {
-            return list
-                .whereType<Map<String, dynamic>>()
-                .map((e) => Employment.fromJson(e))
-                .toList();
-          }
-        }
-
-        // Case 2: Direct list (fallback)
-        if (dataWrapper is List) {
-          return dataWrapper
-              .whereType<Map<String, dynamic>>()
-              .map((e) => Employment.fromJson(e))
-              .toList();
-        }
+         final dataWrapper = decoded['data'];
+         if (dataWrapper is List) list = dataWrapper;
+         else if (dataWrapper is Map && dataWrapper['data'] is List) list = dataWrapper['data'];
+      } else if (decoded is List) {
+         list = decoded;
       }
 
-      // If decoded is List (old structure fallback)
-      if (decoded is List) {
-         return decoded
-            .whereType<Map<String, dynamic>>()
-            .map((e) => Employment.fromJson(e))
-            .toList();
-      }
+      // Map User or Employment -> Employment
+      return list.map((jsonItem) {
+         final map = jsonItem as Map<String, dynamic>;
+         // Check if it's already an Employment (has 'user' key key or 'user_uuid')
+         if (map.containsKey('user_uuid') || map.containsKey('workshop_uuid')) {
+            return Employment.fromJson(map);
+         }
+         // Else assume it is a User object
+         final user = User.fromJson(map);
+         return Employment(
+            id: user.id, 
+            userUuid: user.id,
+            workshopUuid: workshopUuid ?? '', 
+            code: '',
+            user: user,
+            roleName: user.role,
+            jobdesk: user.role, 
+            status: 'active',
+         );
+      }).toList();
 
-      return <Employment>[];
     } catch (e) {
-      throw Exception('Gagal mengambil data employee (ADMIN): '
-          '${e.toString().replaceFirst("Exception: ", "")}');
+      throw Exception('Fetch Error: $e');
     }
   }
 }

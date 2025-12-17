@@ -8,6 +8,7 @@ import 'package:bengkel_online_flutter/core/models/employment.dart';
 void showTechnicianSelectDialog(
   BuildContext context, {
   required Function(String mechanicUuid, String mechanicName) onConfirm,
+  String? workshopUuid, // Added workshopUuid param
 }) {
   showDialog(
     context: context,
@@ -17,7 +18,7 @@ void showTechnicianSelectDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Padding(
           padding: const EdgeInsets.all(20),
-          child: TechnicianSelectContent(onConfirm: onConfirm),
+          child: TechnicianSelectContent(onConfirm: onConfirm, workshopUuid: workshopUuid),
         ),
       );
     },
@@ -26,8 +27,9 @@ void showTechnicianSelectDialog(
 
 class TechnicianSelectContent extends StatefulWidget {
   final Function(String, String) onConfirm;
+  final String? workshopUuid;
 
-  const TechnicianSelectContent({super.key, required this.onConfirm});
+  const TechnicianSelectContent({super.key, required this.onConfirm, this.workshopUuid});
 
   @override
   State<TechnicianSelectContent> createState() => _TechnicianSelectContentState();
@@ -50,15 +52,14 @@ class _TechnicianSelectContentState extends State<TechnicianSelectContent> {
     try {
       final adminProvider = context.read<AdminServiceProvider>();
       // Fetch mechanics/employees via Admin API
-      // Fetch mechanics/employees via Admin API
-      // Use larger perPage to get more candidates since backend might not filter by role default
       final employees = await adminProvider.fetchEmployees(
         page: 1, 
         perPage: 100,
-        role: 'mechanic', // Attempt backend filter if supported
+        role: 'mechanic', // Attempt backend filter
+        workshopUuid: widget.workshopUuid, // Pass workshopUuid from widget
       );
       
-      // Filter for mechanics if role is available, otherwise show all or filter by jobdesk/specialist
+      // Filter for mechanics
       setState(() {
         mechanics = employees.where((e) {
              final r = e.role.toLowerCase();
@@ -68,7 +69,7 @@ class _TechnicianSelectContentState extends State<TechnicianSelectContent> {
              final isRoleMatch = r.contains('mechanic') || r.contains('teknisi') || r.contains('mekanik');
              final isJobMatch = j.contains('mechanic') || j.contains('teknisi') || j.contains('mekanik');
              
-             // Check via User.hasRole helper (exact match or contains)
+             // Check via User.hasRole helper
              final user = e.user;
              bool isHasRoleMatch = false;
              if (user != null) {
@@ -76,7 +77,6 @@ class _TechnicianSelectContentState extends State<TechnicianSelectContent> {
                 if (user.hasRole('mechanic') || user.hasRole('teknisi') || user.hasRole('mekanik')) {
                   isHasRoleMatch = true;
                 }
-                // Check Case Insensitive match just in case hasRole is strict
                 final userRole = user.role.toLowerCase();
                  if (userRole.contains('mechanic') || userRole.contains('teknisi') || userRole.contains('mekanik')) {
                   isHasRoleMatch = true;
@@ -86,18 +86,18 @@ class _TechnicianSelectContentState extends State<TechnicianSelectContent> {
              return isRoleMatch || isJobMatch || isHasRoleMatch;
         }).toList();
         
-        // Fallback: if empty, maybe roles are not set correctly, show all for debugging?
-        // Or keep empty.
+        // Debug fallback: show all if strict filter has 0 results but we have employees
+        // Useful if the returned "users" don't have roles set correctly yet
         if (mechanics.isEmpty && employees.isNotEmpty) {
-             // Debug fallback: show all if strict filter has 0 results but we have employees
-             // This helps if role naming isn't exactly 'mechanic'
              mechanics = employees;
         }
         loading = false;
       });
     } catch (e) {
       setState(() {
-        error = e.toString();
+        error = e.toString().contains("Exception:") 
+            ? e.toString().split("Exception:").last.trim() 
+            : e.toString();
         loading = false;
       });
     }

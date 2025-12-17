@@ -4,6 +4,8 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../reject_dialog.dart';
 import '../accept_dialog.dart';
 import '../../screens/service_detail.dart';
+import '../../screens/service_progress.dart';
+import '../../screens/invoice_payment.dart';
 import 'service_helpers.dart';
 import 'package:provider/provider.dart';
 import 'package:bengkel_online_flutter/feature/admin/providers/admin_service_provider.dart';
@@ -271,4 +273,6 @@ class ServiceCard extends StatelessWidget {
     // Take first letter of first 2 words
     return (parts[0][0] + parts[1][0]).toUpperCase();
   }
+
+ 
 }

@@ -149,6 +149,14 @@ class TechnicianTab extends StatelessWidget {
     );
   }
 
+  String _getInitials(String name) {
+    if (name.isEmpty) return "?";
+    final parts = name.trim().split(' ');
+    if (parts.isEmpty) return "?";
+    if (parts.length == 1) return parts[0].substring(0, 1).toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+
   Widget _techCard(_Tech t) {
     return Container(
       decoration: BoxDecoration(
@@ -171,7 +179,15 @@ class TechnicianTab extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 18,
-                backgroundImage: NetworkImage(t.avatar),
+                backgroundColor: const Color(0xFFDC2626).withOpacity(0.1),
+                child: Text(
+                  _getInitials(t.name),
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFFDC2626),
+                  ),
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(

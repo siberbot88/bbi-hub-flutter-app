@@ -14,6 +14,14 @@ class ServicePendingDetail extends StatelessWidget {
 
   const ServicePendingDetail({super.key, required this.service});
 
+  String _getInitials(String name) {
+    if (name.isEmpty) return "?";
+    final parts = name.trim().split(' ');
+    if (parts.isEmpty) return "?";
+    if (parts.length == 1) return parts[0].substring(0, 1).toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+
   @override
   Widget build(BuildContext context) {
     const mainColor = Color(0xFFDC2626);
@@ -49,6 +57,7 @@ class ServicePendingDetail extends StatelessWidget {
               onPressed: () {
                 showTechnicianSelectDialog(
                   context,
+                  workshopUuid: service.workshopUuid, // Pass workshop context
                   onConfirm: (mechanicUuid, mechanicName) {
                     context.read<AdminServiceProvider>().assignMechanicAsAdmin(
                       service.id,
@@ -128,12 +137,18 @@ class ServicePendingDetail extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
-                    radius: 22,
-                    backgroundImage: NetworkImage(
-                      "https://i.pravatar.cc/150?img=$id",
-                    ),
-                  ),
+                   CircleAvatar(
+                     radius: 22,
+                     backgroundColor: Colors.red.shade50,
+                     child: Text(
+                        _getInitials(customerName),
+                        style: GoogleFonts.poppins(
+                          color: mainColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                     ),
+                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(

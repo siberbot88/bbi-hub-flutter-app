@@ -141,18 +141,80 @@ class AdminServiceProvider extends ServiceProvider {
       rethrow;
     }
   }
+
+  /// ADMIN: Update Service Status safely (wraps ApiService)
+  Future<void> updateServiceStatusAsAdmin(String id, String status) async {
+      await _adminApi.adminUpdateServiceStatus(id, status);
+      await fetchDetail(id); // refresh logic
+  }
   /// ADMIN: Fetch Employee List
   Future<List<Employment>> fetchEmployees({
     int page = 1, 
     int perPage = 15,
     String? search,
     String? role,
+    String? workshopUuid,
   }) {
     return _adminApi.adminFetchEmployees(
       page: page, 
       perPage: perPage,
       search: search,
       role: role,
+      workshopUuid: workshopUuid,
     );
   }
+  /// ADMIN: Create Walk-in Service
+  Future<ServiceModel> createWalkInService({
+    required String workshopUuid,
+    required String name,
+    required DateTime scheduledDate,
+    String? categoryName,
+    num? price,
+    String? description,
+    
+    // Customer Info (Walk-in)
+    String? customerName,
+    String? customerPhone,
+    String? customerEmail,
+    
+    // Vehicle Info
+    String? vehiclePlate,
+    String? vehicleBrand,
+    String? vehicleModel,
+    int? vehicleYear,
+    int? vehicleOdometer,
+  }) async {
+    try {
+      final created = await _adminApi.adminCreateService(
+        workshopUuid: workshopUuid,
+        name: name,
+        scheduledDate: scheduledDate,
+        categoryName: categoryName,
+        price: price,
+        description: description,
+        
+        customerName: customerName,
+        customerPhone: customerPhone,
+        customerEmail: customerEmail,
+        
+        vehiclePlate: vehiclePlate,
+        vehicleBrand: vehicleBrand,
+        vehicleModel: vehicleModel,
+        vehicleYear: vehicleYear,
+        vehicleOdometer: vehicleOdometer,
+        
+        status: 'pending', // Default pending mechanic selection
+      );
+      
+      // Update local list
+      _items.insert(0, created);
+      notifyListeners();
+      
+      return created;
+    } catch (e) {
+      if (kDebugMode) print('createWalkInService error: $e');
+      rethrow;
+    }
+  }
 }
+

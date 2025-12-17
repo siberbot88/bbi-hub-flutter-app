@@ -13,6 +13,14 @@ class ServiceDetailPage extends StatelessWidget {
 
   const ServiceDetailPage({super.key, required this.service});
 
+  String _getInitials(String name) {
+    if (name.isEmpty) return "?";
+    final parts = name.trim().split(' ');
+    if (parts.isEmpty) return "?";
+    if (parts.length == 1) return parts[0].substring(0, 1).toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+
   @override
   Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);
@@ -82,12 +90,18 @@ class ServiceDetailPage extends StatelessWidget {
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                CircleAvatar(
-                                  radius: 24,
-                                  backgroundImage: NetworkImage(
-                                    "https://i.pravatar.cc/150?img=$id",
-                                  ),
-                                ),
+                                 CircleAvatar(
+                                   radius: 24,
+                                   backgroundColor: Colors.red.shade50,
+                                   child: Text(
+                                      _getInitials(customerName),
+                                      style: GoogleFonts.poppins(
+                                        color: const Color(0xFFB70F0F),
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18,
+                                      ),
+                                   ),
+                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
@@ -343,81 +357,124 @@ class ServiceDetailPage extends StatelessWidget {
         ),
       ),
 
-      // 🔹 Tombol bawah tetap
+      // 🔹 Tombol bawah (Conditional)
       bottomNavigationBar: Container(
         color: Colors.white,
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-        child: Row(
-          children: [
-            Expanded(
-              child: SizedBox(
-                height: 58,
-                child: ElevatedButton(
-                  onPressed: () => showRejectDialog(
-                    context,
-                    onConfirm: (reason, desc) {
-                      context.read<AdminServiceProvider>().declineServiceAsAdmin(
-                            service.id,
-                            reason: reason,
-                            reasonDescription: desc,
-                          );
-                      Navigator.pop(context); // Close detail page after action? Maybe better to keep open or refresh. 
-                      // User flow usually expects going back if item status changes heavily.
-                      // Let's pop for now as it moves to history.
-                      Navigator.pop(context);
-                    },
+        child: _buildBottomActions(context),
+      ),
+    );
+  }
+
+  Widget _buildBottomActions(BuildContext context) {
+    final status = (service.acceptanceStatus ?? '').toLowerCase();
+
+    // 1. If Pending -> Show Accept & Decline
+    if (status == 'pending') {
+      return Row(
+        children: [
+          Expanded(
+            child: SizedBox(
+              height: 58,
+              child: ElevatedButton(
+                onPressed: () => showRejectDialog(
+                  context,
+                  onConfirm: (reason, desc) {
+                    context.read<AdminServiceProvider>().declineServiceAsAdmin(
+                          service.id,
+                          reason: reason,
+                          reasonDescription: desc,
+                        );
+                    Navigator.pop(context);
+                    Navigator.pop(context);
+                  },
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
                   ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    elevation: 4,
-                  ),
-                  child: Text(
-                    "Tolak",
-                    style: GoogleFonts.poppins(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+                  elevation: 4,
+                ),
+                child: Text(
+                  "Tolak",
+                  style: GoogleFonts.poppins(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
                 ),
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: SizedBox(
-                height: 58,
-                child: ElevatedButton(
-                  onPressed: () => showAcceptDialog(
-                    context,
-                    onConfirm: () {
-                      context
-                          .read<AdminServiceProvider>()
-                          .acceptServiceAsAdmin(service.id);
-                      Navigator.pop(context); // Close detail page
-                    },
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: SizedBox(
+              height: 58,
+              child: ElevatedButton(
+                onPressed: () => showAcceptDialog(
+                  context,
+                  onConfirm: () {
+                    context
+                        .read<AdminServiceProvider>()
+                        .acceptServiceAsAdmin(service.id);
+                    Navigator.pop(context);
+                  },
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
                   ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    elevation: 4,
-                  ),
-                  child: Text(
-                    "Terima",
-                    style: GoogleFonts.poppins(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+                  elevation: 4,
+                ),
+                child: Text(
+                  "Terima",
+                  style: GoogleFonts.poppins(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
                 ),
               ),
             ),
-          ],
+          ),
+        ],
+      );
+    }
+
+    // 2. If already processed, show disabled button
+    Color btnColor = Colors.grey;
+    String btnText = "Status: $status";
+
+    if (status == 'accepted') {
+      btnColor = Colors.green.withOpacity(0.5);
+      btnText = "Sudah Diterima";
+    } else if (status == 'declined' || status == 'rejected') {
+      btnColor = Colors.red.withOpacity(0.5);
+      btnText = "Sudah Ditolak";
+    }
+
+    return SizedBox(
+      height: 58,
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: null, // Disabled
+        style: ElevatedButton.styleFrom(
+          backgroundColor: btnColor,
+          disabledBackgroundColor: btnColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+          elevation: 0,
+        ),
+        child: Text(
+          btnText,
+          style: GoogleFonts.poppins(
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
       ),
     );

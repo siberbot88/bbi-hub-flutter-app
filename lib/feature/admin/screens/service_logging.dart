@@ -62,15 +62,17 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
 
   bool _matchesFilterKey(ServiceModel t, String filterKey) {
     if (filterKey == 'All') return true;
-    final status = (t.status ?? '').toLowerCase();
+    final status = (t.status).toLowerCase();
     switch (filterKey) {
       case 'Pending':
         // Di logging page, 'Pending' berarti Accepted but waiting for Mechanic
         return status == 'pending';
       case 'In Progress':
-        return status == 'in_progress' || status == 'on_process';
+        return status == 'in_progress' || status == 'progress' || status == 'in progress';
       case 'Completed':
-        return status == 'completed';
+        return status == 'completed' || status == 'menunggu pembayaran';
+      case 'Lunas':
+        return status == 'lunas';
       default:
         return false;
     }
@@ -79,7 +81,7 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
   List<ServiceModel> _getFilteredTasks(List<ServiceModel> allServices) {
     return allServices.where((service) {
       // 1. Must be Accepted by Admin
-      if (service.acceptanceStatus != 'accepted') return false;
+      if ((service.acceptanceStatus ?? '').toLowerCase() != 'accepted') return false;
 
       // 2. Date match (API filters by date, but double check)
        // bool dateMatch = LoggingHelpers.isSameDate(service.scheduledDate ?? DateTime.now(), selectedDate);
@@ -89,16 +91,7 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
       bool statusMatch = _matchesFilterKey(service, selectedLoggingFilter);
       if (!statusMatch) return false;
 
-      // 4. Time Slot Filter
-      // Assuming time match logic based on hours
-      if (selectedTimeSlot != null) {
-        // Simple string match or parsing. Current implementation is string based.
-        // Let's rely on string match for now if service has time property, otherwise skip or implement better time logic later.
-        // For now, let's ignore time slot filter if model doesn't support it well, or try to match formatted time.
-        // if (task['time'] != selectedTimeSlot) return false;
-      }
-
-      // 5. Search Text
+      // ... (search logic)
       if (searchText.trim().isNotEmpty) {
         final q = searchText.toLowerCase();
         final title = (service.name).toLowerCase();
@@ -127,23 +120,41 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
     // Categorize based on Service Status
     // Pending: Accepted by Admin, but "status" is still pending (Waiting for Mechanic)
     final pending = acceptedServicesForDate
-        .where((t) => (t.status ?? '').toLowerCase() == 'pending')
+        .where((t) => (t.status).toLowerCase() == 'pending')
         .length;
         
     // In Progress: Mechanic Assigned
     final inProgress = acceptedServicesForDate
-        .where((t) => (t.status ?? '').toLowerCase() == 'in_progress' || (t.status ?? '').toLowerCase() == 'on_process')
+        .where((t) {
+            final st = (t.status).toLowerCase();
+            return st == 'in_progress' || st == 'progress' || st == 'in progress';
+        })
         .length;
         
-    // Completed
+    // Completed (Menunggu Pembayaran considered completed in terms of work, but maybe not finalized)
+    // User requested "Lunas" box separate.
+    // Let's assume 'completed' and 'menunggu pembayaran' go to Completed box vs Lunas box.
     final completed = acceptedServicesForDate
-        .where((t) => (t.status ?? '').toLowerCase() == 'completed')
+        .where((t) {
+           final st = (t.status).toLowerCase();
+           return st == 'completed' || st == 'menunggu pembayaran';
+        })
+        .length;
+
+    // Lunas
+    final lunas = acceptedServicesForDate
+        .where((t) => (t.status).toLowerCase() == 'lunas')
+        .length;
+
+    // Declined (Ditolak) - from allServices, not acceptedServicesForDate
+    final declined = allServices
+        .where((t) => (t.acceptanceStatus ?? '').toLowerCase() == 'declined')
         .length;
 
     final loggingFiltered = _getFilteredTasks(allServices);
     final title = selectedTimeSlot == null
         ? "Semua Tugas"
-        : "Tugas untuk jam $selectedTimeSlot"; // Time slot logic is pending proper implementation
+        : "Tugas untuk jam $selectedTimeSlot"; 
 
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: 90),
@@ -155,6 +166,8 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
             pending: pending,
             inProgress: inProgress,
             completed: completed,
+            lunas: lunas,
+            declined: declined,
           ),
           const SizedBox(height: 12),
           LoggingCalendar(
