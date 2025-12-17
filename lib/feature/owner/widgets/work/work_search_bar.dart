@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+const Color _primaryRed = Color(0xFFD72B1C);
 
 class WorkSearchBar extends StatelessWidget {
   final TextEditingController controller;
@@ -16,47 +19,58 @@ class WorkSearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Container(
-      height: 56,
-      decoration: const BoxDecoration(
-        color: Color(0xFFF0F1F5),
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(50),
-          bottomLeft: Radius.circular(50),
-          bottomRight: Radius.circular(30),
+      height: 48,
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1c2630) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark ? const Color(0xFF374151) : const Color(0xFFE5E7EB),
         ),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 18),
       child: Row(
         children: [
-          const Icon(Icons.search, color: Colors.grey),
-          const SizedBox(width: 10),
+          Padding(
+            padding: const EdgeInsets.only(left: 16, right: 8),
+            child: Icon(
+              Icons.search,
+              size: 24,
+              color: const Color(0xFF9dabb9),
+            ),
+          ),
           Expanded(
             child: TextField(
               controller: controller,
-              decoration: const InputDecoration(
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+              decoration: InputDecoration(
                 hintText: 'Cari kendaraan, customer, atau plat',
+                hintStyle: GoogleFonts.inter(
+                  fontSize: 14,
+                  color: const Color(0xFF9dabb9),
+                ),
                 border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 8),
               ),
               onChanged: onChanged,
             ),
           ),
-          InkWell(
-            onTap: onFilterTap,
-            borderRadius: BorderRadius.circular(24),
-            child: Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color:
-                    hasActiveFilter ? const Color(0xFFDC2626) : Colors.transparent,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.tune,
-                color: hasActiveFilter ? Colors.white : Colors.grey,
+          if (hasActiveFilter)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Container(
+                width: 6,
+                height: 6,
+                decoration: const BoxDecoration(
+                  color: _primaryRed,
+                  shape: BoxShape.circle,
+                ),
               ),
             ),
-          ),
         ],
       ),
     );

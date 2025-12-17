@@ -14,6 +14,7 @@ import 'package:bengkel_online_flutter/core/models/service.dart';
 
 class ApiService {
   static const String _baseUrl = 'http://10.0.2.2:8000/api/v1/';
+  String get baseUrl => _baseUrl; // Added public getter
   final _storage = const FlutterSecureStorage();
 
   /* ===================== Common helpers ===================== */
@@ -1115,5 +1116,99 @@ class ApiService {
     } catch (e) {
       throw Exception('Gagal cek status: ${e.toString()}');
     }
+  }  // =======================================================================
+  // ADMIN SERVICE METHODS (Proxies to generic endpoints with specific logic)
+  // =======================================================================
+
+  Future<Map<String, dynamic>> adminFetchServicesRaw({
+    String? status,
+    bool includeExtras = true,
+    String? workshopUuid,
+    String? code,
+    String? dateFrom,
+    String? dateTo,
+    int page = 1,
+    int perPage = 10,
+  }) {
+    return fetchServicesRaw(
+      status: status,
+      includeExtras: includeExtras,
+      workshopUuid: workshopUuid,
+      code: code,
+      dateFrom: dateFrom,
+      dateTo: dateTo,
+      page: page,
+      perPage: perPage,
+    );
   }
+
+  Future<ServiceModel> adminFetchServiceDetail(String id) {
+    return fetchServiceDetail(id);
+  }
+
+  Future<void> adminAcceptService(String id, {String? mechanicUuid}) async {
+    final body = {
+      'status': 'accept', // Sesuai validasi backend: 'accept'
+      if (mechanicUuid != null) 'mechanic_uuid': mechanicUuid,
+    };
+    
+    // Perbaikan: gunakan POST/PUT ke generic update endpoint
+    final response = await http.put(
+      Uri.parse('$baseUrl/services/$id'),
+      headers: await _getJsonHeaders(),
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception(_getErrorMessage(jsonDecode(response.body)));
+    }
+  }
+
+  Future<void> adminDeclineService(String id, {required String reason, String? reasonDescription}) async {
+    final body = {
+      'status': 'cancelled',
+      'reason': reason == 'Lainnya' && reasonDescription != null ? reasonDescription : reason,
+    };
+
+    final response = await http.put(
+      Uri.parse('$baseUrl/services/$id'),
+      headers: await _getJsonHeaders(),
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception(_getErrorMessage(jsonDecode(response.body)));
+    }
+  }
+
+  Future<void> adminAssignMechanic(String id, {required String mechanicUuid}) async {
+    final body = {
+      'mechanic_uuid': mechanicUuid,
+      // Optional: auto change status to 'in progress' if needed, but backend logic might handle it
+      'status': 'in progress',
+    };
+
+    final response = await http.put(
+      Uri.parse('$baseUrl/services/$id'),
+      headers: await _getJsonHeaders(),
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception(_getErrorMessage(jsonDecode(response.body)));
+    }
+  }
+
+  Future<void> adminDeleteService(String id) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/services/$id'),
+      headers: await _getAuthHeaders(),
+    );
+
+    if (response.statusCode != 204 && response.statusCode != 200) {
+      // 204 No Content is typical for delete, but sometimes 200
+      throw Exception(_getErrorMessage(jsonDecode(response.body)));
+    }
+  }
+
 }
