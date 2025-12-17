@@ -131,15 +131,8 @@ class _StaffPerformanceScreenState extends State<StaffPerformanceScreen> {
   @override
   Widget build(BuildContext context) {
     // 0. Check Premium Locked
-    final auth = Provider.of<AuthProvider>(context);
+    final auth = Provider.of<AuthProvider>(context, listen: false);
     final isPremium = auth.user?.isPremium ?? false;
-
-    // Auto-fetch if we just became premium and have no data (and no error)
-    if (isPremium && _staffList.isEmpty && _error == null && !_isLoading) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _fetchData();
-      });
-    }
 
     if (!isPremium) {
        return Scaffold(
@@ -230,16 +223,47 @@ class _StaffPerformanceScreenState extends State<StaffPerformanceScreen> {
 
     if (_staffList.isEmpty) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.people_outline_rounded, size: 48, color: Colors.grey),
-            const SizedBox(height: 16),
-            Text(
-              'Belum ada data staff',
-              style: AppTheme.sectionTitle.copyWith(color: AppTheme.textSecondary),
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryRed.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.people_outline_rounded,
+                  size: 64,
+                  color: AppTheme.primaryRed,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Belum Ada Data Kinerja',
+                style: AppTheme.sectionTitle.copyWith(fontSize: 18),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Anda belum memiliki staff atau belum ada aktivitas.\nTambahkan staff di menu Kelola Staff untuk melihat kinerja mereka.',
+                style: AppTheme.staffRole.copyWith(height: 1.5),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              OutlinedButton.icon(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.arrow_back),
+                label: const Text('Kembali'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppTheme.primaryRed,
+                  side: const BorderSide(color: AppTheme.primaryRed),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }

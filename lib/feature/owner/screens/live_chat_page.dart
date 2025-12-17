@@ -1,7 +1,12 @@
+import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
 import 'package:bengkel_online_flutter/core/theme/app_colors.dart';
+import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
 
 class LiveChatPage extends StatefulWidget {
   const LiveChatPage({super.key});
@@ -14,52 +19,280 @@ class _LiveChatPageState extends State<LiveChatPage> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final List<ChatMessage> _messages = [];
+  
+  Timer? _pollingTimer;
+  bool _isLoading = true;
+  bool _isSending = false;
+  String? _errorMessage;
+  DateTime? _lastMessageTime;
+  String? _roomId;
 
   @override
   void initState() {
     super.initState();
-    // Welcome message from support
-    _messages.add(ChatMessage(
-      text: "Halo! Selamat datang di BBI Hub Support. Ada yang bisa kami bantu?",
-      isUser: false,
-      timestamp: DateTime.now(),
-    ));
+    _initializeChat();
   }
 
-  @override
-  void dispose() {
-    _messageController.dispose();
-    _scrollController.dispose();
-    super.dispose();
+  Future<void> _initializeChat() async {
+    final auth = context.read<AuthProvider>();
+    final user = auth.user;
+    
+    if (user == null) {
+      setState(() {
+        _errorMessage = 'User not authenticated';
+        _isLoading = false;
+      });
+      return;
+    }
+
+    // Generate room ID based on user ID
+    _roomId = 'support_owner_${user.id}';
+    
+    // Load chat history
+    await _loadHistory();
+    
+    // Start polling for new messages every 3 seconds
+    _pollingTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      _pollNewMessages();
+    });
   }
 
-  void _sendMessage() {
-    if (_messageController.text.trim().isEmpty) return;
+  Future<void> _loadHistory() async {
+    try {
+      final auth = context.read<AuthProvider>();
+      final token = auth.token;
+      
+      if (token == null || _roomId == null) return;
+
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/v1/chat/history?room_id=$_roomId&limit=50'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final List messages = data['data'] ?? [];
+        
+        setState(() {
+          _messages.clear();
+          for (var msg in messages) {
+            _messages.add(ChatMessage.fromJson(msg));
+            _lastMessageTime = DateTime.parse(msg['created_at']);
+          }
+          _isLoading = false;
+        });
+        
+        _scrollToBottom();
+      } else {
+        debugPrint('❌ Load history failed: ${response.statusCode}');
+        debugPrint('Response: ${response.body}');
+        setState(() {
+          _errorMessage = 'Failed to load chat history (${response.statusCode})';
+          _isLoading = false;
+        });
+      }
+    } catch (e, stackTrace) {
+      debugPrint('❌ Load history exception: $e');
+      debugPrint('Stack: $stackTrace');
+      setState(() {
+        _errorMessage = 'Error: $e';
+        _isLoading = false;
+      });
+    }
+  }
+
+
+
+  bool _isAiTyping = false;
+
+
+
+  Future<void> _pollNewMessages() async {
+    if (_roomId == null || _lastMessageTime == null) return;
+
+    try {
+      final auth = context.read<AuthProvider>();
+      final token = auth.token;
+      
+      if (token == null) return;
+
+      final afterTime = _lastMessageTime!.toIso8601String();
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/v1/chat/messages?room_id=$_roomId&after=$afterTime'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final List newMessages = data['data'] ?? [];
+        
+        if (newMessages.isNotEmpty) {
+          setState(() {
+            bool hasAdminReply = false;
+            for (var msg in newMessages) {
+              final newMsg = ChatMessage.fromJson(msg);
+              // Check if message already exists (deduplication)
+              final exists = _messages.any((m) => m.id == newMsg.id);
+              if (!exists) {
+                _messages.add(newMsg);
+                _lastMessageTime = DateTime.parse(msg['created_at']);
+                if (!newMsg.isUser) hasAdminReply = true;
+              }
+            }
+            if (hasAdminReply) {
+                _isAiTyping = false;
+            }
+          });
+          
+          _scrollToBottom();
+        }
+      }
+    } catch (e) {
+      debugPrint('Polling error: $e');
+    }
+  }
+
+  Future<void> _sendMessage() async {
+    if (_messageController.text.trim().isEmpty || _isSending || _roomId == null) return;
+
+    final messageText = _messageController.text.trim();
+    _messageController.clear();
 
     setState(() {
-      _messages.add(ChatMessage(
-        text: _messageController.text.trim(),
-        isUser: true,
-        timestamp: DateTime.now(),
-      ));
+      _isSending = true;
+      _isAiTyping = true; // Show typing indicator immediately
     });
 
-    _messageController.clear();
-    _scrollToBottom();
+    try {
+      final auth = context.read<AuthProvider>();
+      final token = auth.token;
+      
+      if (token == null) return;
 
-    // Simulate support response
-    Future.delayed(const Duration(seconds: 1), () {
-      if (mounted) {
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:8000/api/v1/chat/send'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: json.encode({
+          'room_id': _roomId,
+          'message': messageText,
+        }),
+      );
+
+      if (response.statusCode == 201) {
+        final data = json.decode(response.body);
+        final newMessage = ChatMessage.fromJson(data['data']);
+        
         setState(() {
-          _messages.add(ChatMessage(
-            text: "Terima kasih atas pesan Anda. Tim support kami akan segera merespons.",
-            isUser: false,
-            timestamp: DateTime.now(),
-          ));
+          _messages.add(newMessage);
+          _lastMessageTime = newMessage.timestamp;
+          _isSending = false;
         });
+        
         _scrollToBottom();
+      } else {
+        debugPrint('❌ Send message failed: ${response.statusCode}');
+        debugPrint('Response body: ${response.body}');
+        
+        setState(() {
+          _isSending = false;
+          _isAiTyping = false;
+        });
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to send message (${response.statusCode})')),
+          );
+        }
       }
-    });
+    } catch (e, stackTrace) {
+      debugPrint('❌ Send message exception: $e');
+      debugPrint('Stack: $stackTrace');
+      
+      setState(() {
+        _isSending = false;
+        _isAiTyping = false;
+      });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _confirmClearChat() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Hapus Chat?'),
+        content: const Text('Semua riwayat chat akan dihapus permanen. Lanjutkan?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.primaryRed),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      _clearChat();
+    }
+  }
+
+  Future<void> _clearChat() async {
+     try {
+      final auth = context.read<AuthProvider>();
+      final token = auth.token;
+      
+      if (token == null || _roomId == null) return;
+
+      setState(() => _isLoading = true);
+
+      final response = await http.delete(
+        Uri.parse('http://10.0.2.2:8000/api/v1/chat/history'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: json.encode({'room_id': _roomId}),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _messages.clear();
+          _isLoading = false;
+        });
+        if (mounted) {
+             ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Riwayat chat berhasil dihapus')),
+             );
+        }
+      } else {
+        setState(() => _isLoading = false);
+        debugPrint('❌ Clear chat failed: ${response.statusCode}');
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      debugPrint('❌ Clear chat error: $e');
+    }
   }
 
   void _scrollToBottom() {
@@ -75,7 +308,69 @@ class _LiveChatPageState extends State<LiveChatPage> {
   }
 
   @override
+  void dispose() {
+    _pollingTimer?.cancel();
+    _messageController.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  Widget _buildQuickQuestionChip(String text) {
+    return ActionChip(
+      label: Text(
+        text,
+        style: GoogleFonts.poppins(
+          fontSize: 12,
+          color: AppColors.primaryRed,
+        ),
+      ),
+      backgroundColor: Colors.white,
+      side: BorderSide(color: AppColors.primaryRed.withOpacity(0.5)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      onPressed: () {
+        if (!_isSending) {
+            _messageController.text = text;
+            _sendMessage();
+        }
+      },
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: AppColors.backgroundLight,
+        appBar: AppBar(
+          backgroundColor: AppColors.primaryRed,
+          title: const Text('Live Chat'),
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Scaffold(
+        backgroundColor: AppColors.backgroundLight,
+        appBar: AppBar(
+          backgroundColor: AppColors.primaryRed,
+          title: const Text('Live Chat'),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, size: 64, color: AppColors.error),
+              const SizedBox(height: 16),
+              Text(_errorMessage!, style: const TextStyle(fontSize: 16)),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
@@ -123,11 +418,25 @@ class _LiveChatPageState extends State<LiveChatPage> {
           ],
         ),
         actions: [
-          IconButton(
+          PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert, color: Colors.white),
-            onPressed: () {
-              // Show options
+            onSelected: (value) {
+              if (value == 'clear_chat') {
+                _confirmClearChat();
+              }
             },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'clear_chat',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete_outline, color: Colors.red),
+                    SizedBox(width: 8),
+                    Text('Hapus Chat'),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -163,10 +472,32 @@ class _LiveChatPageState extends State<LiveChatPage> {
             child: ListView.builder(
               controller: _scrollController,
               padding: const EdgeInsets.all(16),
-              itemCount: _messages.length,
+              itemCount: _messages.length + (_isAiTyping ? 1 : 0),
               itemBuilder: (context, index) {
+                if (index == _messages.length) {
+                    return const _TypingIndicator();
+                }
                 return _ChatBubble(message: _messages[index]);
               },
+            ),
+          ),
+
+          // Quick Questions
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                _buildQuickQuestionChip('Apa itu BBI Hub?'),
+                const SizedBox(width: 8),
+                _buildQuickQuestionChip('Cara upgrade Member?'),
+                const SizedBox(width: 8),
+                _buildQuickQuestionChip('Lupa Password'),
+                const SizedBox(width: 8),
+                _buildQuickQuestionChip('Fitur BBI Hub Plus'),
+                const SizedBox(width: 8),
+                _buildQuickQuestionChip('Hubungi Admin'),
+              ],
             ),
           ),
 
@@ -189,12 +520,13 @@ class _LiveChatPageState extends State<LiveChatPage> {
                   IconButton(
                     icon: Icon(Icons.attach_file, color: AppColors.primaryRed),
                     onPressed: () {
-                      // Attach file
+                      // Attach file (future feature)
                     },
                   ),
                   Expanded(
                     child: TextField(
                       controller: _messageController,
+                      enabled: !_isSending,
                       decoration: InputDecoration(
                         hintText: 'Ketik pesan...',
                         hintStyle: GoogleFonts.poppins(
@@ -225,19 +557,92 @@ class _LiveChatPageState extends State<LiveChatPage> {
                   ),
                   const SizedBox(width: 8),
                   Container(
-                    decoration: const BoxDecoration(
-                      color: AppColors.primaryRed,
+                    decoration: BoxDecoration(
+                      color: _isSending 
+                          ? AppColors.primaryRed.withOpacity(0.5)
+                          : AppColors.primaryRed,
                       shape: BoxShape.circle,
                     ),
                     child: IconButton(
-                      icon: const Icon(Icons.send, color: Colors.white, size: 20),
-                      onPressed: _sendMessage,
+                      icon: _isSending
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                          : const Icon(Icons.send, color: Colors.white, size: 20),
+                      onPressed: _isSending ? null : _sendMessage,
                     ),
                   ),
                 ],
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TypingIndicator extends StatelessWidget {
+  const _TypingIndicator();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+            Container(
+              width: 32,
+              height: 32,
+              margin: const EdgeInsets.only(right: 8),
+              decoration: BoxDecoration(
+                color: AppColors.primaryRed,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.support_agent, color: Colors.white, size: 18),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppColors.backgroundWhite,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                  bottomLeft: Radius.circular(4),
+                  bottomRight: Radius.circular(20),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 5,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                   SizedBox(
+                       width: 12, height: 12,
+                       child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.textSecondary)
+                   ),
+                   const SizedBox(width: 8),
+                   Text(
+                     'Sedang mengetik...',
+                     style: GoogleFonts.poppins(
+                       color: AppColors.textSecondary,
+                       fontSize: 12,
+                       fontStyle: FontStyle.italic
+                     ),
+                   ),
+                ],
+              ),
+            ),
         ],
       ),
     );
@@ -319,13 +724,28 @@ class _ChatBubble extends StatelessWidget {
 }
 
 class ChatMessage {
+  final int id;
   final String text;
+  final String userName;
   final bool isUser;
   final DateTime timestamp;
 
   ChatMessage({
+    required this.id,
     required this.text,
+    required this.userName,
     required this.isUser,
     required this.timestamp,
   });
+
+  factory ChatMessage.fromJson(Map<String, dynamic> json) {
+    final userType = json['user_type'] ?? 'admin';
+    return ChatMessage(
+      id: json['id'],
+      text: json['message'],
+      userName: json['user_name'] ?? 'Unknown',
+      isUser: userType == 'owner',
+      timestamp: DateTime.parse(json['created_at']).toLocal(),
+    );
+  }
 }
