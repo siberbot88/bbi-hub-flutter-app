@@ -10,6 +10,7 @@ import 'package:bengkel_online_flutter/feature/owner/screens/help_support_page.d
 import 'package:bengkel_online_flutter/feature/owner/screens/edit_user_screen.dart';
 import 'package:bengkel_online_flutter/features/membership/presentation/premium_membership_screen.dart';
 import 'package:bengkel_online_flutter/features/membership/presentation/membership_selection_screen.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/live_chat_page.dart';
 
 import 'profile_animations.dart';
 import 'profile_menu_item.dart';
@@ -113,11 +114,30 @@ class ProfileMenuCard extends StatelessWidget {
                     },
                   ),
                   const ProfileSoftDivider(),
+                  
+                  // Live Chat
+                   _buildAnimatedItem(
+                    context,
+                    index: 3,
+                    icon: Icons.chat_bubble_outline_rounded,
+                    title: "Live Chat",
+                    iconSize: itemIconSize,
+                    fontSize: itemFontSize,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const LiveChatPage(),
+                        ),
+                      );
+                    },
+                  ),
+                  const ProfileSoftDivider(),
 
                   // Bantuan & Dukungan
                   _buildAnimatedItem(
                     context,
-                    index: 3,
+                    index: 4,
                     iconPath: "assets/icons/help.svg",
                     title: "Bantuan & Dukungan",
                     iconSize: itemIconSize,
