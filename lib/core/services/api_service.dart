@@ -1211,4 +1211,66 @@ class ApiService {
     }
   }
 
+
+
+  /* ====================== NOTIFICATIONS ====================== */
+
+  Future<Map<String, dynamic>> fetchNotifications({int page = 1}) async {
+    try {
+      final uri = Uri.parse('${_baseUrl}notifications?page=$page');
+      final headers = await _getAuthHeaders();
+
+      _debugRequest('FETCH_NOTIFICATIONS', uri, headers, null);
+      final res = await http.get(uri, headers: headers);
+      _debugResponse('FETCH_NOTIFICATIONS', res);
+
+      if (res.statusCode == 200 && _isJsonResponse(res)) {
+        final j = _tryDecodeJson(res.body);
+        if (j is Map<String, dynamic>) {
+          return j; 
+        }
+      }
+      throw Exception('Gagal mengambil notifikasi (HTTP ${res.statusCode})');
+    } catch (e) {
+      throw Exception('Gagal mengambil notifikasi: ${e.toString()}');
+    }
+  }
+
+  Future<int> getUnreadNotificationCount() async {
+    try {
+      final uri = Uri.parse('${_baseUrl}notifications/unread-count');
+      final headers = await _getAuthHeaders();
+
+      final res = await http.get(uri, headers: headers);
+      
+      if (res.statusCode == 200) {
+        final j = _tryDecodeJson(res.body);
+        if (j is Map<String, dynamic> && j['data'] is Map) {
+          return j['data']['count'] ?? 0;
+        }
+      }
+      return 0;
+    } catch (e) {
+      return 0; 
+    }
+  }
+
+  Future<void> markNotificationRead(String id) async {
+    try {
+      final uri = Uri.parse('${_baseUrl}notifications/mark-read');
+      final headers = await _getAuthHeaders();
+      final body = jsonEncode({'id': id});
+
+      _debugRequest('MARK_READ', uri, headers, body);
+      final res = await http.post(uri, headers: headers, body: body);
+      _debugResponse('MARK_READ', res);
+
+      if (res.statusCode != 200) {
+        throw Exception('Gagal mengubah status notifikasi');
+      }
+    } catch (e) {
+      throw Exception('Gagal mark read: ${e.toString()}');
+    }
+  }
+
 }

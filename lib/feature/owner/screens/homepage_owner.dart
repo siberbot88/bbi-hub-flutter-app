@@ -15,6 +15,7 @@ import 'package:bengkel_online_flutter/features/membership/presentation/premium_
 import 'package:bengkel_online_flutter/features/membership/presentation/membership_selection_screen.dart';
 import 'package:bengkel_online_flutter/core/widgets/trial_offer_banner.dart';
 import 'package:bengkel_online_flutter/core/services/api_service.dart';
+import 'package:bengkel_online_flutter/feature/owner/widgets/notification_badge.dart';
 
 const Color primaryRed = Color(0xFFB70F0F);
 const Color gradientRedStart = Color(0xFF9B0D0D);
@@ -111,6 +112,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           'assets/image/marquez.png',
                           height: 359,
                         ),
+                      ),
+                      const Positioned(
+                         right: 20,
+                         top: 60, // Adjust based on SafeArea/AppBar height
+                         child: NotificationBadge(),
                       ),
                       SafeArea(
                         child: Padding(

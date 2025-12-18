@@ -42,6 +42,9 @@ import 'package:bengkel_online_flutter/feature/owner/screens/list_voucher_page.d
 
 
 
+import 'package:bengkel_online_flutter/core/services/notification_provider.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/notification_page.dart';
+
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
@@ -57,6 +60,10 @@ void main() async {
         ChangeNotifierProvider(create: (_) => EmployeeProvider()),
         ChangeNotifierProvider(create: (_) => ServiceProvider()),
         ChangeNotifierProvider(create: (_) => AdminServiceProvider()),
+        ChangeNotifierProxyProvider<AuthProvider, NotificationProvider>(
+          create: (context) => NotificationProvider(context.read<AuthProvider>()),
+          update: (context, auth, previous) => NotificationProvider(auth),
+        ),
       ],
       child: const MyApp(),
     ),
@@ -161,6 +168,7 @@ class _MyAppState extends State<MyApp> {
         "/voucher/list": (context) => const ListVoucherPage(),
         "/forgot-password": (context) => const forgot_pass.ForgotPasswordPage(),
         "/reset-password": (context) => const reset_pass.ResetPasswordPage(),
+        "/notifications": (context) => const NotificationPage(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/list') {
