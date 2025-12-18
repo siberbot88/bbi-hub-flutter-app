@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class LoggingSummaryBoxes extends StatelessWidget {
+  final int pending;
+  final int inProgress;
+  final int completed;
+  final int lunas;
   final int declined;
 
   const LoggingSummaryBoxes({
@@ -58,7 +62,6 @@ class LoggingSummaryBoxes extends StatelessWidget {
                     fontSize: 12, fontWeight: FontWeight.w600, color: color)),
           ],
         ),
-      ),
-    );
+      );
   }
 }

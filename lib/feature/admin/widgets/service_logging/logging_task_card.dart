@@ -90,8 +90,8 @@ class LoggingTaskCard extends StatelessWidget {
            Navigator.push(
               context,
               MaterialPageRoute(
-                // Change destination to PaymentInvoicePage as requested
-                builder: (_) => const invoice.InvoiceServiceList(), 
+                // Change destination to PaymentInvoicePage as requested or placeholder
+                builder: (_) => const invoice.PaymentInvoicePage(), 
               ));
         },
         style: ElevatedButton.styleFrom(

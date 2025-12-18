@@ -19,19 +19,28 @@ class ServiceTabSelector extends StatelessWidget {
         children: [
           Expanded(
             child: _buildTab(
-              label: 'Scheduled',
+              label: 'Penjadwalan',
               icon: Icons.calendar_today,
               isSelected: selectedTab == 0,
               onTap: () => onTabChanged(0),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
           Expanded(
             child: _buildTab(
-              label: 'Logging',
-              icon: Icons.show_chart,
+              label: 'On-the-site',
+              icon: Icons.build,
               isSelected: selectedTab == 1,
               onTap: () => onTabChanged(1),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _buildTab(
+              label: 'Pencatatan',
+              icon: Icons.show_chart,
+              isSelected: selectedTab == 2,
+              onTap: () => onTabChanged(2),
             ),
           ),
         ],

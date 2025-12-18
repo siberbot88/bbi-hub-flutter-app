@@ -370,4 +370,12 @@ class ServiceProvider extends ChangeNotifier {
     }
     return fallback;
   }
+
+  /// Helper untuk menambah item ke list local (dari subclass / UI optimis)
+  /// Ditandai @protected agar digunakan hati-hati.
+  @protected
+  void addLocalItem(ServiceModel item) {
+    _items.insert(0, item);
+    notifyListeners();
+  }
 }

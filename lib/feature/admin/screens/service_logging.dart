@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -162,6 +163,30 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 8),
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.blue.shade200),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Pencatatan menampilkan semua order yang sudah diterima:",
+                  style: GoogleFonts.poppins(
+                      fontSize: 13, fontWeight: FontWeight.w600, color: Colors.blue.shade900),
+                ),
+                const SizedBox(height: 4),
+                _bulletPoint("Booking yang diterima"),
+                _bulletPoint("Walk-in (otomatis diterima)"),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
           LoggingSummaryBoxes(
             pending: pending,
             inProgress: inProgress,
@@ -284,4 +309,14 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
         selectedDay = 1;
         _fetchData();
       });
+
+  Widget _bulletPoint(String text) {
+    return Row(
+      children: [
+        const Icon(Icons.circle, size: 6, color: Colors.blue),
+        const SizedBox(width: 8),
+        Text(text, style: GoogleFonts.poppins(fontSize: 12, color: Colors.black87)),
+      ],
+    );
+  }
 }

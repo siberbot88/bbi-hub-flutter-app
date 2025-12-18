@@ -1192,7 +1192,7 @@ class ApiService {
       final uri = Uri.parse('${_baseUrl}admins/services');
       final headers = await _getAuthHeaders();
       
-      final bodyMap = {
+      final bodyMap = <String, dynamic>{
         'workshop_uuid': workshopUuid,
         'name': name,
         'scheduled_date': scheduledDate.toIso8601String(),

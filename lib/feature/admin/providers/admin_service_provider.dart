@@ -207,8 +207,8 @@ class AdminServiceProvider extends ServiceProvider {
       );
       
       // Update local list
-      _items.insert(0, created);
-      notifyListeners();
+      addLocalItem(created);
+      // notifyListeners() is called inside addLocalItem
       
       return created;
     } catch (e) {

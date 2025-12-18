@@ -5,6 +5,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 
 import 'service_logging.dart';
+import 'service_on_the_site.dart';
 import '../widgets/custom_header.dart';
 import '../widgets/service/service_tab_selector.dart';
 import '../widgets/service/service_calendar_section.dart';
@@ -104,6 +105,7 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
               index: selectedTab,
               children: [
                 _buildScheduledTab(provider),
+                const ServiceOnTheSitePage(),
                 const ServiceLoggingPage(),
               ],
             ),
