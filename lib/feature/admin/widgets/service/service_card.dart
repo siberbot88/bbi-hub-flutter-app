@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../reject_dialog.dart';
 import '../accept_dialog.dart';
 import '../../screens/service_detail.dart';
@@ -10,10 +12,15 @@ import 'service_helpers.dart';
 import 'package:provider/provider.dart';
 import 'package:bengkel_online_flutter/feature/admin/providers/admin_service_provider.dart';
 import 'package:bengkel_online_flutter/core/models/service.dart';
+import 'package:provider/provider.dart';
+import 'package:bengkel_online_flutter/feature/admin/providers/admin_service_provider.dart';
+import 'package:bengkel_online_flutter/core/models/service.dart';
 
 class ServiceCard extends StatelessWidget {
   final ServiceModel service;
+  final ServiceModel service;
 
+  const ServiceCard({super.key, required this.service});
   const ServiceCard({super.key, required this.service});
 
   @override
@@ -57,12 +64,23 @@ class ServiceCard extends StatelessWidget {
                   _getInitials(customerName),
                   style: AppTextStyles.labelBold(color: AppColors.primaryRed),
                 ),
+                radius: 20,
+                backgroundColor: AppColors.primaryRed.withValues(alpha: 0.1),
+                child: Text(
+                  _getInitials(customerName),
+                  style: AppTextStyles.labelBold(color: AppColors.primaryRed),
+                ),
               ),
+              const SizedBox(width: 12),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Text(customerName,
+                        style: AppTextStyles.labelBold()),
+                    Text("ID: $id",
+                        style: AppTextStyles.caption()),
                     Text(customerName,
                         style: AppTextStyles.labelBold()),
                     Text("ID: $id",
@@ -73,6 +91,19 @@ class ServiceCard extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
+                  Text(ServiceHelpers.formatDate(scheduledDate),
+                      style: AppTextStyles.caption(color: AppColors.textPrimary)),
+                  // Jika mau menampilkan info scheduled spesifik
+                  Container(
+                    margin: const EdgeInsets.only(top: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.statusPending.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text("Scheduled",
+                        style: AppTextStyles.caption(color: AppColors.statusPending).copyWith(fontSize: 10, fontWeight: FontWeight.bold)),
+                  ),
                   Text(ServiceHelpers.formatDate(scheduledDate),
                       style: AppTextStyles.caption(color: AppColors.textPrimary)),
                   // Jika mau menampilkan info scheduled spesifik
@@ -97,6 +128,8 @@ class ServiceCard extends StatelessWidget {
                 child: Text(
                   serviceName,
                   style: AppTextStyles.heading5(),
+                  serviceName,
+                  style: AppTextStyles.heading5(),
                 ),
               ),
               Container(
@@ -105,9 +138,13 @@ class ServiceCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: _getVehicleBgColor(category)
                       .withValues(alpha: 0.2), 
+                  color: _getVehicleBgColor(category)
+                      .withValues(alpha: 0.2), 
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
+                  category,
+                  style: AppTextStyles.caption(color: _getVehicleTextColor(category)).copyWith(fontWeight: FontWeight.w600),
                   category,
                   style: AppTextStyles.caption(color: _getVehicleTextColor(category)).copyWith(fontWeight: FontWeight.w600),
                 ),
@@ -124,6 +161,9 @@ class ServiceCard extends StatelessWidget {
                 children: [
                   Text("Plat Nomor",
                       style:
+                          AppTextStyles.caption()),
+                  Text(plate,
+                      style: AppTextStyles.bodyMedium(color: AppColors.textPrimary).copyWith(fontWeight: FontWeight.w600)),
                           AppTextStyles.caption()),
                   Text(plate,
                       style: AppTextStyles.bodyMedium(color: AppColors.textPrimary).copyWith(fontWeight: FontWeight.w600)),
@@ -225,12 +265,16 @@ class ServiceCard extends StatelessWidget {
                           AppTextStyles.caption()),
                   Text(vehicleName,
                       style: AppTextStyles.bodyMedium().copyWith(fontWeight: FontWeight.bold)),
+                          AppTextStyles.caption()),
+                  Text(vehicleName,
+                      style: AppTextStyles.bodyMedium().copyWith(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
                   ElevatedButton(
                     onPressed: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
+                            builder: (_) => ServiceDetailPage(service: service)),
                             builder: (_) => ServiceDetailPage(service: service)),
                       );
                     },
@@ -241,6 +285,7 @@ class ServiceCard extends StatelessWidget {
                     ),
                     child: Text(
                       "Detail",
+                      style: AppTextStyles.buttonSmall(color: Colors.white),
                       style: AppTextStyles.buttonSmall(color: Colors.white),
                     ),
                   ),

@@ -9,11 +9,11 @@ class PremiumLimitDialog extends StatelessWidget {
   final VoidCallback? onUpgrade;
 
   const PremiumLimitDialog({
-    Key? key,
+    super.key,
     this.title = 'Batas Akses Tercapai',
     this.message = 'Anda telah mencapai batas maksimal fitur paket Gratis. Upgrade ke Premium untuk akses tanpa batas!',
     this.onUpgrade,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

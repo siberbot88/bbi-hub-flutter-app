@@ -4,6 +4,11 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 
+import 'package:provider/provider.dart';
+
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
+
 import 'service_logging.dart';
 import 'service_on_the_site.dart';
 import '../widgets/custom_header.dart';
@@ -103,7 +108,10 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
   Widget build(BuildContext context) {
     final provider = context.watch<AdminServiceProvider>();
 
+    final provider = context.watch<AdminServiceProvider>();
+
     return Scaffold(
+      backgroundColor: AppColors.backgroundLight,
       backgroundColor: AppColors.backgroundLight,
       appBar: const CustomHeader(
         title: "Service",
@@ -180,6 +188,7 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
 
 
     return SingleChildScrollView(
+      padding:  const EdgeInsets.only(bottom: 80),
       padding:  const EdgeInsets.only(bottom: 80),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

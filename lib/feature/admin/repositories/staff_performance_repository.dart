@@ -11,27 +11,44 @@ class StaffPerformanceRepository {
     final token = await _storage.read(key: 'auth_token');
 
     if (token == null) {
-      throw Exception('Unauthorized');
+      throw Exception('Unauthorized - Please login again');
     }
 
-    final response = await http.get(
-      Uri.parse('$baseUrl/owners/staff/performance?range=$range'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Accept': 'application/json',
-      },
-    );
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/owners/staff/performance?range=$range'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          throw Exception('Request timeout - Server tidak merespons');
+        },
+      );
 
-    if (response.statusCode == 200) {
-      final jsonResponse = json.decode(response.body);
-      if (jsonResponse['success'] == true) {
-        final List<dynamic> data = jsonResponse['data'];
-        return data.map((json) => StaffPerformance.fromJson(json)).toList();
+      print('Staff Performance Response: ${response.statusCode}');
+      print('Staff Performance Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        if (jsonResponse['success'] == true) {
+          final List<dynamic> data = jsonResponse['data'];
+          return data.map((json) => StaffPerformance.fromJson(json)).toList();
+        } else {
+          throw Exception(jsonResponse['message'] ?? 'Failed to load staff performance');
+        }
+      } else if (response.statusCode == 403) {
+        throw Exception('Fitur ini memerlukan paket Premium');
+      } else if (response.statusCode == 401) {
+        throw Exception('Unauthorized - Please login again');
       } else {
-        throw Exception(jsonResponse['message'] ?? 'Failed to load staff performance');
+        throw Exception('Failed to load: ${response.statusCode}');
       }
-    } else {
-      throw Exception('Failed to load staff performance: ${response.statusCode}');
+    } catch (e) {
+      print('Staff Performance Error: $e');
+      rethrow;
     }
   }
 }

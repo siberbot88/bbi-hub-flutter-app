@@ -3,11 +3,14 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/models/staff_performance.dart';
 // import 'dart:math' as math; // Unused
 import '../../admin/repositories/staff_performance_repository.dart'; // Point to existing repo
+import 'package:provider/provider.dart';
+import '../../../core/services/auth_provider.dart';
+import '../../../core/widgets/premium_feature_lock.dart';
 
 // --- App Theme Constants (Local for portability) ---
 class AppTheme {
-  static const Color primaryRed = Color(0xFFE53935);
-  static const Color primaryRedDark = Color(0xFFD32F2F); 
+  static const Color primaryRed = Color(0xFFB70F0F); // Darker red to match Staff Management
+  static const Color primaryRedDark = Color(0xFF9B0D0D); // Even darker for gradient 
   static const Color background = Color(0xFFF5F5F5);
   static const Color cardColor = Colors.white;
   static const Color textPrimary = Color(0xFF212121);
@@ -30,7 +33,7 @@ class AppTheme {
   static TextStyle get headingSubtitle => GoogleFonts.poppins(
     fontSize: 14,
     fontWeight: FontWeight.w500,
-    color: Colors.white.withOpacity(0.9),
+    color: Colors.white.withValues(alpha: 0.9),
   );
 
   static TextStyle get sectionTitle => GoogleFonts.poppins(
@@ -123,18 +126,30 @@ class _StaffPerformanceScreenState extends State<StaffPerformanceScreen> {
     }
   }
 
-  // Reload when tab changes
-  void _onRangeChanged(DateRange range) {
-    if (_selectedRange != range) {
-      setState(() {
-        _selectedRange = range;
-      });
-      _fetchData();
-    }
-  }
+
 
   @override
   Widget build(BuildContext context) {
+    // 0. Check Premium Locked
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final isPremium = auth.user?.isPremium ?? false;
+
+    if (!isPremium) {
+       return Scaffold(
+         backgroundColor: AppTheme.background,
+         appBar: AppBar(
+            title: Text('Kinerja Staff', style: AppTheme.headingTitle.copyWith(fontSize: 20)),
+             backgroundColor: AppTheme.primaryRed,
+             elevation: 0,
+         ),
+         body: const PremiumFeatureLock(
+           featureName: 'Kinerja Staff',
+           featureDescription: 'Pantau performa mekanik, jumlah pekerjaan, dan estimasi pendapatan mereka secara real-time.',
+           child: Center(child: Icon(Icons.people_outline, size: 80, color: Colors.black12)),
+         ),
+       );
+    }
+
     return Scaffold(
       backgroundColor: AppTheme.primaryRed, 
       body: SafeArea(
@@ -167,7 +182,6 @@ class _StaffPerformanceScreenState extends State<StaffPerformanceScreen> {
           ],
         ),
       ),
-
     );
   }
 
@@ -209,16 +223,47 @@ class _StaffPerformanceScreenState extends State<StaffPerformanceScreen> {
 
     if (_staffList.isEmpty) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.people_outline_rounded, size: 48, color: Colors.grey),
-            const SizedBox(height: 16),
-            Text(
-              'Belum ada data staff',
-              style: AppTheme.sectionTitle.copyWith(color: AppTheme.textSecondary),
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryRed.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.people_outline_rounded,
+                  size: 64,
+                  color: AppTheme.primaryRed,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Belum Ada Data Kinerja',
+                style: AppTheme.sectionTitle.copyWith(fontSize: 18),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Anda belum memiliki staff atau belum ada aktivitas.\nTambahkan staff di menu Kelola Staff untuk melihat kinerja mereka.',
+                style: AppTheme.staffRole.copyWith(height: 1.5),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              OutlinedButton.icon(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.arrow_back),
+                label: const Text('Kembali'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppTheme.primaryRed,
+                  side: const BorderSide(color: AppTheme.primaryRed),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -238,7 +283,7 @@ class _StaffPerformanceScreenState extends State<StaffPerformanceScreen> {
           ..._staffList.map((staff) => Padding(
             padding: const EdgeInsets.only(bottom: 16.0),
             child: StaffPerformanceCard(staff: staff),
-          )).toList(),
+          )),
         ],
       ),
     );
@@ -286,7 +331,7 @@ class _StaffPerformanceScreenState extends State<StaffPerformanceScreen> {
             height: 48,
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.2), // Dark transparent background
+              color: Colors.black.withValues(alpha: 0.2), // Dark transparent background
               borderRadius: BorderRadius.circular(24),
             ),
             child: Row(
@@ -338,7 +383,7 @@ class _StaffPerformanceScreenState extends State<StaffPerformanceScreen> {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.15),
+          color: Colors.white.withValues(alpha: 0.15),
           shape: BoxShape.circle,
         ),
         child: Icon(icon, color: Colors.white, size: 24),
@@ -359,7 +404,7 @@ class _StaffPerformanceScreenState extends State<StaffPerformanceScreen> {
             borderRadius: BorderRadius.circular(20),
             boxShadow: isSelected ? [
               BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 4,
               offset: const Offset(0, 2),
               ) 
@@ -368,7 +413,7 @@ class _StaffPerformanceScreenState extends State<StaffPerformanceScreen> {
           child: Text(
             label,
             style: GoogleFonts.poppins(
-              color: isSelected ? AppTheme.primaryRed : Colors.white.withOpacity(0.8),
+              color: isSelected ? AppTheme.primaryRed : Colors.white.withValues(alpha: 0.8),
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               fontSize: 14,
             ),
@@ -386,7 +431,7 @@ enum DateRange { today, week, month }
 class StaffPerformanceCard extends StatelessWidget {
   final StaffPerformance staff;
 
-  const StaffPerformanceCard({Key? key, required this.staff}) : super(key: key);
+  const StaffPerformanceCard({super.key, required this.staff});
 
   @override
   Widget build(BuildContext context) {
@@ -396,7 +441,7 @@ class StaffPerformanceCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             offset: const Offset(0, 4),
             blurRadius: 15,
           ),
@@ -529,7 +574,7 @@ class StaffPerformanceCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: textColor.withOpacity(0.1)),
+          border: Border.all(color: textColor.withValues(alpha: 0.1)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

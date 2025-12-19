@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/models/staff_performance.dart';
-import 'dart:math' as math;
+import '../repositories/staff_performance_repository.dart';
+
+// --- Date Range Enum ---
+enum DateRange { today, week, month }
 
 // --- App Theme Constants (Local for portability) ---
 class AppTheme {
@@ -29,7 +32,7 @@ class AppTheme {
   static TextStyle get headingSubtitle => GoogleFonts.poppins(
     fontSize: 14,
     fontWeight: FontWeight.w500,
-    color: Colors.white.withOpacity(0.9),
+    color: Colors.white.withValues(alpha: 0.9),
   );
 
   static TextStyle get sectionTitle => GoogleFonts.poppins(
@@ -76,10 +79,8 @@ class AppTheme {
   );
 }
 
-import '../../repositories/staff_performance_repository.dart';
-
 class StaffPerformanceScreen extends StatefulWidget {
-  const StaffPerformanceScreen({Key? key}) : super(key: key);
+  const StaffPerformanceScreen({super.key});
 
   @override
   State<StaffPerformanceScreen> createState() => _StaffPerformanceScreenState();
@@ -123,6 +124,7 @@ class _StaffPerformanceScreenState extends State<StaffPerformanceScreen> {
       }
     }
   }
+
 
   // Reload when tab changes
   void _onRangeChanged(DateRange range) {
@@ -244,7 +246,7 @@ class _StaffPerformanceScreenState extends State<StaffPerformanceScreen> {
           ..._staffList.map((staff) => Padding(
             padding: const EdgeInsets.only(bottom: 16.0),
             child: StaffPerformanceCard(staff: staff),
-          )).toList(),
+          )),
         ],
       ),
     );
@@ -296,7 +298,7 @@ class _StaffPerformanceScreenState extends State<StaffPerformanceScreen> {
             height: 48,
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.2), // Dark transparent background
+              color: Colors.black.withValues(alpha: 0.2), // Dark transparent background
               borderRadius: BorderRadius.circular(24),
             ),
             child: Row(
@@ -320,7 +322,7 @@ class _StaffPerformanceScreenState extends State<StaffPerformanceScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Overview Tim', style: AppTheme.sectionTitle),
-            Text('${_staffList.length} Staff Aktif', style: AppTheme.textSecondary.hasColor ? GoogleFonts.poppins(color: AppTheme.textSecondary) : null),
+            Text('${_staffList.length} Staff Aktif', style: GoogleFonts.poppins(color: AppTheme.textSecondary)),
           ],
         ),
         TextButton.icon(
@@ -347,7 +349,7 @@ class _StaffPerformanceScreenState extends State<StaffPerformanceScreen> {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.15),
+          color: Colors.white.withValues(alpha: 0.15),
           shape: BoxShape.circle,
         ),
         child: Icon(icon, color: Colors.white, size: 24),
@@ -368,7 +370,7 @@ class _StaffPerformanceScreenState extends State<StaffPerformanceScreen> {
             borderRadius: BorderRadius.circular(20),
             boxShadow: isSelected ? [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ) 
@@ -377,7 +379,7 @@ class _StaffPerformanceScreenState extends State<StaffPerformanceScreen> {
           child: Text(
             label,
             style: GoogleFonts.poppins(
-              color: isSelected ? AppTheme.primaryRed : Colors.white.withOpacity(0.8),
+              color: isSelected ? AppTheme.primaryRed : Colors.white.withValues(alpha: 0.8),
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               fontSize: 14,
             ),
@@ -391,7 +393,7 @@ class _StaffPerformanceScreenState extends State<StaffPerformanceScreen> {
 class StaffPerformanceCard extends StatelessWidget {
   final StaffPerformance staff;
 
-  const StaffPerformanceCard({Key? key, required this.staff}) : super(key: key);
+  const StaffPerformanceCard({super.key, required this.staff});
 
   String _getInitials(String name) {
     if (name.isEmpty) return "?";
@@ -409,7 +411,7 @@ class StaffPerformanceCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             offset: const Offset(0, 4),
             blurRadius: 15,
           ),
@@ -543,7 +545,7 @@ class StaffPerformanceCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: textColor.withOpacity(0.1)),
+          border: Border.all(color: textColor.withValues(alpha: 0.1)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

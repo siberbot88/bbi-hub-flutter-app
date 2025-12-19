@@ -15,6 +15,7 @@ import 'package:bengkel_online_flutter/core/models/dashboard_stats.dart';
 
 class ApiService {
   static const String _baseUrl = 'http://10.0.2.2:8000/api/v1/';
+  String get baseUrl => _baseUrl; // Added public getter
   final _storage = const FlutterSecureStorage();
 
   /* ===================== Common helpers ===================== */
@@ -323,7 +324,15 @@ class ApiService {
     required String closingTime,
     required String operationalDays,
     required bool isActive,
-    required String information,
+    String? description,
+    String? address,
+    String? phone,
+    String? email,
+    String? mapsUrl,
+    String? city,
+    String? province,
+    String? country,
+    String? postalCode,
   }) async {
     try {
       final uri = Uri.parse('${_baseUrl}owners/workshops/$id');
@@ -331,6 +340,7 @@ class ApiService {
       if (token == null) throw Exception('Token not found');
 
       final request = http.MultipartRequest('POST', uri);
+
 
       // Method spoofing untuk Laravel
       request.fields['_method'] = 'PUT';
@@ -345,7 +355,16 @@ class ApiService {
       request.fields['closing_time'] = closingTime;
       request.fields['operational_days'] = operationalDays;
       request.fields['is_active'] = isActive ? '1' : '0';
-      request.fields['information'] = information;
+      
+      if (description != null) request.fields['description'] = description;
+      if (address != null) request.fields['address'] = address;
+      if (phone != null) request.fields['phone'] = phone;
+      if (email != null) request.fields['email'] = email;
+      if (mapsUrl != null) request.fields['maps_url'] = mapsUrl;
+      if (city != null) request.fields['city'] = city;
+      if (province != null) request.fields['province'] = province;
+      if (country != null) request.fields['country'] = country;
+      if (postalCode != null) request.fields['postal_code'] = postalCode;
 
       if (photo != null) {
         request.files.add(await http.MultipartFile.fromPath(
@@ -358,6 +377,7 @@ class ApiService {
 
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
+
 
       _debugResponse('UPDATE_WORKSHOP', response);
 
@@ -511,6 +531,7 @@ class ApiService {
       if (decoded is Map<String, dynamic>) {
         final dataWrapper = decoded['data'];
 
+
         // Case 1: Pagination wrapper
         if (dataWrapper is Map<String, dynamic> && dataWrapper.containsKey('data')) {
           final list = dataWrapper['data'];
@@ -521,6 +542,7 @@ class ApiService {
                 .toList();
           }
         }
+
 
         // Case 2: Direct list (fallback)
         if (dataWrapper is List) {

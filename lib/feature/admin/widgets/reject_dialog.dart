@@ -140,6 +140,12 @@ void showConfirmRejectDialog(
   String reason,
   String description,
 ) {
+void showConfirmRejectDialog(
+  BuildContext context,
+  Function(String, String) onConfirm,
+  String reason,
+  String description,
+) {
   showDialog(
     context: context,
     builder: (context) {
@@ -177,6 +183,7 @@ void showConfirmRejectDialog(
                     child: ElevatedButton(
                       onPressed: () {
                         Navigator.pop(context); // close confirm dialog
+                        onConfirm(reason, description);
                         onConfirm(reason, description);
                       },
                       style: ElevatedButton.styleFrom(

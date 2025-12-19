@@ -15,6 +15,7 @@ void showTechnicianSelectDialog(
     builder: (context) {
       return Dialog(
         backgroundColor: Colors.grey[200],
+        backgroundColor: Colors.grey[200],
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -240,9 +241,72 @@ class _TechnicianSelectContentState extends State<TechnicianSelectContent> {
       ],
     );
   }
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => Navigator.pop(context),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  side: BorderSide(
+                    color: Colors.grey.shade400,
+                    width: 1.5,
+                  ),
+                ),
+                child: Text(
+                  "Batalkan",
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: selectedTechnicianUuid == null
+                    ? null
+                    : () {
+                        Navigator.pop(context); // close first dialog
+                        showAssignConfirmDialog(
+                          context,
+                          selectedTechnicianName,
+                          onConfirm: () => widget.onConfirm(selectedTechnicianUuid!, selectedTechnicianName),
+                        ); 
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: mainColor,
+                  disabledBackgroundColor: Colors.grey,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text(
+                  "Lanjutkan",
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
 }
 
 /// 🔹 Popup kedua: konfirmasi assign teknisi
+void showAssignConfirmDialog(
+  BuildContext context, 
+  String technician, {
+  required VoidCallback onConfirm,
+}) {
 void showAssignConfirmDialog(
   BuildContext context, 
   String technician, {
@@ -297,6 +361,7 @@ void showAssignConfirmDialog(
                     child: ElevatedButton(
                       onPressed: () {
                         Navigator.pop(context); // tutup popup konfirmasi
+                        onConfirm();
                         onConfirm();
                       },
                       style: ElevatedButton.styleFrom(

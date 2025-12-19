@@ -59,7 +59,8 @@ class _PremiumMembershipScreenState extends State<PremiumMembershipScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _scaleController;
   late Animation<double> _scaleAnimation;
-  bool _isPressed = false;
+  final ScrollController _scrollController = ScrollController(); // Added
+  bool _isPressed = false; // Used for animation state tracking
 
   @override
   void initState() {
@@ -82,6 +83,7 @@ class _PremiumMembershipScreenState extends State<PremiumMembershipScreen>
   @override
   void dispose() {
     _scaleController.dispose();
+    _scrollController.dispose(); // Added
     super.dispose();
   }
 
@@ -268,51 +270,48 @@ class _PremiumMembershipScreenState extends State<PremiumMembershipScreen>
                           ],
                         ),
                       ),
-                      Center(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Lihat Paket Membership',
-                              style: AppTextStyles.button(), 
+                      const SizedBox(height: 32),
+
+                      // CTA Button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 54,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            _scrollController.animateTo(
+                              _scrollController.position.maxScrollExtent,
+                              duration: const Duration(seconds: 1),
+                              curve: Curves.easeInOutQuart,
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryRed,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
                             ),
-                            AppSpacing.horizontalSpaceSM,
-                            const Icon(
-                              Icons.arrow_forward_rounded,
-                              color: Colors.white,
-                              size: 22,
-                            ),
-                          ],
+                            elevation: 8,
+                            shadowColor: AppColors.primaryRed.withAlpha(102), // 0.4
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Lihat Paket Membership',
+                                style: AppTextStyles.button(),
+                              ),
+                              AppSpacing.horizontalSpaceSM,
+                              const Icon(
+                                Icons.arrow_forward_rounded,
+                                color: Colors.white,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                  
-                  AppSpacing.verticalSpaceSM,
-                  
-                  // Secondary Button
-                  TextButton(
-                    onPressed: () {
-                      if (widget.onContinueFreeVersion != null) {
-                        widget.onContinueFreeVersion!();
-                      } else {
-                        Navigator.of(context).pop();
-                      }
-                    },
-                    style: TextButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 40),
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      splashFactory: InkRipple.splashFactory,
-                    ),
-                    child: Text(
-                      'Lanjut pakai versi gratis',
-                      style: AppTextStyles.labelBold(
-                        color: isDark ? Colors.grey[400] : AppColors.textSecondary,
-                      ),
-                    ),
+                      
+                      AppSpacing.verticalSpaceXXL,
+                    ],
                   ),
-
-                  AppSpacing.verticalSpaceXXL,
-                ],
-              ),
                 ),
               ),
             ),
@@ -413,21 +412,36 @@ class _PremiumMembershipScreenState extends State<PremiumMembershipScreen>
   Widget _buildActiveSubscriptionView(BuildContext context, User user) {
      final primaryColor = AppColors.primaryRed;
      final isDark = Theme.of(context).brightness == Brightness.dark;
+     final isTrial = user.isInTrial;
 
      // Format Date
      String formattedDate = '30 Hari'; // Default fallback
-     if (user.subscriptionExpiredAt != null) {
+     String statusLabel = 'AKTIF';
+     Color statusColor = Colors.green;
+     String planName = user.subscriptionPlanName ?? 'Premium Plan';
+     String benefitTitle = 'Keuntungan Paket Anda:';
+
+     if (isTrial) {
+        planName = 'Trial Premium';
+        statusLabel = 'TRIAL';
+        statusColor = Colors.blue;
+        benefitTitle = 'Fitur Trial Anda:';
+        
+        if (user.trialEndsAt != null) {
+          final daysLeft = user.trialDaysRemaining ?? user.trialEndsAt!.difference(DateTime.now()).inDays;
+          formattedDate = "$daysLeft Hari Lagi";
+        }
+     } else if (user.subscriptionExpiredAt != null) {
         final date = user.subscriptionExpiredAt!;
         formattedDate = "${date.day}/${date.month}/${date.year}";
      } else {
-        // Fallback for old data or lifetime plans
-        formattedDate = "Aktif Selamanya"; // Or "30 Hari" depending on context
+        formattedDate = "Aktif Selamanya"; 
      }
 
      return RefreshIndicator(
        onRefresh: _refreshStatus,
        child: SingleChildScrollView(
-         physics: const AlwaysScrollableScrollPhysics(), // Ensure scroll even if content fits
+         physics: const AlwaysScrollableScrollPhysics(),
          child: Padding(
            padding: const EdgeInsets.all(20.0),
            child: Column(
@@ -446,30 +460,35 @@ class _PremiumMembershipScreenState extends State<PremiumMembershipScreen>
                    ),
                    borderRadius: BorderRadius.circular(24),
                    boxShadow: [
-                      BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, 10))
+                      BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 20, offset: const Offset(0, 10))
                    ],
-                   border: Border.all(color: Colors.amber.withOpacity(0.5), width: 1)
+                   border: Border.all(color: isTrial ? Colors.blue.withValues(alpha: 0.5) : Colors.amber.withValues(alpha: 0.5), width: 1)
                  ),
                  child: Column(
                    children: [
-                     const Icon(Icons.verified, color: Colors.amber, size: 48),
+                     Icon(
+                        isTrial ? Icons.timer_outlined : Icons.verified, 
+                        color: isTrial ? Colors.blue : Colors.amber, 
+                        size: 48
+                     ),
                      const SizedBox(height: 16),
-                     Text('Paket Aktif',
+                     Text(
+                       isTrial ? 'Status Membership' : 'Paket Aktif',
                       style: AppTextStyles.labelBold(color: Colors.grey),
                      ),
                      const SizedBox(height: 8),
                      Text(
-                       user.subscriptionPlanName ?? 'Premium Plan',
+                       planName,
                        style: AppTextStyles.heading2(color: isDark ? Colors.white : Colors.black87),
                        textAlign: TextAlign.center,
                      ),
                      const SizedBox(height: 24),
-                     Divider(color: Colors.grey.withOpacity(0.2)),
+                     Divider(color: Colors.grey.withValues(alpha: 0.2)),
                      const SizedBox(height: 24),
                      Row(
                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                        children: [
-                         Text('Masa Berlaku', style: AppTextStyles.bodyMedium(color: Colors.grey)),
+                         Text(isTrial ? 'Sisa Waktu' : 'Masa Berlaku', style: AppTextStyles.bodyMedium(color: Colors.grey)),
                          Text(formattedDate, style: AppTextStyles.heading5(color: isDark ? Colors.white : Colors.black87)),
                        ],
                      ),
@@ -481,10 +500,10 @@ class _PremiumMembershipScreenState extends State<PremiumMembershipScreen>
                          Container(
                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                            decoration: BoxDecoration(
-                             color: Colors.green.withOpacity(0.1),
+                             color: statusColor.withValues(alpha: 0.1),
                              borderRadius: BorderRadius.circular(20)
                            ),
-                           child: Text('AKTIF', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 12)),
+                           child: Text(statusLabel, style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 12)),
                          )
                        ],
                      )
@@ -496,12 +515,11 @@ class _PremiumMembershipScreenState extends State<PremiumMembershipScreen>
                Padding(
                  padding: const EdgeInsets.symmetric(horizontal: 8),
                  child: Text(
-                   "Keuntungan Paket Anda:",
+                   benefitTitle,
                     style: AppTextStyles.heading4(color: isDark ? Colors.white : Colors.black87),
                  ),
                ),
                 const SizedBox(height: 16),
-                 // Benefits List Reused
                  _buildBenefitRow(
                    context,
                    icon: Icons.analytics_outlined,
@@ -524,35 +542,58 @@ class _PremiumMembershipScreenState extends State<PremiumMembershipScreen>
                    isLast: true,
                  ),
    
-               const SizedBox(height: 40), // Replaced Spacer with fixed space
-               Text(
-                 "Ingin mengubah paket?",
-                 textAlign: TextAlign.center,
-                 style: AppTextStyles.bodyMedium(color: Colors.grey),
-               ),
-               const SizedBox(height: 16),
-               ElevatedButton(
-                 onPressed: widget.onViewMembershipPackages, // Re-use callback to show packages
-                 style: ElevatedButton.styleFrom(
-                   backgroundColor: primaryColor,
-                   padding: const EdgeInsets.symmetric(vertical: 16),
-                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))
-                 ),
-                 child: Text('Perpanjang / Ganti Paket', style: AppTextStyles.button(color: Colors.white)),
-               ),
-               const SizedBox(height: 16),
-               Center(
-                 child: TextButton(
-                   onPressed: () => _showCancelSubscriptionDialog(context),
-                   style: TextButton.styleFrom(
-                     foregroundColor: Colors.red,
-                   ),
-                   child: Text(
-                     'Batalkan Langganan',
-                     style: AppTextStyles.labelBold(color: Colors.red),
-                   ),
-                 ),
-               ),
+               const SizedBox(height: 40),
+               
+               if (isTrial) ...[
+                  Text(
+                    "Trial akan otomatis berakhir.",
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.bodyMedium(color: Colors.grey),
+                  ),
+                  const SizedBox(height: 16),
+                  Center(
+                    child: TextButton(
+                      onPressed: () => _showCancelSubscriptionDialog(context, isTrial: true),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.red,
+                      ),
+                      child: Text(
+                        'Batalkan Trial',
+                        style: AppTextStyles.labelBold(color: Colors.red),
+                      ),
+                    ),
+                  ),
+               ] else ...[
+                  Text(
+                    "Ingin mengubah paket?",
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.bodyMedium(color: Colors.grey),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: widget.onViewMembershipPackages,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))
+                    ),
+                    child: Text('Perpanjang / Ganti Paket', style: AppTextStyles.button(color: Colors.white)),
+                  ),
+                  const SizedBox(height: 16),
+                  Center(
+                    child: TextButton(
+                      onPressed: () => _showCancelSubscriptionDialog(context),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.red,
+                      ),
+                      child: Text(
+                        'Batalkan Langganan',
+                        style: AppTextStyles.labelBold(color: Colors.red),
+                      ),
+                    ),
+                  ),
+               ],
+
                 const SizedBox(height: 32),
              ],
            ),
@@ -633,24 +674,28 @@ class _PremiumMembershipScreenState extends State<PremiumMembershipScreen>
 
 
   Future<void> _refreshStatus() async {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final authProvider = context.read<AuthProvider>();
+    
     try {
       final api = ApiService();
       await api.checkSubscriptionStatus();
       if (!mounted) return;
-      await context.read<AuthProvider>().checkLoginStatus();
+      await authProvider.checkLoginStatus();
+      if (!mounted) return;
       
-      ScaffoldMessenger.of(context).showSnackBar(
+      scaffoldMessenger.showSnackBar(
         const SnackBar(content: Text('Status langganan diperbarui'), backgroundColor: Colors.green),
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      scaffoldMessenger.showSnackBar(
         SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
       );
     }
   }
 
-  void _showCancelSubscriptionDialog(BuildContext context) {
+  void _showCancelSubscriptionDialog(BuildContext context, {bool isTrial = false}) {
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
@@ -663,13 +708,15 @@ class _PremiumMembershipScreenState extends State<PremiumMembershipScreen>
               const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 48),
               const SizedBox(height: 16),
               Text(
-                'Batalkan Langganan?',
+                isTrial ? 'Batalkan Trial?' : 'Batalkan Langganan?',
                 style: AppTextStyles.heading3(color: Colors.black),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
               Text(
-                'Anda akan kehilangan akses ke fitur Premium setelah periode langganan saat ini berakhir. Apakah Anda yakin?',
+                isTrial 
+                    ? 'Anda akan segera kehilangan akses ke fitur Premium. Apakah Anda yakin?'
+                    : 'Anda akan kehilangan akses ke fitur Premium setelah periode langganan saat ini berakhir. Apakah Anda yakin?',
                 style: AppTextStyles.bodyMedium(color: Colors.grey[600]!),
                 textAlign: TextAlign.center,
               ),
@@ -687,26 +734,30 @@ class _PremiumMembershipScreenState extends State<PremiumMembershipScreen>
                       builder: (_) => const Center(child: CircularProgressIndicator())
                     );
                     
+                    final navigator = Navigator.of(context);
+                    final scaffoldMessenger = ScaffoldMessenger.of(context);
+                    final authProvider = context.read<AuthProvider>();
+                    
                     try {
                       final api = ApiService();
                       await api.cancelSubscription();
                       
                       if (!mounted) return;
-                      Navigator.pop(context); // Close loading
+                      navigator.pop(); // Close loading
                       
                       // Refresh user data
-                      await context.read<AuthProvider>().checkLoginStatus();
+                      await authProvider.checkLoginStatus();
                       
                       if (!mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      scaffoldMessenger.showSnackBar(
                         const SnackBar(content: Text('Langganan berhasil dibatalkan'), backgroundColor: Colors.green),
                       );
-                      Navigator.pop(context); // Close Premium Screen
+                      navigator.pop(); // Close Premium Screen
                       
                     } catch (e) {
                       if (!mounted) return;
-                      Navigator.pop(context); // Close loading
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      navigator.pop(); // Close loading
+                      scaffoldMessenger.showSnackBar(
                         SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
                       );
                     }

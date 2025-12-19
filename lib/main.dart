@@ -12,6 +12,8 @@ import 'package:bengkel_online_flutter/core/screens/loading_gate.dart';
 import 'package:bengkel_online_flutter/core/screens/login.dart' as login_screen;
 
 import 'package:bengkel_online_flutter/core/screens/registers/register.dart';
+import 'package:bengkel_online_flutter/feature/auth/screens/forgot_password_page.dart' as forgot_pass;
+import 'package:bengkel_online_flutter/feature/auth/screens/reset_password_page.dart' as reset_pass;
 
 import 'package:bengkel_online_flutter/core/screens/splash_screen.dart';
 import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
@@ -40,6 +42,8 @@ import 'package:bengkel_online_flutter/feature/owner/screens/list_voucher_page.d
 
 
 
+import 'package:bengkel_online_flutter/core/services/notification_provider.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/notification_page.dart';
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
@@ -55,6 +59,10 @@ void main() async {
         ChangeNotifierProvider(create: (_) => EmployeeProvider()),
         ChangeNotifierProvider(create: (_) => ServiceProvider()),
         ChangeNotifierProvider(create: (_) => AdminServiceProvider()),
+        ChangeNotifierProxyProvider<AuthProvider, NotificationProvider>(
+          create: (context) => NotificationProvider(context.read<AuthProvider>()),
+          update: (context, auth, previous) => NotificationProvider(auth),
+        ),
       ],
       child: const MyApp(),
     ),
@@ -157,6 +165,9 @@ class _MyAppState extends State<MyApp> {
         "/owner/profile": (context) => owner_profil.ProfilePageOwner(),
         "/voucher": (context) => const VoucherPage(),
         "/voucher/list": (context) => const ListVoucherPage(),
+        "/forgot-password": (context) => const forgot_pass.ForgotPasswordPage(),
+        "/reset-password": (context) => const reset_pass.ResetPasswordPage(),
+        "/notifications": (context) => const NotificationPage(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/list') {

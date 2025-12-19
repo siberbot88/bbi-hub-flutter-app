@@ -8,6 +8,11 @@ import 'package:intl/intl.dart';
 import 'package:bengkel_online_flutter/feature/admin/providers/admin_service_provider.dart';
 import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
 import 'package:bengkel_online_flutter/core/models/service.dart';
+import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
+import 'package:bengkel_online_flutter/feature/admin/providers/admin_service_provider.dart';
+import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
+import 'package:bengkel_online_flutter/core/models/service.dart';
 import '../widgets/service_logging/logging_summary_boxes.dart';
 import '../widgets/service_logging/logging_calendar.dart';
 import '../widgets/service_logging/logging_filter_tabs.dart';
@@ -61,10 +66,13 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
       DateTime(displayedYear, displayedMonth, selectedDay);
 
   bool _matchesFilterKey(ServiceModel t, String filterKey) {
+  bool _matchesFilterKey(ServiceModel t, String filterKey) {
     if (filterKey == 'All') return true;
     final status = (t.status).toLowerCase();
     switch (filterKey) {
       case 'Pending':
+        // Di logging page, 'Pending' berarti Accepted but waiting for Mechanic
+        return status == 'pending';
         // Di logging page, 'Pending' berarti Accepted but waiting for Mechanic
         return status == 'pending';
       case 'In Progress':
@@ -94,6 +102,11 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
       // ... (search logic)
       if (searchText.trim().isNotEmpty) {
         final q = searchText.toLowerCase();
+        final title = (service.name).toLowerCase();
+        final plate = (service.displayVehiclePlate).toLowerCase();
+        final user = (service.displayCustomerName).toLowerCase();
+        
+        return title.contains(q) || plate.contains(q) || user.contains(q);
         final title = (service.name).toLowerCase();
         final plate = (service.displayVehiclePlate).toLowerCase();
         final user = (service.displayCustomerName).toLowerCase();
@@ -152,6 +165,7 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
         .length;
 
     final loggingFiltered = _getFilteredTasks(allServices);
+    final loggingFiltered = _getFilteredTasks(allServices);
     final title = selectedTimeSlot == null
         ? "Semua Tugas"
         : "Tugas untuk jam $selectedTimeSlot"; 
@@ -203,6 +217,10 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
               setState(() => selectedDay = day);
               _fetchData();
             },
+            onDaySelected: (day) {
+              setState(() => selectedDay = day);
+              _fetchData();
+            },
           ),
           const SizedBox(height: 12),
           _buildSearchBar(),
@@ -214,6 +232,9 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
           ),
           const SizedBox(height: 12),
           if (selectedLoggingFilter == "All") ...[
+            // Padding for timeslots if we implement logic later
+            // LoggingTimeSlots(...), 
+            // const SizedBox(height: 12),
             // Padding for timeslots if we implement logic later
             // LoggingTimeSlots(...), 
             // const SizedBox(height: 12),
@@ -231,7 +252,9 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: Colors.white,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.border),
           border: Border.all(color: AppColors.border),
         ),
         child: Row(
@@ -241,9 +264,13 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
             Expanded(
                 child: TextField(
                 decoration: InputDecoration.collapsed(
+                child: TextField(
+                decoration: InputDecoration.collapsed(
                   hintText: "Search logging...",
                   hintStyle: AppTextStyles.caption(),
+                  hintStyle: AppTextStyles.caption(),
                 ),
+                style: AppTextStyles.bodyMedium(),
                 style: AppTextStyles.bodyMedium(),
                 onChanged: (val) => setState(() => searchText = val),
               ),
@@ -260,6 +287,7 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
 
   Widget _buildLoggingContent(
       String title, List<ServiceModel> filtered) {
+      String title, List<ServiceModel> filtered) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
@@ -268,9 +296,11 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
           Text(
             title,
             style: AppTextStyles.heading4(),
+            style: AppTextStyles.heading4(),
           ),
           const SizedBox(height: 12),
           if (filtered.isEmpty)
+            Center(
             Center(
               child: Padding(
                 padding: EdgeInsets.all(24.0),
@@ -278,10 +308,12 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
                   "Tidak ada tugas yang sesuai dengan filter.",
                   textAlign: TextAlign.center,
                   style: AppTextStyles.bodyMedium(color: AppColors.textSecondary),
+                  style: AppTextStyles.bodyMedium(color: AppColors.textSecondary),
                 ),
               ),
             )
           else
+            ...filtered.map((t) => LoggingTaskCard(service: t)),
             ...filtered.map((t) => LoggingTaskCard(service: t)),
         ],
       ),
@@ -296,6 +328,7 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
         }
         selectedDay = 1;
         _fetchData();
+        _fetchData();
       });
 
   void _nextMonth() => setState(() {
@@ -305,6 +338,7 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
           displayedYear += 1;
         }
         selectedDay = 1;
+        _fetchData();
         _fetchData();
       });
 

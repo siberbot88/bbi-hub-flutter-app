@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'package:bengkel_online_flutter/core/models/service.dart';
 import 'package:bengkel_online_flutter/core/providers/service_provider.dart';
@@ -10,9 +11,10 @@ import '../widgets/work/work_helpers.dart';
 import '../widgets/work/work_filter_sheet.dart';
 import '../widgets/work/work_search_bar.dart';
 import '../widgets/work/work_pagination.dart';
+import '../widgets/custom_header.dart';
 
-const Color _gradStart = Color(0xFF9B0D0D);
-const Color _gradEnd = Color(0xFFB70F0F);
+const Color _bgDark = Color(0xFF101922);
+const Color _bgLight = Color(0xFFF6F7F8);
 
 class ListWorkPage extends StatefulWidget {
   const ListWorkPage({super.key, this.workshopUuid});
@@ -174,163 +176,168 @@ class _ListWorkPageState extends State<ListWorkPage> {
 
   @override
   Widget build(BuildContext context) {
-    final media = MediaQuery.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor = isDark ? _bgDark : _bgLight;
     final prov = context.watch<ServiceProvider>();
     final list = _filtered(prov.items);
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Stack(
+      backgroundColor: backgroundColor,
+      appBar: CustomHeader(
+        title: "Daftar Pekerjaan",
+        actions: [
+          IconButton(
+            onPressed: () =>
+                prov.fetchServices(workshopUuid: widget.workshopUuid),
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            tooltip: 'Refresh',
+          ),
+        ],
+      ),
+      body: Column(
         children: [
-          Positioned.fill(
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [_gradStart, _gradEnd],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+          // Search and Filter Section
+          Container(
+            decoration: BoxDecoration(
+              color: backgroundColor,
+              border: Border(
+                bottom: BorderSide(
+                  color: isDark ? const Color(0xFF374151) : const Color(0xFFE5E7EB),
                 ),
               ),
             ),
-          ),
-          CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              SliverAppBar(
-                pinned: true,
-                backgroundColor: _gradStart,
-                elevation: 0,
-                expandedHeight: 220,
-                leading: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.white),
-                  onPressed: () => Navigator.maybePop(context),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+            child: Column(
+              children: [
+                // Search Bar
+                WorkSearchBar(
+                  controller: _search,
+                  onFilterTap: _openFilterSheet,
+                  hasActiveFilter: _hasActiveFilter,
+                  onChanged: (_) => setState(() {}),
                 ),
-                actions: [
-                  IconButton(
-                    onPressed: () =>
-                        prov.fetchServices(workshopUuid: widget.workshopUuid),
-                    icon: const Icon(Icons.refresh, color: Colors.white),
-                    tooltip: 'Refresh',
-                  ),
-                ],
-                flexibleSpace: FlexibleSpaceBar(
-                  background: Container(
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [_gradStart, _gradEnd],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
+                const SizedBox(height: 12),
+
+                // Filter Chips
+                SizedBox(
+                  height: 40,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: [
+                      WorkStatusChip(
+                        label: 'Pending',
+                        icon: Icons.error_outline,
+                        selected: _tabStatus == WorkStatus.pending,
+                        onTap: () =>
+                            setState(() => _tabStatus = WorkStatus.pending),
                       ),
+                      const SizedBox(width: 12),
+                      WorkStatusChip(
+                        label: 'Process',
+                        icon: Icons.schedule_rounded,
+                        selected: _tabStatus == WorkStatus.process,
+                        onTap: () =>
+                            setState(() => _tabStatus = WorkStatus.process),
+                      ),
+                      const SizedBox(width: 12),
+                      WorkStatusChip(
+                        label: 'Selesai',
+                        icon: Icons.verified_rounded,
+                        selected: _tabStatus == WorkStatus.done,
+                        onTap: () =>
+                            setState(() => _tabStatus = WorkStatus.done),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Content Area
+          Expanded(
+            child: prov.loading
+                ? Center(
+                    child: CircularProgressIndicator(
+                      color: isDark ? Colors.white : const Color(0xFFD72B1C),
                     ),
-                    child: SafeArea(
-                      bottom: false,
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            const SizedBox(height: 4),
-                            const Text(
-                              'Laporan',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.w900,
-                              ),
+                  )
+                : prov.lastError != null
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24.0),
+                          child: Text(
+                            prov.lastError!,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: isDark ? Colors.white70 : Colors.black54,
                             ),
-                            const SizedBox(height: 4),
-                            const Text(
-                              'Daftar Pekerjaan',
-                              style:
-                                  TextStyle(color: Colors.white70, fontSize: 14),
-                            ),
-                            const SizedBox(height: 18),
-                            WorkSearchBar(
-                              controller: _search,
-                              onFilterTap: _openFilterSheet,
-                              hasActiveFilter: _hasActiveFilter,
-                              onChanged: (_) => setState(() {}),
-                            ),
-                            const SizedBox(height: 14),
-                            Row(
+                          ),
+                        ),
+                      )
+                    : list.isEmpty
+                        ? Center(
+                            child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                WorkStatusChip(
-                                  label: 'Pending',
-                                  icon: Icons.error_outline,
-                                  selected: _tabStatus == WorkStatus.pending,
-                                  onTap: () =>
-                                      setState(() => _tabStatus = WorkStatus.pending),
+                                Container(
+                                  padding: const EdgeInsets.all(24),
+                                  decoration: BoxDecoration(
+                                    color: isDark 
+                                        ? const Color(0xFF1c2630)
+                                        : Colors.white,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.assignment_late_outlined,
+                                    size: 48,
+                                    color: const Color(0xFF9dabb9),
+                                  ),
                                 ),
-                                const SizedBox(width: 16),
-                                WorkStatusChip(
-                                  label: 'Process',
-                                  icon: Icons.schedule_rounded,
-                                  selected: _tabStatus == WorkStatus.process,
-                                  onTap: () =>
-                                      setState(() => _tabStatus = WorkStatus.process),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Belum ada pekerjaan',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w500,
+                                    color: isDark ? Colors.white : Colors.black87,
+                                  ),
                                 ),
-                                const SizedBox(width: 16),
-                                WorkStatusChip(
-                                  label: 'Selesai',
-                                  icon: Icons.verified_rounded,
-                                  selected: _tabStatus == WorkStatus.done,
-                                  onTap: () =>
-                                      setState(() => _tabStatus = WorkStatus.done),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Coba ubah filter atau cari kata kunci lain',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
+                                    color: const Color(0xFF9dabb9),
+                                  ),
                                 ),
                               ],
                             ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
+                          )
+                        : ListView.separated(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: list.length,
+                            separatorBuilder: (_, __) => const SizedBox(height: 16),
+                            itemBuilder: (_, i) {
+                              return WorkCard(item: list[i]);
+                            },
+                          ),
+          ),
+
+          // Pagination Footer
+          Container(
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1c2630) : Colors.white,
+              border: Border(
+                top: BorderSide(
+                  color: isDark ? const Color(0xFF374151) : const Color(0xFFE5E7EB),
                 ),
               ),
-
-              if (prov.loading)
-                const SliverFillRemaining(
-                  child: Center(
-                    child: CircularProgressIndicator(color: Colors.white),
-                  ),
-                )
-              else if (prov.lastError != null)
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24.0),
-                      child: Text(
-                        prov.lastError!,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  ),
-                )
-              else if (list.isEmpty)
-                const SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Center(
-                    child: Text(
-                      'Belum ada pekerjaan',
-                      style: TextStyle(color: Colors.white70),
-                    ),
-                  ),
-                )
-              else
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-                  sliver: SliverList.separated(
-                    itemCount: list.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 14),
-                    itemBuilder: (_, i) {
-                      return WorkCard(item: list[i]);
-                    },
-                  ),
-                ),
-
-              SliverToBoxAdapter(
+            ),
+            child: SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
                 child: WorkPagination(
                   currentPage: prov.currentPage,
                   totalPages: prov.totalPages,
@@ -345,11 +352,7 @@ class _ListWorkPageState extends State<ListWorkPage> {
                   ),
                 ),
               ),
-
-              SliverToBoxAdapter(
-                child: SizedBox(height: media.padding.bottom + 8),
-              ),
-            ],
+            ),
           ),
         ],
       ),
