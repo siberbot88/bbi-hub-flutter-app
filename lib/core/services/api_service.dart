@@ -1180,7 +1180,8 @@ class ApiService {
         return j;
       }
 
-      throw Exception('Respon layanan (ADMIN) tidak valid.');
+      print('DEBUG API ERROR: j type=${j.runtimeType}, body=${res.body}');
+      throw Exception('Respon layanan (ADMIN) tidak valid. Type: ${j.runtimeType}');
     } catch (e) {
       throw Exception('Gagal mengambil data service (ADMIN): '
           '${e.toString().replaceFirst("Exception: ", "")}');
@@ -1227,7 +1228,7 @@ class ApiService {
       if (description != null) bodyMap['description'] = description;
       if (price != null) bodyMap['price'] = price;
       if (estimatedTime != null) bodyMap['estimated_time'] = estimatedTime.toIso8601String();
-      if (categoryName != null) bodyMap['category_service'] = categoryName;
+      if (categoryName != null) bodyMap['category'] = categoryName;
 
       // Fields tambahan untuk walk-in (jika backend support create customer/vehicle on the fly)
       if (customerName != null) bodyMap['customer_name'] = customerName;
@@ -1307,7 +1308,10 @@ class ApiService {
       
       if (description != null) bodyMap['description'] = description;
       if (price != null) bodyMap['price'] = price;
-      if (categoryName != null) bodyMap['category_service'] = categoryName;
+      if (categoryName != null) bodyMap['category'] = categoryName;
+
+      // Always on-site for walk-in
+      bodyMap['type'] = 'on-site';
 
       final body = jsonEncode(bodyMap);
 
@@ -1644,6 +1648,63 @@ class ApiService {
 
     } catch (e) {
       throw Exception('Fetch Error: $e');
+    }
+  }
+
+  /* ==================== NOTIFICATIONS ==================== */
+
+  /// GET /v1/notifications
+  Future<Map<String, dynamic>> fetchNotifications({int page = 1, int perPage = 20}) async {
+    // _getAuthHeaders internally gets token and validates
+    final headers = await _getAuthHeaders();
+
+    final uri = Uri.parse('$_baseUrl/notifications').replace(queryParameters: {
+      'page': page.toString(),
+      'per_page': perPage.toString(),
+    });
+
+    final response = await http.get(uri, headers: headers);
+    _debugResponse('FETCH NOTIFICATIONS', response);
+
+    if (response.statusCode == 200 && _isJsonResponse(response)) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to fetch notifications: ${response.statusCode}');
+    }
+  }
+
+  /// GET /v1/notifications/unread-count
+  Future<int> getUnreadNotificationCount() async {
+    try {
+      final headers = await _getAuthHeaders();
+      final uri = Uri.parse('$_baseUrl/notifications/unread-count');
+      final response = await http.get(uri, headers: headers);
+
+      if (response.statusCode == 200 && _isJsonResponse(response)) {
+        final body = jsonDecode(response.body);
+        if (body is Map && body.containsKey('count')) {
+          return body['count'] is int ? body['count'] : int.tryParse(body['count'].toString()) ?? 0;
+        }
+        if (body is Map && body['data'] is Map && body['data'].containsKey('count')) {
+          return body['data']['count'] is int ? body['data']['count'] : int.tryParse(body['data']['count'].toString()) ?? 0;
+        }
+      }
+    } catch (_) {
+      // ignore
+    }
+    return 0;
+  }
+
+  /// POST /v1/notifications/{id}/read
+  Future<void> markNotificationRead(String id) async {
+    final headers = await _getAuthHeaders();
+    final uri = Uri.parse('$_baseUrl/notifications/$id/read');
+    final response = await http.put(uri, headers: headers);
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return;
+    } else {
+      throw Exception('Failed to mark notification read: ${response.statusCode}');
     }
   }
 }

@@ -7,13 +7,8 @@ import 'package:provider/provider.dart';
 import 'package:bengkel_online_flutter/feature/admin/providers/admin_service_provider.dart';
 import 'package:bengkel_online_flutter/core/models/service.dart';
 import '../widgets/service/service_helpers.dart';
-import 'package:provider/provider.dart';
-import 'package:bengkel_online_flutter/feature/admin/providers/admin_service_provider.dart';
-import 'package:bengkel_online_flutter/core/models/service.dart';
-import '../widgets/service/service_helpers.dart';
 
 class ServiceDetailPage extends StatelessWidget {
-  final ServiceModel service;
   final ServiceModel service;
 
   const ServiceDetailPage({super.key, required this.service});
@@ -31,18 +26,6 @@ class ServiceDetailPage extends StatelessWidget {
     final mq = MediaQuery.of(context);
     final textScale = mq.textScaler.scale(1.0).clamp(0.9, 1.15);
     double s(double size) => (size * textScale);
-
-    // Helpers
-    final id = service.id;
-    final customerName = service.displayCustomerName;
-    final scheduledDate = service.scheduledDate ?? DateTime.now();
-    final dateOrder = service.createdAt ?? DateTime.now();
-    final vehicleName = service.displayVehicleName;
-    final plate = service.displayVehiclePlate;
-    final category = service.vehicle?.category ?? service.vehicle?.type ?? "Unknown";
-    final phone = service.customer?.phoneNumber ?? '-'; // Asumsi ada phone number di customer atau di mana saja
-    final address = service.customer?.address ?? '-'; // Asumsi ada address
-    final desc = service.reasonDescription ?? service.description ?? '-';
 
     // Helpers
     final id = service.id;
@@ -127,14 +110,12 @@ class ServiceDetailPage extends StatelessWidget {
                                     children: [
                                       Text(
                                         customerName,
-                                        customerName,
                                         style: GoogleFonts.poppins(
                                           fontSize: s(18),
                                           fontWeight: FontWeight.w700,
                                         ),
                                       ),
                                       Text(
-                                        "ID: $id",
                                         "ID: $id",
                                         style: GoogleFonts.poppins(
                                           fontSize: s(13),
@@ -151,7 +132,6 @@ class ServiceDetailPage extends StatelessWidget {
                                         style: TextStyle(
                                             fontSize: s(12),
                                             color: Colors.grey[600])),
-                                    Text(ServiceHelpers.formatDate(dateOrder),
                                     Text(ServiceHelpers.formatDate(dateOrder),
                                         style: GoogleFonts.poppins(
                                             fontSize: s(14),
@@ -192,7 +172,6 @@ class ServiceDetailPage extends StatelessWidget {
                                               fontSize: s(12),
                                               color: Colors.grey[600])),
                                       Text(vehicleName,
-                                      Text(vehicleName,
                                           style: GoogleFonts.poppins(
                                               fontSize: s(15),
                                               fontWeight: FontWeight.w700)),
@@ -207,7 +186,6 @@ class ServiceDetailPage extends StatelessWidget {
                                           style: TextStyle(
                                               fontSize: s(12),
                                               color: Colors.grey[600])),
-                                      Text("${ServiceHelpers.formatDate(scheduledDate)}", // Simplified for now
                                       Text("${ServiceHelpers.formatDate(scheduledDate)}", // Simplified for now
                                           textAlign: TextAlign.right,
                                           style: GoogleFonts.poppins(
@@ -233,7 +211,6 @@ class ServiceDetailPage extends StatelessWidget {
                                               fontSize: s(12),
                                               color: Colors.grey[600])),
                                       Text(plate,
-                                      Text(plate,
                                           style: GoogleFonts.poppins(
                                               fontSize: s(15),
                                               fontWeight: FontWeight.w700)),
@@ -258,7 +235,6 @@ class ServiceDetailPage extends StatelessWidget {
                                               BorderRadius.circular(20),
                                         ),
                                         child: Text(
-                                          category,
                                           category,
                                           style: GoogleFonts.poppins(
                                             fontSize: s(13),
@@ -298,7 +274,6 @@ class ServiceDetailPage extends StatelessWidget {
                                         ),
                                         child: Text(
                                           service.categoryName ?? "Pemeliharaan",
-                                          service.categoryName ?? "Pemeliharaan",
                                           style: GoogleFonts.poppins(
                                             fontSize: s(13),
                                             fontWeight: FontWeight.w600,
@@ -317,7 +292,6 @@ class ServiceDetailPage extends StatelessWidget {
                                           style: TextStyle(
                                               fontSize: s(12),
                                               color: Colors.grey[600])),
-                                      Text(phone,
                                       Text(phone,
                                           style: GoogleFonts.poppins(
                                               fontSize: s(14),
@@ -339,7 +313,6 @@ class ServiceDetailPage extends StatelessWidget {
                                         fontSize: s(12),
                                         color: Colors.grey[600])),
                                 Text(
-                                  address,
                                   address,
                                   style: GoogleFonts.poppins(
                                     fontSize: s(14),
@@ -367,7 +340,6 @@ class ServiceDetailPage extends StatelessWidget {
                                 color: Colors.red.shade50,
                               ),
                               child: Text(
-                                desc,
                                 desc,
                                 style: TextStyle(fontSize: s(13)),
                               ),

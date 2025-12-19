@@ -108,10 +108,9 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
   Widget build(BuildContext context) {
     final provider = context.watch<AdminServiceProvider>();
 
-    final provider = context.watch<AdminServiceProvider>();
+
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
       backgroundColor: AppColors.backgroundLight,
       appBar: const CustomHeader(
         title: "Service",
@@ -162,20 +161,32 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
     final allServices = provider.items;
 
     // Calculate Stats
-    // All: Total services for the date
-    final allCount = allServices.length;
+    // All: Total services for the date (Booking Only)
+    // Filter out Walk-ins first (Show Booking Only)
+    // Menampilkan semua yang BUKAN on-site (termasuk type null atau 'booking')
+    final bookingServices = allServices.where((s) {
+       final type = (s.type ?? '').toLowerCase();
+       return type != 'on-site'; // Semua yang bukan on-site dianggap booking
+    }).toList();
+    
+    print('DEBUG service_page: allServices=${allServices.length}, bookingServices=${bookingServices.length}');
+    for (var s in allServices) {
+      print('  -> id=${s.id}, type=${s.type}, name=${s.name}');
+    }
+
+    final allCount = bookingServices.length;
     // Menunggu (Pending): acceptance_status == "pending"
-    final pendingCount = allServices.where((s) => (s.acceptanceStatus ?? '').toLowerCase() == 'pending').length;
+    final pendingCount = bookingServices.where((s) => (s.acceptanceStatus ?? '').toLowerCase() == 'pending').length;
     // Terima (Accepted): acceptance_status == "accepted"
-    final acceptedCount = allServices.where((s) => (s.acceptanceStatus ?? '').toLowerCase() == 'accepted').length;
+    final acceptedCount = bookingServices.where((s) => (s.acceptanceStatus ?? '').toLowerCase() == 'accepted').length;
     // Tolak (Declined): acceptance_status == "declined" or "rejected"
-    final declinedCount = allServices.where((s) {
+    final declinedCount = bookingServices.where((s) {
        final st = (s.acceptanceStatus ?? '').toLowerCase();
        return st == 'declined' || st == 'rejected' || st == 'canceled' || st == 'cancelled';
     }).length;
     
     // Filter List
-    final filteredServices = allServices.where((s) {
+    final filteredServices = bookingServices.where((s) {
       final acceptance = (s.acceptanceStatus ?? '').toLowerCase();
       // final status = (s.status).toLowerCase();
       
@@ -188,7 +199,6 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
 
 
     return SingleChildScrollView(
-      padding:  const EdgeInsets.only(bottom: 80),
       padding:  const EdgeInsets.only(bottom: 80),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -1,33 +1,21 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
 import '../reject_dialog.dart';
 import '../accept_dialog.dart';
 import '../../screens/service_detail.dart';
-import '../../screens/service_progress.dart';
-import '../../screens/invoice_payment.dart';
 import 'service_helpers.dart';
-import 'package:provider/provider.dart';
-import 'package:bengkel_online_flutter/feature/admin/providers/admin_service_provider.dart';
-import 'package:bengkel_online_flutter/core/models/service.dart';
 import 'package:provider/provider.dart';
 import 'package:bengkel_online_flutter/feature/admin/providers/admin_service_provider.dart';
 import 'package:bengkel_online_flutter/core/models/service.dart';
 
 class ServiceCard extends StatelessWidget {
   final ServiceModel service;
-  final ServiceModel service;
 
-  const ServiceCard({super.key, required this.service});
   const ServiceCard({super.key, required this.service});
 
   @override
   Widget build(BuildContext context) {
-    // Debug print
-    // print("DEBUG CARD: ${service.name} status=${service.status} acceptance=${service.acceptanceStatus}");
-
     // Helper accessors
     final customerName = service.displayCustomerName;
     final vehicleName = service.displayVehicleName;
@@ -59,28 +47,17 @@ class ServiceCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 20,
-                backgroundColor: AppColors.primaryRed.withValues(alpha: 0.1),
-                child: Text(
-                  _getInitials(customerName),
-                  style: AppTextStyles.labelBold(color: AppColors.primaryRed),
-                ),
-                radius: 20,
-                backgroundColor: AppColors.primaryRed.withValues(alpha: 0.1),
+                backgroundColor: AppColors.primaryRed.withOpacity(0.1),
                 child: Text(
                   _getInitials(customerName),
                   style: AppTextStyles.labelBold(color: AppColors.primaryRed),
                 ),
               ),
               const SizedBox(width: 12),
-              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(customerName,
-                        style: AppTextStyles.labelBold()),
-                    Text("ID: $id",
-                        style: AppTextStyles.caption()),
                     Text(customerName,
                         style: AppTextStyles.labelBold()),
                     Text("ID: $id",
@@ -98,20 +75,7 @@ class ServiceCard extends StatelessWidget {
                     margin: const EdgeInsets.only(top: 4),
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
-                      color: AppColors.statusPending.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text("Scheduled",
-                        style: AppTextStyles.caption(color: AppColors.statusPending).copyWith(fontSize: 10, fontWeight: FontWeight.bold)),
-                  ),
-                  Text(ServiceHelpers.formatDate(scheduledDate),
-                      style: AppTextStyles.caption(color: AppColors.textPrimary)),
-                  // Jika mau menampilkan info scheduled spesifik
-                  Container(
-                    margin: const EdgeInsets.only(top: 4),
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: AppColors.statusPending.withValues(alpha: 0.1),
+                      color: AppColors.statusPending.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text("Scheduled",
@@ -128,8 +92,6 @@ class ServiceCard extends StatelessWidget {
                 child: Text(
                   serviceName,
                   style: AppTextStyles.heading5(),
-                  serviceName,
-                  style: AppTextStyles.heading5(),
                 ),
               ),
               Container(
@@ -137,14 +99,10 @@ class ServiceCard extends StatelessWidget {
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: _getVehicleBgColor(category)
-                      .withValues(alpha: 0.2), 
-                  color: _getVehicleBgColor(category)
-                      .withValues(alpha: 0.2), 
+                      .withOpacity(0.2), 
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  category,
-                  style: AppTextStyles.caption(color: _getVehicleTextColor(category)).copyWith(fontWeight: FontWeight.w600),
                   category,
                   style: AppTextStyles.caption(color: _getVehicleTextColor(category)).copyWith(fontWeight: FontWeight.w600),
                 ),
@@ -161,9 +119,6 @@ class ServiceCard extends StatelessWidget {
                 children: [
                   Text("Plat Nomor",
                       style:
-                          AppTextStyles.caption()),
-                  Text(plate,
-                      style: AppTextStyles.bodyMedium(color: AppColors.textPrimary).copyWith(fontWeight: FontWeight.w600)),
                           AppTextStyles.caption()),
                   Text(plate,
                       style: AppTextStyles.bodyMedium(color: AppColors.textPrimary).copyWith(fontWeight: FontWeight.w600)),
@@ -228,7 +183,7 @@ class ServiceCard extends StatelessWidget {
                      Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: Colors.green.withValues(alpha: 0.1),
+                          color: Colors.green.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(color: Colors.green),
                         ),
@@ -238,7 +193,7 @@ class ServiceCard extends StatelessWidget {
                      Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: Colors.red.withValues(alpha: 0.1),
+                          color: Colors.red.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(color: Colors.red),
                         ),
@@ -249,7 +204,7 @@ class ServiceCard extends StatelessWidget {
                      Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: Colors.grey.withValues(alpha: 0.1),
+                          color: Colors.grey.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(color: Colors.grey),
                         ),
@@ -265,16 +220,12 @@ class ServiceCard extends StatelessWidget {
                           AppTextStyles.caption()),
                   Text(vehicleName,
                       style: AppTextStyles.bodyMedium().copyWith(fontWeight: FontWeight.bold)),
-                          AppTextStyles.caption()),
-                  Text(vehicleName,
-                      style: AppTextStyles.bodyMedium().copyWith(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
                   ElevatedButton(
                     onPressed: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (_) => ServiceDetailPage(service: service)),
                             builder: (_) => ServiceDetailPage(service: service)),
                       );
                     },
@@ -285,7 +236,6 @@ class ServiceCard extends StatelessWidget {
                     ),
                     child: Text(
                       "Detail",
-                      style: AppTextStyles.buttonSmall(color: Colors.white),
                       style: AppTextStyles.buttonSmall(color: Colors.white),
                     ),
                   ),
@@ -332,6 +282,4 @@ class ServiceCard extends StatelessWidget {
     // Take first letter of first 2 words
     return (parts[0][0] + parts[1][0]).toUpperCase();
   }
-
- 
 }

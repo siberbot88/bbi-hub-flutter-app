@@ -54,7 +54,8 @@ class _ServiceOnTheSitePageState extends State<ServiceOnTheSitePage> {
     // Backend doesn't have "Walk-in" field yet explicitly, maybe check `categoryName`?
     // We'll leave it generic for now.
 
-    final todayQueue = allServices; 
+    // Filter ONLY Walk-in services
+    final todayQueue = allServices.where((s) => (s.type ?? '') == 'on-site').toList(); 
     
     total = todayQueue.length;
     processing = todayQueue.where((s) {
@@ -200,7 +201,10 @@ class _AddWalkInServiceDialogState extends State<AddWalkInServiceDialog> {
   final _odometerCtrl = TextEditingController();
   
   final _serviceNameCtrl = TextEditingController();
-  final _categoryCtrl = TextEditingController(); 
+  // final _categoryCtrl = TextEditingController(); // Removed for Dropdown
+  
+  String? _selectedCategory;
+  final List<String> _categoryOptions = ['ringan', 'sedang', 'berat', 'maintenance']; 
 
   bool _loading = false;
 
@@ -215,7 +219,7 @@ class _AddWalkInServiceDialogState extends State<AddWalkInServiceDialog> {
     _yearCtrl.dispose();
     _odometerCtrl.dispose();
     _serviceNameCtrl.dispose();
-    _categoryCtrl.dispose();
+    // _categoryCtrl.dispose();
     super.dispose();
   }
 
@@ -232,7 +236,7 @@ class _AddWalkInServiceDialogState extends State<AddWalkInServiceDialog> {
             workshopUuid: workshopUuid,
             name: _serviceNameCtrl.text,
             scheduledDate: DateTime.now(), // On the site = Now
-            categoryName: _categoryCtrl.text.isEmpty ? 'Servis Umum' : _categoryCtrl.text,
+            categoryName: _selectedCategory, // Use selected dropdown value
             description: "Walk-in service", // default desc
             
             customerName: _customerNameCtrl.text,
@@ -321,7 +325,54 @@ class _AddWalkInServiceDialogState extends State<AddWalkInServiceDialog> {
                        const SizedBox(height: 16),
                        _sectionHeader(Icons.build, "Informasi Servis"),
                        _inputField("Nama Servis *", _serviceNameCtrl, hint: "Servis Rutin, Ganti Oli...", required: true),
-                       _inputField("Kategori Servis *", _categoryCtrl, hint: "Perbaikan, Servis Ringan...", required: true),
+                       
+                       // Dropdown for Category
+                       Padding(
+                         padding: const EdgeInsets.only(bottom: 12),
+                         child: Column(
+                           crossAxisAlignment: CrossAxisAlignment.start,
+                           children: [
+                             RichText(
+                               text: TextSpan(
+                                 text: "Kategori Servis",
+                                 style: GoogleFonts.poppins(fontSize: 12, color: Colors.black54),
+                                 children: const [
+                                   TextSpan(text: ' *', style: TextStyle(color: Colors.red)),
+                                 ],
+                               ),
+                             ),
+                             const SizedBox(height: 6),
+                             DropdownButtonFormField<String>(
+                               value: _selectedCategory,
+                               items: _categoryOptions.map((String val) {
+                                 return DropdownMenuItem<String>(
+                                   value: val,
+                                   child: Text(
+                                     val[0].toUpperCase() + val.substring(1), // Capitalize
+                                     style: GoogleFonts.poppins(fontSize: 14),
+                                   ),
+                                 );
+                               }).toList(),
+                               onChanged: (val) => setState(() => _selectedCategory = val),
+                               validator: (val) => (val == null || val.isEmpty) ? 'Wajib dipilih' : null,
+                               decoration: InputDecoration(
+                                 hintText: "Pilih Kategori",
+                                 hintStyle: GoogleFonts.poppins(fontSize: 13, color: Colors.grey.shade400),
+                                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                 border: OutlineInputBorder(
+                                   borderRadius: BorderRadius.circular(8),
+                                   borderSide: BorderSide(color: Colors.grey.shade300),
+                                 ),
+                                 enabledBorder: OutlineInputBorder(
+                                   borderRadius: BorderRadius.circular(8),
+                                   borderSide: BorderSide(color: Colors.grey.shade300),
+                                 ),
+                               ),
+                               style: GoogleFonts.poppins(fontSize: 14, color: Colors.black87),
+                             ),
+                           ],
+                         ),
+                       ),
                      ],
                    ),
                  ),

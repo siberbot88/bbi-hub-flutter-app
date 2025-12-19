@@ -8,17 +8,11 @@ import 'package:intl/intl.dart';
 import 'package:bengkel_online_flutter/feature/admin/providers/admin_service_provider.dart';
 import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
 import 'package:bengkel_online_flutter/core/models/service.dart';
-import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
-import 'package:bengkel_online_flutter/feature/admin/providers/admin_service_provider.dart';
-import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
-import 'package:bengkel_online_flutter/core/models/service.dart';
 import '../widgets/service_logging/logging_summary_boxes.dart';
 import '../widgets/service_logging/logging_calendar.dart';
 import '../widgets/service_logging/logging_filter_tabs.dart';
-import '../widgets/service_logging/logging_time_slots.dart';
 import '../widgets/service_logging/logging_task_card.dart';
-import '../widgets/service_logging/logging_helpers.dart';
+// import '../widgets/service_logging/logging_helpers.dart';
 
 class ServiceLoggingPage extends StatefulWidget {
   const ServiceLoggingPage({super.key});
@@ -66,13 +60,10 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
       DateTime(displayedYear, displayedMonth, selectedDay);
 
   bool _matchesFilterKey(ServiceModel t, String filterKey) {
-  bool _matchesFilterKey(ServiceModel t, String filterKey) {
     if (filterKey == 'All') return true;
-    final status = (t.status).toLowerCase();
+    final status = (t.status ?? '').toLowerCase();
     switch (filterKey) {
       case 'Pending':
-        // Di logging page, 'Pending' berarti Accepted but waiting for Mechanic
-        return status == 'pending';
         // Di logging page, 'Pending' berarti Accepted but waiting for Mechanic
         return status == 'pending';
       case 'In Progress':
@@ -107,11 +98,6 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
         final user = (service.displayCustomerName).toLowerCase();
         
         return title.contains(q) || plate.contains(q) || user.contains(q);
-        final title = (service.name).toLowerCase();
-        final plate = (service.displayVehiclePlate).toLowerCase();
-        final user = (service.displayCustomerName).toLowerCase();
-        
-        return title.contains(q) || plate.contains(q) || user.contains(q);
       }
 
       return true;
@@ -133,13 +119,13 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
     // Categorize based on Service Status
     // Pending: Accepted by Admin, but "status" is still pending (Waiting for Mechanic)
     final pending = acceptedServicesForDate
-        .where((t) => (t.status).toLowerCase() == 'pending')
+        .where((t) => (t.status ?? '').toLowerCase() == 'pending')
         .length;
         
     // In Progress: Mechanic Assigned
     final inProgress = acceptedServicesForDate
         .where((t) {
-            final st = (t.status).toLowerCase();
+            final st = (t.status ?? '').toLowerCase();
             return st == 'in_progress' || st == 'progress' || st == 'in progress';
         })
         .length;
@@ -149,22 +135,19 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
     // Let's assume 'completed' and 'menunggu pembayaran' go to Completed box vs Lunas box.
     final completed = acceptedServicesForDate
         .where((t) {
-           final st = (t.status).toLowerCase();
+           final st = (t.status ?? '').toLowerCase();
            return st == 'completed' || st == 'menunggu pembayaran';
         })
         .length;
 
     // Lunas
     final lunas = acceptedServicesForDate
-        .where((t) => (t.status).toLowerCase() == 'lunas')
+        .where((t) => (t.status ?? '').toLowerCase() == 'lunas')
         .length;
 
-    // Declined (Ditolak) - from allServices, not acceptedServicesForDate
-    final declined = allServices
-        .where((t) => (t.acceptanceStatus ?? '').toLowerCase() == 'declined')
-        .length;
+    // Declined (Ditolak) - unused in summary boxes currently
+    // final declined = ...
 
-    final loggingFiltered = _getFilteredTasks(allServices);
     final loggingFiltered = _getFilteredTasks(allServices);
     final title = selectedTimeSlot == null
         ? "Semua Tugas"
@@ -217,10 +200,6 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
               setState(() => selectedDay = day);
               _fetchData();
             },
-            onDaySelected: (day) {
-              setState(() => selectedDay = day);
-              _fetchData();
-            },
           ),
           const SizedBox(height: 12),
           _buildSearchBar(),
@@ -232,9 +211,6 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
           ),
           const SizedBox(height: 12),
           if (selectedLoggingFilter == "All") ...[
-            // Padding for timeslots if we implement logic later
-            // LoggingTimeSlots(...), 
-            // const SizedBox(height: 12),
             // Padding for timeslots if we implement logic later
             // LoggingTimeSlots(...), 
             // const SizedBox(height: 12),
@@ -252,9 +228,7 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: Colors.white,
-          color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border),
           border: Border.all(color: AppColors.border),
         ),
         child: Row(
@@ -262,15 +236,11 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
             const Icon(Icons.search, color: Colors.grey),
             const SizedBox(width: 8),
             Expanded(
-                child: TextField(
-                decoration: InputDecoration.collapsed(
-                child: TextField(
+              child: TextField(
                 decoration: InputDecoration.collapsed(
                   hintText: "Search logging...",
                   hintStyle: AppTextStyles.caption(),
-                  hintStyle: AppTextStyles.caption(),
                 ),
-                style: AppTextStyles.bodyMedium(),
                 style: AppTextStyles.bodyMedium(),
                 onChanged: (val) => setState(() => searchText = val),
               ),
@@ -287,7 +257,6 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
 
   Widget _buildLoggingContent(
       String title, List<ServiceModel> filtered) {
-      String title, List<ServiceModel> filtered) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
@@ -296,24 +265,20 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
           Text(
             title,
             style: AppTextStyles.heading4(),
-            style: AppTextStyles.heading4(),
           ),
           const SizedBox(height: 12),
           if (filtered.isEmpty)
             Center(
-            Center(
               child: Padding(
-                padding: EdgeInsets.all(24.0),
+                padding: const EdgeInsets.all(24.0),
                 child: Text(
                   "Tidak ada tugas yang sesuai dengan filter.",
                   textAlign: TextAlign.center,
-                  style: AppTextStyles.bodyMedium(color: AppColors.textSecondary),
                   style: AppTextStyles.bodyMedium(color: AppColors.textSecondary),
                 ),
               ),
             )
           else
-            ...filtered.map((t) => LoggingTaskCard(service: t)),
             ...filtered.map((t) => LoggingTaskCard(service: t)),
         ],
       ),
@@ -328,7 +293,6 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
         }
         selectedDay = 1;
         _fetchData();
-        _fetchData();
       });
 
   void _nextMonth() => setState(() {
@@ -338,7 +302,6 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
           displayedYear += 1;
         }
         selectedDay = 1;
-        _fetchData();
         _fetchData();
       });
 

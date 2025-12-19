@@ -1,23 +1,17 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
 import 'logging_helpers.dart';
 import '../../screens/service_pending.dart' as pending;
 import '../../screens/service_progress.dart' as progress;
-import '../../screens/service_complete.dart' as complete;
-import '../../screens/invoice_payment.dart' as invoice; // Keep if needed or remove
 import '../../screens/invoice_form.dart' as invoice_form;
 import 'package:bengkel_online_flutter/core/models/service.dart';
 
 class LoggingTaskCard extends StatelessWidget {
   final ServiceModel service;
-  final ServiceModel service;
 
   const LoggingTaskCard({
     super.key,
-    required this.service,
     required this.service,
   });
 
@@ -35,9 +29,6 @@ class LoggingTaskCard extends StatelessWidget {
     // Map API status to UI status colors
     // Statuses: pending, in_progress, completed, canceled
     final status = service.status ?? 'Pending';
-    // Map API status to UI status colors
-    // Statuses: pending, in_progress, completed, canceled
-    final status = service.status ?? 'Pending';
 
     if (status.toLowerCase() == "completed" || status.toLowerCase() == "lunas") {
       statusColor = AppColors.statusCompleted;
@@ -46,7 +37,6 @@ class LoggingTaskCard extends StatelessWidget {
     } else if (status.toLowerCase() == "pending") {
       statusColor = AppColors.statusPending; // Pending mechanic assignment
     } else {
-      statusColor = AppColors.textSecondary;
       statusColor = AppColors.textSecondary;
     }
 
@@ -58,7 +48,6 @@ class LoggingTaskCard extends StatelessWidget {
     if (statusLower == 'pending') {
       actionButton = ElevatedButton(
         onPressed: () {
-          // TODO: Use ServiceModel in ServicePendingDetail
            Navigator.push(
               context,
               MaterialPageRoute(
@@ -77,7 +66,6 @@ class LoggingTaskCard extends StatelessWidget {
     } else if (statusLower == 'in_progress' || statusLower == 'progress' || statusLower == 'in progress' || statusLower == "on_process") {
       actionButton = ElevatedButton(
         onPressed: () {
-          // TODO: Use ServiceModel in ServiceProgressDetail
            Navigator.push(
               context,
               MaterialPageRoute(
@@ -137,10 +125,6 @@ class LoggingTaskCard extends StatelessWidget {
     // Assuming time is not separate in ServiceModel yet, or use scheduledDate time
     final timeStr = "${scheduledDate.hour.toString().padLeft(2, '0')}:${scheduledDate.minute.toString().padLeft(2, '0')}";
 
-    final scheduledDate = service.scheduledDate ?? DateTime.now();
-    // Assuming time is not separate in ServiceModel yet, or use scheduledDate time
-    final timeStr = "${scheduledDate.hour.toString().padLeft(2, '0')}:${scheduledDate.minute.toString().padLeft(2, '0')}";
-
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
@@ -164,16 +148,11 @@ class LoggingTaskCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                     color: statusColor.withOpacity(0.2),
-                    color: statusColor.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(20)),
-                child: Text(status,
-                    style: AppTextStyles.caption(color: statusColor).copyWith(fontWeight: FontWeight.w600)),
                 child: Text(status,
                     style: AppTextStyles.caption(color: statusColor).copyWith(fontWeight: FontWeight.w600)),
               ),
               Text(
-                  "${LoggingHelpers.formatDate(scheduledDate)} • $timeStr",
-                  style: AppTextStyles.caption()),
                   "${LoggingHelpers.formatDate(scheduledDate)} • $timeStr",
                   style: AppTextStyles.caption()),
             ],
@@ -181,13 +160,7 @@ class LoggingTaskCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(service.name,
               style: AppTextStyles.heading5()),
-          Text(service.name,
-              style: AppTextStyles.heading5()),
           const SizedBox(height: 4),
-          Text(service.complaint ?? service.request ?? service.description ?? '-',
-              style: AppTextStyles.bodyMedium(color: AppColors.textPrimary), 
-              maxLines: 2, 
-              overflow: TextOverflow.ellipsis),
           Text(service.complaint ?? service.request ?? service.description ?? '-',
               style: AppTextStyles.bodyMedium(color: AppColors.textPrimary), 
               maxLines: 2, 
@@ -196,10 +169,7 @@ class LoggingTaskCard extends StatelessWidget {
           Row(
             children: [
               const Icon(Icons.settings, size: 16, color: AppColors.textSecondary),
-              const Icon(Icons.settings, size: 16, color: AppColors.textSecondary),
               const SizedBox(width: 6),
-              Text("${service.displayVehicleName}  #${service.displayVehiclePlate}",
-                  style: AppTextStyles.caption()),
               Text("${service.displayVehicleName}  #${service.displayVehiclePlate}",
                   style: AppTextStyles.caption()),
             ],
@@ -244,23 +214,6 @@ class LoggingTaskCard extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  // Temporary helper to maintain compatibility with detail pages if they still use Map
-  // Ideally those pages should also be refactored
-  Map<String, dynamic> _toLegacyMap(ServiceModel s) {
-    return {
-      "id": s.id,
-      "user": s.displayCustomerName,
-      "date": s.scheduledDate ?? DateTime.now(),
-      "title": s.name,
-      "desc": s.description ?? s.complaint ?? "-",
-      "plate": s.displayVehiclePlate,
-      "motor": s.displayVehicleName,
-      "status": s.status,
-      "category": "logging",
-      "time": "", // todo
-    };
   }
 
   // Temporary helper to maintain compatibility with detail pages if they still use Map

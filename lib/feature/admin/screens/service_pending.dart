@@ -7,15 +7,9 @@ import 'package:provider/provider.dart';
 import 'package:bengkel_online_flutter/feature/admin/providers/admin_service_provider.dart';
 import 'package:bengkel_online_flutter/core/models/service.dart';
 import 'package:intl/intl.dart';          
-import 'package:flutter_svg/flutter_svg.dart';   
-import 'package:provider/provider.dart';
-import 'package:bengkel_online_flutter/feature/admin/providers/admin_service_provider.dart';
-import 'package:bengkel_online_flutter/core/models/service.dart';
-import 'package:intl/intl.dart';          
 
 
 class ServicePendingDetail extends StatelessWidget {
-  final ServiceModel service;
   final ServiceModel service;
 
   const ServicePendingDetail({super.key, required this.service});
@@ -31,18 +25,6 @@ class ServicePendingDetail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const mainColor = Color(0xFFDC2626);
-    
-    // Helpers
-    final id = service.id;
-    final customerName = service.displayCustomerName;
-    final scheduledDate = service.scheduledDate;
-    final vehicleName = service.displayVehicleName;
-    final plate = service.displayVehiclePlate;
-    final category = service.vehicle?.category ?? service.vehicle?.type ?? "Unknown";
-    final phone = service.customer?.phoneNumber ?? '-';
-    final address = service.customer?.address ?? '-';
-    final desc = service.complaint ?? service.request ?? service.description ?? '-';
-    final status = service.status;
     
     // Helpers
     final id = service.id;
@@ -174,14 +156,12 @@ class ServicePendingDetail extends StatelessWidget {
                       children: [
                         Text(
                           customerName,
-                          customerName,
                           style: GoogleFonts.poppins(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         Text(
-                          "ID: $id",
                           "ID: $id",
                           style: GoogleFonts.poppins(
                             fontSize: 13,
@@ -202,7 +182,6 @@ class ServicePendingDetail extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        scheduledDate != null ? _formatDate(scheduledDate) : "-",
                         scheduledDate != null ? _formatDate(scheduledDate) : "-",
                         style: GoogleFonts.poppins(
                           fontSize: 14,
@@ -237,7 +216,6 @@ class ServicePendingDetail extends StatelessWidget {
               _detailRow(
                 "Jenis Kendaraan",
                 category,
-                category,
                 custom: Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
@@ -246,7 +224,6 @@ class ServicePendingDetail extends StatelessWidget {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    category,
                     category,
                     style: GoogleFonts.poppins(
                       fontSize: 12,
@@ -257,17 +234,13 @@ class ServicePendingDetail extends StatelessWidget {
                 ),
               ),
               _detailRow("Model Kendaraan", vehicleName),
-              _detailRow("Model Kendaraan", vehicleName),
               _detailRow(
                 "Penjadwalan",
                 scheduledDate != null ? _formatDate(scheduledDate) : '-',
-                scheduledDate != null ? _formatDate(scheduledDate) : '-',
               ),
-              _detailRow("Plat Nomor", plate),
               _detailRow("Plat Nomor", plate),
               _detailRow(
                 "Status",
-                status,
                 status,
                 custom: Container(
                   padding:
@@ -278,7 +251,6 @@ class ServicePendingDetail extends StatelessWidget {
                   ),
                   child: Text(
                     (status ?? "PENDING").toString().toUpperCase(),
-                    (status ?? "PENDING").toString().toUpperCase(),
                     style: GoogleFonts.poppins(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -288,10 +260,8 @@ class ServicePendingDetail extends StatelessWidget {
                 ),
               ),
               _detailRow("No. Telepon", phone),
-              _detailRow("No. Telepon", phone),
               _detailRow(
                 "Alamat",
-                address,
                 address,
               ),
 
@@ -304,7 +274,6 @@ class ServicePendingDetail extends StatelessWidget {
                 style: GoogleFonts.poppins(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
-                  color: Colors.black87,  
                   color: Colors.black87,  
                 ),
               ),
@@ -319,7 +288,6 @@ class ServicePendingDetail extends StatelessWidget {
                   color: mainColor.withAlpha(13),
                 ),
                 child: Text(
-                  desc,
                   desc,
                   style: GoogleFonts.poppins(fontSize: 14),
                 ),
