@@ -124,12 +124,15 @@ class ServiceCard extends StatelessWidget {
                       style: AppTextStyles.bodyMedium(color: AppColors.textPrimary).copyWith(fontWeight: FontWeight.w600)),
                   const SizedBox(height: 10),
                   if ((service.acceptanceStatus ?? 'pending').toLowerCase() == 'pending')
-                    Row(
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
                       children: [
-                        Builder(
-                          builder: (ctx) => ElevatedButton(
+                        SizedBox(
+                          height: 36,
+                          child: ElevatedButton(
                             onPressed: () => showRejectDialog(
-                              ctx,
+                              context,
                               onConfirm: (reason, desc) {
                                 context
                                     .read<AdminServiceProvider>()
@@ -143,9 +146,9 @@ class ServiceCard extends StatelessWidget {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.red.shade700,
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 20, vertical: 12),
+                                  horizontal: 16, vertical: 0),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30),
+                                borderRadius: BorderRadius.circular(20),
                               ),
                             ),
                             child: Text(
@@ -154,27 +157,29 @@ class ServiceCard extends StatelessWidget {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        ElevatedButton(
-                          onPressed: () => showAcceptDialog(
-                            context,
-                            onConfirm: () {
-                              context
-                                  .read<AdminServiceProvider>()
-                                  .acceptServiceAsAdmin(service.id);
-                            },
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green.shade700,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
+                        SizedBox(
+                          height: 36,
+                          child: ElevatedButton(
+                            onPressed: () => showAcceptDialog(
+                              context,
+                              onConfirm: () {
+                                context
+                                    .read<AdminServiceProvider>()
+                                    .acceptServiceAsAdmin(service.id);
+                              },
                             ),
-                          ),
-                          child: Text(
-                            "Terima",
-                            style: AppTextStyles.buttonSmall(color: Colors.white),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green.shade700,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 0),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                            ),
+                            child: Text(
+                              "Terima",
+                              style: AppTextStyles.buttonSmall(color: Colors.white),
+                            ),
                           ),
                         ),
                       ],

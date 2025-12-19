@@ -66,10 +66,12 @@ class AdminServiceProvider extends ServiceProvider {
         mechanicUuid: mechanicUuid,
       );
 
+      // Optimistic local update - immediately update local state
+      _updateLocalServiceAcceptance(id, 'accepted', newStatus: 'in_progress');
+
       if (refresh) {
-        // refresh detail & list dengan logic bawaan ServiceProvider
+        // Refresh detail for the specific service
         await fetchDetail(id);
-        await fetchServices(page: currentPage);
       }
     } catch (e) {
       if (kDebugMode) print('acceptServiceAsAdmin error: $e');
@@ -92,13 +94,63 @@ class AdminServiceProvider extends ServiceProvider {
         reasonDescription: reasonDescription,
       );
 
+      // Optimistic local update - immediately update local state
+      _updateLocalServiceAcceptance(id, 'declined', newReason: reason, newReasonDescription: reasonDescription);
+
       if (refresh) {
+        // Refresh detail for the specific service
         await fetchDetail(id);
-        await fetchServices(page: currentPage);
       }
     } catch (e) {
       if (kDebugMode) print('declineServiceAsAdmin error: $e');
       rethrow;
+    }
+  }
+
+  /// Helper to update local service state optimistically
+  void _updateLocalServiceAcceptance(
+    String id, 
+    String newAcceptanceStatus, {
+    String? newStatus,
+    String? newReason,
+    String? newReasonDescription,
+  }) {
+    final idx = findItemIndex(id);
+    if (idx >= 0) {
+      final oldService = items[idx];
+      final updatedService = ServiceModel(
+        id: oldService.id,
+        code: oldService.code,
+        name: oldService.name,
+        description: oldService.description,
+        price: oldService.price,
+        scheduledDate: oldService.scheduledDate,
+        estimatedTime: oldService.estimatedTime,
+        status: newStatus ?? oldService.status,
+        type: oldService.type,
+        acceptanceStatus: newAcceptanceStatus,
+        acceptedAt: newAcceptanceStatus == 'accepted' ? DateTime.now() : oldService.acceptedAt,
+        completedAt: oldService.completedAt,
+        customerUuid: oldService.customerUuid,
+        workshopUuid: oldService.workshopUuid,
+        vehicleId: oldService.vehicleId,
+        mechanicUuid: oldService.mechanicUuid,
+        customer: oldService.customer,
+        vehicle: oldService.vehicle,
+        workshopName: oldService.workshopName,
+        mechanic: oldService.mechanic,
+        items: oldService.items,
+        note: oldService.note,
+        categoryName: oldService.categoryName,
+        reason: newReason ?? oldService.reason,
+        reasonDescription: newReasonDescription ?? oldService.reasonDescription,
+        feedbackMechanic: oldService.feedbackMechanic,
+        createdAt: oldService.createdAt,
+        updatedAt: DateTime.now(),
+      );
+      
+      // Use parent's protected method to update item
+      updateLocalItemAt(idx, updatedService);
     }
   }
 

@@ -378,4 +378,19 @@ class ServiceProvider extends ChangeNotifier {
     _items.insert(0, item);
     notifyListeners();
   }
+
+  /// Helper untuk update item di index tertentu (untuk optimistic update)
+  @protected
+  void updateLocalItemAt(int index, ServiceModel updatedItem) {
+    if (index >= 0 && index < _items.length) {
+      _items[index] = updatedItem;
+      notifyListeners();
+    }
+  }
+
+  /// Helper untuk mendapatkan index item berdasarkan id
+  @protected
+  int findItemIndex(String id) {
+    return _items.indexWhere((e) => e.id == id);
+  }
 }

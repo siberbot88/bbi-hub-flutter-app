@@ -8,6 +8,8 @@ import '../providers/admin_service_provider.dart';
 import 'package:bengkel_online_flutter/core/models/service.dart';
 import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
 import '../widgets/service/service_card.dart';
+import '../widgets/service/service_calendar_section.dart';
+import '../widgets/service/service_helpers.dart';
 
 class ServiceOnTheSitePage extends StatefulWidget {
   const ServiceOnTheSitePage({super.key});
@@ -22,21 +24,61 @@ class _ServiceOnTheSitePageState extends State<ServiceOnTheSitePage> {
   int processing = 0;
   int completed = 0;
 
+  // Date filter state
+  int displayedMonth = DateTime.now().month;
+  int displayedYear = DateTime.now().year;
+  int selectedDay = DateTime.now().day;
+  
+  DateTime get selectedDate =>
+      DateTime(displayedYear, displayedMonth, selectedDay);
+
   @override
   void initState() {
     super.initState();
-    // Fetch data for "Today" and status=all, but we specifically filter logic here
-    // But standard fetchServices fetches by date.
-    // For "On-the-site", we assume it implies services created today or scheduled today that are walk-ins?
-    // User image says "Antrian Hari Ini". So we fetch services for today.
-    // Ideally we distinguish 'walk-in' vs 'booking'. Assuming all 'pending/accepted' today are relevant?
-    // Or maybe we add 'category' param later. For now, show all "Today" services in this tab 
-    // OR filter by some logic. User said "tampilan menu yang diatas itu ada 3 ... sekaliann fitur on the sitee lemgkap".
-    // I'll filter logic to just show local daily queue.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchData();
+    });
+  }
+
+  void _fetchData() {
+    final auth = context.read<AuthProvider>();
+    final workshopUuid = auth.user?.workshopUuid;
+    final startOfDay = DateTime(displayedYear, displayedMonth, selectedDay, 0, 0, 0);
+    final endOfDay = DateTime(displayedYear, displayedMonth, selectedDay, 23, 59, 59);
     
-    // Actually, `ServicePageAdmin` usually handles the fetch at parent level for the selected date.
-    // But this page might want auto-refresh.
-    // Let's rely on the parent provider data for "Today" (assuming parent handles date selection).
+    final dateFrom = DateFormat('yyyy-MM-dd HH:mm:ss').format(startOfDay);
+    final dateTo = DateFormat('yyyy-MM-dd HH:mm:ss').format(endOfDay);
+    print("DEBUG: service_on_the_site _fetchData -> Selected: $selectedDate, From: $dateFrom, To: $dateTo");
+    
+    context.read<AdminServiceProvider>().fetchServices(
+      dateFrom: dateFrom,
+      dateTo: dateTo,
+      workshopUuid: workshopUuid,
+    );
+  }
+
+  void _prevMonth() {
+    setState(() {
+      displayedMonth--;
+      if (displayedMonth < 1) {
+        displayedMonth = 12;
+        displayedYear--;
+      }
+      selectedDay = 1;
+    });
+    _fetchData();
+  }
+
+  void _nextMonth() {
+    setState(() {
+      displayedMonth++;
+      if (displayedMonth > 12) {
+        displayedMonth = 1;
+        displayedYear++;
+      }
+      selectedDay = 1;
+    });
+    _fetchData();
   }
 
   @override
@@ -54,8 +96,14 @@ class _ServiceOnTheSitePageState extends State<ServiceOnTheSitePage> {
     // Backend doesn't have "Walk-in" field yet explicitly, maybe check `categoryName`?
     // We'll leave it generic for now.
 
-    // Filter ONLY Walk-in services
+    // Filter ONLY Walk-in/On-site services
     final todayQueue = allServices.where((s) => (s.type ?? '') == 'on-site').toList(); 
+    
+    // Debug logging
+    print('DEBUG service_on_the_site: allServices=${allServices.length}, onSiteServices=${todayQueue.length}');
+    for (var s in todayQueue) {
+      print('  -> id=${s.id}, type=${s.type}, status=${s.status}, name=${s.name}');
+    }
     
     total = todayQueue.length;
     processing = todayQueue.where((s) {
@@ -75,15 +123,28 @@ class _ServiceOnTheSitePageState extends State<ServiceOnTheSitePage> {
           _buildAddButton(context),
           const SizedBox(height: 16),
           _buildSummaryBoxes(),
+          const SizedBox(height: 16),
+          // Calendar Section for date filtering
+          ServiceCalendarSection(
+            displayedMonth: displayedMonth,
+            displayedYear: displayedYear,
+            selectedDay: selectedDay,
+            onPrevMonth: _prevMonth,
+            onNextMonth: _nextMonth,
+            onDaySelected: (day) {
+              setState(() => selectedDay = day);
+              _fetchData();
+            },
+          ),
           const SizedBox(height: 20),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Antrian Hari Ini", style: AppTextStyles.heading4()),
+                Text("Antrian On-the-site", style: AppTextStyles.heading4()),
                 Text(
-                  DateFormat("d MMM").format(DateTime.now()), 
+                  DateFormat("d MMM yyyy").format(selectedDate), 
                   style: AppTextStyles.bodyMedium(color: Colors.grey),
                 ),
               ],

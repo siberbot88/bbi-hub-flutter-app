@@ -4,11 +4,6 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 
-import 'package:provider/provider.dart';
-
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
-
 import 'service_logging.dart';
 import 'service_on_the_site.dart';
 import '../widgets/custom_header.dart';
