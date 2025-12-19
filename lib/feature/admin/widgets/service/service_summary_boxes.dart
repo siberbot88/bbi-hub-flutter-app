@@ -5,12 +5,14 @@ class ServiceSummaryBoxes extends StatelessWidget {
   final int all;
   final int accepted;
   final int pending;
+  final int declined;
 
   const ServiceSummaryBoxes({
     super.key,
     required this.all,
     required this.accepted,
     required this.pending,
+    required this.declined,
   });
 
   @override
@@ -21,6 +23,7 @@ class ServiceSummaryBoxes extends StatelessWidget {
         _buildBox("Semua", all, Colors.blueGrey, Colors.grey.shade200),
         _buildBox("Diterima", accepted, const Color(0xFF4285F4), const Color(0xFFE8F0FE)), // Blue
         _buildBox("Menunggu", pending, const Color(0xFFFBBC05), const Color(0xFFFEF7E0)), // Yellow
+        _buildBox("Ditolak", declined, const Color(0xFFD32F2F), const Color(0xFFFFEBEE)), // Red
       ]),
     );
   }
@@ -43,7 +46,7 @@ class ServiceSummaryBoxes extends StatelessWidget {
             const SizedBox(height: 6),
             Text(label,
                 style: GoogleFonts.poppins(
-                    fontSize: 12, fontWeight: FontWeight.w600, color: textColor)),
+                    fontSize: 10, fontWeight: FontWeight.w600, color: textColor), maxLines: 1, overflow: TextOverflow.ellipsis),
           ],
         ),
       ),

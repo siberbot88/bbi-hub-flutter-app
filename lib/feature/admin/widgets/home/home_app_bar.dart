@@ -173,7 +173,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                   const SizedBox(height: 76),
                   const Padding(padding: EdgeInsets.only(left: 20)),
                   Text(
-                    'Selamat $waktu, $userName',
+                    'Selamat $waktu, $userName', // userName displays user.name, passed from home_app_bar_wrapper or similar
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: greetingSize,

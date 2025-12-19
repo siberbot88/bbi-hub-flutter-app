@@ -3,6 +3,7 @@ import 'package:bengkel_online_flutter/core/services/api_service.dart';
 import 'package:bengkel_online_flutter/core/models/service.dart';
 import 'package:bengkel_online_flutter/core/providers/service_provider.dart';
 import 'package:bengkel_online_flutter/core/models/employment.dart';
+import 'package:bengkel_online_flutter/core/models/dashboard_stats.dart';
 
 /// Provider khusus ADMIN
 /// Extend ServiceProvider supaya:
@@ -24,6 +25,7 @@ class AdminServiceProvider extends ServiceProvider {
     int page = 1,
     int perPage = 10,
   }) {
+    print("DEBUG: fetching services with dateFrom=$dateFrom, dateTo=$dateTo, status=$status");
     return _adminApi.adminFetchServicesRaw(
       page: page,
       perPage: perPage,
@@ -147,6 +149,11 @@ class AdminServiceProvider extends ServiceProvider {
       await _adminApi.adminUpdateServiceStatus(id, status);
       await fetchDetail(id); // refresh logic
   }
+  /// ADMIN: Fetch Dashboard Stats
+  Future<DashboardStats> fetchDashboardStats({String? workshopUuid}) {
+    return _adminApi.adminFetchDashboardStats(workshopUuid: workshopUuid);
+  }
+
   /// ADMIN: Fetch Employee List
   Future<List<Employment>> fetchEmployees({
     int page = 1, 
@@ -185,7 +192,7 @@ class AdminServiceProvider extends ServiceProvider {
     int? vehicleOdometer,
   }) async {
     try {
-      final created = await _adminApi.adminCreateService(
+      final created = await _adminApi.adminCreateWalkInService(
         workshopUuid: workshopUuid,
         name: name,
         scheduledDate: scheduledDate,
@@ -193,17 +200,17 @@ class AdminServiceProvider extends ServiceProvider {
         price: price,
         description: description,
         
-        customerName: customerName,
-        customerPhone: customerPhone,
+        customerName: customerName ?? 'Walk-in Customer',
+        customerPhone: customerPhone ?? '',
         customerEmail: customerEmail,
         
-        vehiclePlate: vehiclePlate,
+        vehiclePlate: vehiclePlate ?? '',
         vehicleBrand: vehicleBrand,
         vehicleModel: vehicleModel,
         vehicleYear: vehicleYear,
         vehicleOdometer: vehicleOdometer,
         
-        status: 'pending', // Default pending mechanic selection
+        // Status is handled by backend (default accepted)
       );
       
       // Update local list

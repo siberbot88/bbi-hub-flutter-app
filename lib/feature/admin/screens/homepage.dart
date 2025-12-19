@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../../core/services/auth_provider.dart';
 import 'service_page.dart';
 import '../widgets/home/home_app_bar.dart';
 import '../widgets/home/home_stat_card.dart';
@@ -11,9 +13,12 @@ class HomePage extends StatelessWidget {
   
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      appBar: HomeAppBar(),
-      body: HomeContent(),
+    final user = context.watch<AuthProvider>().user;
+    return Scaffold(
+      appBar: HomeAppBar(
+        userName: user?.name ?? "Admin",
+      ),
+      body: const HomeContent(),
     );
   }
 }

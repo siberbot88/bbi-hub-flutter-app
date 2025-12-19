@@ -18,6 +18,9 @@ class ServiceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Debug print
+    // print("DEBUG CARD: ${service.name} status=${service.status} acceptance=${service.acceptanceStatus}");
+
     // Helper accessors
     final customerName = service.displayCustomerName;
     final vehicleName = service.displayVehicleName;
@@ -191,7 +194,7 @@ class ServiceCard extends StatelessWidget {
                         ),
                         child: Text("Diterima", style: AppTextStyles.caption(color: Colors.green).copyWith(fontWeight: FontWeight.bold)),
                      )
-                  else if ((service.acceptanceStatus ?? '').toLowerCase() == 'declined' || (service.acceptanceStatus ?? '').toLowerCase() == 'rejected')
+                  else if (['declined', 'rejected', 'canceled', 'cancelled'].contains((service.acceptanceStatus ?? '').toLowerCase()))
                      Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
@@ -200,6 +203,17 @@ class ServiceCard extends StatelessWidget {
                           border: Border.all(color: Colors.red),
                         ),
                         child: Text("Ditolak", style: AppTextStyles.caption(color: Colors.red).copyWith(fontWeight: FontWeight.bold)),
+                     )
+                  else 
+                     // Fallback for unknown status or if status is null but not pending
+                     Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.grey),
+                        ),
+                        child: Text(service.acceptanceStatus ?? 'Unknown', style: AppTextStyles.caption(color: Colors.grey)),
                      )
                 ],
               ),

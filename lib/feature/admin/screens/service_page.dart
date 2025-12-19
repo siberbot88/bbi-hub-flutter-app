@@ -47,12 +47,18 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
   void _fetchData() {
     final auth = context.read<AuthProvider>();
     final workshopUuid = auth.user?.workshopUuid;
-    final dateStr = DateFormat('yyyy-MM-dd').format(selectedDate);
+    final startOfDay = DateTime(displayedYear, displayedMonth, selectedDay, 0, 0, 0);
+    final endOfDay = DateTime(displayedYear, displayedMonth, selectedDay, 23, 59, 59);
+    
+    // Format to ISO string or format expected by backend (usually YYYY-MM-DD HH:mm:ss)
+    final dateFrom = DateFormat('yyyy-MM-dd HH:mm:ss').format(startOfDay);
+    final dateTo = DateFormat('yyyy-MM-dd HH:mm:ss').format(endOfDay);
+    print("DEBUG: _fetchData UI -> Selected: $selectedDate, From: $dateFrom, To: $dateTo");
     
     // Fetch ALL services for the date
     context.read<AdminServiceProvider>().fetchServices(
-      dateFrom: dateStr,
-      dateTo: dateStr,
+      dateFrom: dateFrom,
+      dateTo: dateTo,
       workshopUuid: workshopUuid,
       // Removed status: 'pending' to get all services for stats and filtering
     );
@@ -65,7 +71,18 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
         displayedMonth = 12;
         displayedYear--;
       }
-      selectedDay = 1;
+      final daysInMonth = ServiceHelpers.daysInMonth(displayedYear, displayedMonth);
+      if (selectedDay > daysInMonth) {
+        selectedDay = daysInMonth; // Clamp to last day of new month
+      } else {
+        selectedDay = 1; // Or default to 1 as before? User said "tanggal yg digunakan juga belum sesuai". 
+        // If I switch month, usually I want to see the 1st, or stay on same day index?
+        // Let's reset to 1 as it's safer, or clamp. The previous code reset to 1.
+        // But user said "tanggal yg digunakan belum sesuai". maybe they want to keep the day?
+        // I will reset to 1 but ensure it's valid.
+        selectedDay = 1;
+      }
+      print("DEBUG: PrevMonth -> Month: $displayedMonth, Year: $displayedYear, Day: $selectedDay");
     });
     _fetchData();
   }
@@ -77,7 +94,7 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
         displayedMonth = 1;
         displayedYear++;
       }
-      selectedDay = 1;
+      selectedDay = 1; // Default to 1st of next month
     });
     _fetchData();
   }
@@ -143,6 +160,11 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
     final pendingCount = allServices.where((s) => (s.acceptanceStatus ?? '').toLowerCase() == 'pending').length;
     // Terima (Accepted): acceptance_status == "accepted"
     final acceptedCount = allServices.where((s) => (s.acceptanceStatus ?? '').toLowerCase() == 'accepted').length;
+    // Tolak (Declined): acceptance_status == "declined" or "rejected"
+    final declinedCount = allServices.where((s) {
+       final st = (s.acceptanceStatus ?? '').toLowerCase();
+       return st == 'declined' || st == 'rejected' || st == 'canceled' || st == 'cancelled';
+    }).length;
     
     // Filter List
     final filteredServices = allServices.where((s) {
@@ -152,7 +174,7 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
       if (selectedFilter == 'Semua') return true;
       if (selectedFilter == 'Menunggu') return acceptance == 'pending';
       if (selectedFilter == 'Terima') return acceptance == 'accepted';
-      if (selectedFilter == 'Tolak') return acceptance == 'declined' || acceptance == 'rejected';
+      if (selectedFilter == 'Tolak') return acceptance == 'declined' || acceptance == 'rejected' || acceptance == 'canceled' || acceptance == 'cancelled';
       return true;
     }).toList();
 
@@ -168,6 +190,7 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
             all: allCount,
             accepted: acceptedCount,
             pending: pendingCount,
+            declined: declinedCount,
           ),
           const SizedBox(height: 12),
           

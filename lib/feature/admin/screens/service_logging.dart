@@ -42,16 +42,15 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
   void _fetchData() {
     final auth = context.read<AuthProvider>();
     final workshopUuid = auth.user?.workshopUuid;
-    final dateStr = DateFormat('yyyy-MM-dd').format(selectedDate);
+    final startOfDay = DateTime(displayedYear, displayedMonth, selectedDay, 0, 0, 0);
+    final endOfDay = DateTime(displayedYear, displayedMonth, selectedDay, 23, 59, 59);
 
-    // Fetch ALL services for the date, then we filter client-side if needed for 'accepted' status
-    // Or if API supports filtering by acceptance_status, use that.
-    // Assuming API 'status' param maps to service status (pending, in_progress, etc), not acceptance.
-    // So we fetch by date and workshop, then filter for acceptanceStatus == 'accepted'.
+    final dateFrom = DateFormat('yyyy-MM-dd HH:mm:ss').format(startOfDay);
+    final dateTo = DateFormat('yyyy-MM-dd HH:mm:ss').format(endOfDay);
     
     context.read<AdminServiceProvider>().fetchServices(
-      dateFrom: dateStr,
-      dateTo: dateStr,
+      dateFrom: dateFrom,
+      dateTo: dateTo,
       workshopUuid: workshopUuid,
       // We don't limit by status here because logging page shows Pending (Mechanic), In Progress, and Completed.
       // But we MUST exclude those that are NOT accepted yet (handled in filtering later).
@@ -192,7 +191,6 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
             inProgress: inProgress,
             completed: completed,
             lunas: lunas,
-            declined: declined,
           ),
           const SizedBox(height: 12),
           LoggingCalendar(

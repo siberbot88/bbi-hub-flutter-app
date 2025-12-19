@@ -6,7 +6,6 @@ class LoggingSummaryBoxes extends StatelessWidget {
   final int inProgress;
   final int completed;
   final int lunas;
-  final int declined;
 
   const LoggingSummaryBoxes({
     super.key,
@@ -14,7 +13,6 @@ class LoggingSummaryBoxes extends StatelessWidget {
     required this.inProgress,
     required this.completed,
     required this.lunas,
-    required this.declined,
   });
 
   @override
@@ -31,8 +29,6 @@ class LoggingSummaryBoxes extends StatelessWidget {
           _buildBox("Selesai", completed, Colors.green),
           const SizedBox(width: 8),
           _buildBox("Lunas", lunas, Colors.teal),
-          const SizedBox(width: 8),
-          _buildBox("Ditolak", declined, Colors.red),
         ]),
       ),
     );

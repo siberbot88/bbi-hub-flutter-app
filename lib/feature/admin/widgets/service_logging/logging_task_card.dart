@@ -5,7 +5,8 @@ import 'logging_helpers.dart';
 import '../../screens/service_pending.dart' as pending;
 import '../../screens/service_progress.dart' as progress;
 import '../../screens/service_complete.dart' as complete;
-import '../../screens/invoice_payment.dart' as invoice;
+import '../../screens/invoice_payment.dart' as invoice; // Keep if needed or remove
+import '../../screens/invoice_form.dart' as invoice_form;
 import 'package:bengkel_online_flutter/core/models/service.dart';
 
 class LoggingTaskCard extends StatelessWidget {
@@ -90,8 +91,7 @@ class LoggingTaskCard extends StatelessWidget {
            Navigator.push(
               context,
               MaterialPageRoute(
-                // Change destination to PaymentInvoicePage as requested or placeholder
-                builder: (_) => const invoice.PaymentInvoicePage(), 
+                builder: (_) => invoice_form.InvoiceFormPage(task: _toLegacyMap(service)), 
               ));
         },
         style: ElevatedButton.styleFrom(
@@ -109,7 +109,7 @@ class LoggingTaskCard extends StatelessWidget {
            Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => const invoice.PaymentInvoicePage(), 
+                builder: (_) => invoice_form.InvoiceFormPage(task: _toLegacyMap(service)), 
               ));
         },
         style: ElevatedButton.styleFrom(

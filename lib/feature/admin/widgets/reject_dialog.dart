@@ -3,13 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 void showRejectDialog(BuildContext context, {required Function(String, String) onConfirm}) {
-  final List<String> reasons = [
-    "Harga tidak sesuai",
-    "Jadwal bentrok",
-    "Lokasi terlalu jauh",
-    "Lainnya"
-  ];
-  String? selectedReason;
+  final Map<String, String> reasonMap = {
+    "Antrian Penuh": "antrian sedang full",
+    "Jadwal Bentrok": "jadwal bentrok",
+    "Lokasi Terlalu Jauh": "lokasi terlalu jauh",
+    "Kendaraan Tidak Sesuai": "kendaraan tidak sesuai",
+    "Lainnya": "lainnya",
+  };
+  
+  String? selectedReasonValue;
   final TextEditingController notesController = TextEditingController();
 
   showDialog(
@@ -48,14 +50,14 @@ void showRejectDialog(BuildContext context, {required Function(String, String) o
                       style: GoogleFonts.poppins(fontSize: 13)),
                   const SizedBox(height: 6),
                   DropdownButtonFormField<String>(
-                    initialValue: selectedReason,
-                    items: reasons
+                    value: selectedReasonValue,
+                    items: reasonMap.entries
                         .map((e) => DropdownMenuItem(
-                              value: e,
-                              child: Text(e),
+                              value: e.value,
+                              child: Text(e.key),
                             ))
                         .toList(),
-                    onChanged: (val) => setState(() => selectedReason = val),
+                    onChanged: (val) => setState(() => selectedReasonValue = val),
                     decoration: InputDecoration(
                       hintText: "Pilih alasan anda",
                       border: OutlineInputBorder(
@@ -104,7 +106,11 @@ void showRejectDialog(BuildContext context, {required Function(String, String) o
                         child: ElevatedButton(
                           onPressed: () {
                             Navigator.pop(context); // Tutup popup pertama
-                            showConfirmRejectDialog(context, onConfirm, selectedReason ?? "Lainnya", notesController.text); // Muncul popup kedua
+                            showConfirmRejectDialog(
+                                context,
+                                onConfirm,
+                                selectedReasonValue ?? "lainnya",
+                                notesController.text); // Muncul popup kedua
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.red[700],

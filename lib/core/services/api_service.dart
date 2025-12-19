@@ -11,6 +11,7 @@ import 'package:bengkel_online_flutter/core/models/user.dart';
 import 'package:bengkel_online_flutter/core/models/workshop.dart';
 import 'package:bengkel_online_flutter/core/models/workshop_document.dart';
 import 'package:bengkel_online_flutter/core/models/service.dart';
+import 'package:bengkel_online_flutter/core/models/dashboard_stats.dart';
 
 class ApiService {
   static const String _baseUrl = 'http://10.0.2.2:8000/api/v1/';
@@ -1244,6 +1245,76 @@ class ApiService {
     }
   }
 
+  /// NEW Endpoint: POST /v1/admins/services/walk-in
+  /// Handles auto customer/vehicle creation
+  Future<ServiceModel> adminCreateWalkInService({
+    required String workshopUuid,
+    required String customerName,
+    required String customerPhone, // Unique identifier for customer
+    String? customerEmail,
+    required String vehiclePlate, // Unique identifier for vehicle
+    String? vehicleBrand,
+    String? vehicleModel,
+    int? vehicleYear,
+    int? vehicleOdometer,
+    
+    required String name, // Service name
+    String? description,
+    num? price,
+    String? categoryName,
+    required DateTime scheduledDate,
+  }) async {
+    try {
+      final uri = Uri.parse('${_baseUrl}admins/services/walk-in');
+      final headers = await _getAuthHeaders();
+      
+      final bodyMap = <String, dynamic>{
+        'workshop_uuid': workshopUuid,
+        'customer_name': customerName,
+        'customer_phone': customerPhone,
+        'vehicle_plate': vehiclePlate,
+        'name': name,
+        'scheduled_date': scheduledDate.toIso8601String(),
+      };
+      
+      if (customerEmail != null && customerEmail.isNotEmpty) bodyMap['customer_email'] = customerEmail;
+      if (vehicleBrand != null) bodyMap['vehicle_brand'] = vehicleBrand;
+      if (vehicleModel != null) bodyMap['vehicle_model'] = vehicleModel;
+      if (vehicleYear != null) bodyMap['vehicle_year'] = vehicleYear;
+      if (vehicleOdometer != null) bodyMap['vehicle_odometer'] = vehicleOdometer;
+      
+      if (description != null) bodyMap['description'] = description;
+      if (price != null) bodyMap['price'] = price;
+      if (categoryName != null) bodyMap['category_service'] = categoryName;
+
+      final body = jsonEncode(bodyMap);
+
+      _debugRequest('ADMIN_CREATE_WALK_IN', uri, headers, body);
+      final res = await http.post(uri, headers: headers, body: body);
+      _debugResponse('ADMIN_CREATE_WALK_IN', res);
+
+      if (!(res.statusCode == 200 || res.statusCode == 201)) {
+        final j = _tryDecodeJson(res.body);
+        if (j is Map<String, dynamic>) {
+          throw Exception(_getErrorMessage(j));
+        }
+        throw Exception('Gagal membuat Walk-In (HTTP ${res.statusCode}).');
+      }
+
+      if (!_isJsonResponse(res)) throw Exception('Respon bukan JSON.');
+      final j = _tryDecodeJson(res.body);
+
+      // Expecting { data: { ...service_object... } }
+      final map = (j is Map && j['data'] is Map)
+          ? j['data'] as Map<String, dynamic>
+          : j as Map<String, dynamic>;
+
+      return ServiceModel.fromJson(map);
+    } catch (e) {
+      throw Exception('Gagal membuat Walk-In: ${e.toString().replaceFirst("Exception: ", "")}');
+    }
+  }
+
   /// Versi admin: ambil detail service
   /// endpoint: GET /v1/admins/services/{id}
   Future<ServiceModel> adminFetchServiceDetail(String id) async {
@@ -1437,7 +1508,37 @@ class ApiService {
   /// endpoint: GET /v1/admins/employees
 
 
-  // Helper/Wrapper to fetch users as employments if admins/employee fails
+  /// Versi admin: ambil data dashboard (stat & trend)
+  /// endpoint: GET /v1/admins/dashboard
+  Future<DashboardStats> adminFetchDashboardStats({String? workshopUuid}) async {
+    try {
+      final uri = Uri.parse('${_baseUrl}admins/dashboard')
+          .replace(queryParameters: workshopUuid != null ? {'workshop_uuid': workshopUuid} : {});
+      final headers = await _getAuthHeaders();
+
+      _debugRequest('ADMIN_DASHBOARD', uri, headers, null);
+      final res = await http.get(uri, headers: headers);
+      _debugResponse('ADMIN_DASHBOARD', res);
+
+      if (res.statusCode == 200 && _isJsonResponse(res)) {
+        final j = _tryDecodeJson(res.body);
+        if (j is Map<String, dynamic> && j['data'] is Map<String, dynamic>) {
+          return DashboardStats.fromJson(j['data']);
+        }
+      }
+      
+      // Fallback/Error handling
+      if (res.statusCode == 404) {
+         // Maybe try owners/dashboard if admins fails? For now just throw.
+      }
+
+      throw Exception('Gagal mengambil data dashboard (HTTP ${res.statusCode}).');
+    } catch (e) {
+      throw Exception('Gagal ambil data dashboard: $e');
+    }
+  }
+
+  /// Helper/Wrapper to fetch users as employments if admins/employee fails
   // Overwriting the previous method body
   // Helper/Wrapper to fetch users as employments
   Future<List<Employment>> adminFetchEmployees({
