@@ -1278,6 +1278,7 @@ class ApiService {
     required String vehiclePlate, // Unique identifier for vehicle
     String? vehicleBrand,
     String? vehicleModel,
+    String? vehicleCategory, // Added
     int? vehicleYear,
     int? vehicleOdometer,
     
@@ -1303,6 +1304,7 @@ class ApiService {
       if (customerEmail != null && customerEmail.isNotEmpty) bodyMap['customer_email'] = customerEmail;
       if (vehicleBrand != null) bodyMap['vehicle_brand'] = vehicleBrand;
       if (vehicleModel != null) bodyMap['vehicle_model'] = vehicleModel;
+      if (vehicleCategory != null) bodyMap['vehicle_category'] = vehicleCategory; // Added
       if (vehicleYear != null) bodyMap['vehicle_year'] = vehicleYear;
       if (vehicleOdometer != null) bodyMap['vehicle_odometer'] = vehicleOdometer;
       
@@ -1705,6 +1707,210 @@ class ApiService {
       return;
     } else {
       throw Exception('Failed to mark notification read: ${response.statusCode}');
+    }
+  }
+
+  /* ==================== TRANSACTIONS ==================== */
+
+  /// POST /v1/admins/transactions - Create transaction
+  Future<Map<String, dynamic>> adminCreateTransaction({
+    required String serviceUuid,
+    String? notes,
+    List<Map<String, dynamic>>? items,
+  }) async {
+    try {
+      final uri = Uri.parse('${_baseUrl}admins/transactions');
+      final headers = await _getAuthHeaders();
+      
+      final bodyMap = <String, dynamic>{
+        'service_uuid': serviceUuid,
+      };
+      if (notes != null) bodyMap['notes'] = notes;
+      if (items != null && items.isNotEmpty) bodyMap['items'] = items;
+
+      final body = jsonEncode(bodyMap);
+      _debugRequest('ADMIN_CREATE_TRANSACTION', uri, headers, body);
+      final res = await http.post(uri, headers: headers, body: body);
+      _debugResponse('ADMIN_CREATE_TRANSACTION', res);
+
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        final j = _tryDecodeJson(res.body);
+        return (j is Map && j['data'] is Map) 
+            ? Map<String, dynamic>.from(j['data'])
+            : Map<String, dynamic>.from(j);
+      }
+      throw Exception('Failed to create transaction (HTTP ${res.statusCode})');
+    } catch (e) {
+      throw Exception('Create transaction error: $e');
+    }
+  }
+
+  /// GET /v1/admins/transactions/{id} - Get transaction detail
+  Future<Map<String, dynamic>> adminGetTransaction(String id) async {
+    try {
+      final uri = Uri.parse('${_baseUrl}admins/transactions/$id');
+      final headers = await _getAuthHeaders();
+
+      _debugRequest('ADMIN_GET_TRANSACTION', uri, headers, null);
+      final res = await http.get(uri, headers: headers);
+      _debugResponse('ADMIN_GET_TRANSACTION', res);
+
+      if (res.statusCode == 200 && _isJsonResponse(res)) {
+        final j = _tryDecodeJson(res.body);
+        return (j is Map && j['data'] is Map) 
+            ? Map<String, dynamic>.from(j['data'])
+            : Map<String, dynamic>.from(j);
+      }
+      throw Exception('Failed to get transaction (HTTP ${res.statusCode})');
+    } catch (e) {
+      throw Exception('Get transaction error: $e');
+    }
+  }
+
+  /// PUT /v1/admins/transactions/{id} - Update transaction
+  Future<Map<String, dynamic>> adminUpdateTransaction(
+    String id, {
+    String? notes,
+    List<Map<String, dynamic>>? items,
+  }) async {
+    try {
+      final uri = Uri.parse('${_baseUrl}admins/transactions/$id');
+      final headers = await _getAuthHeaders();
+      
+      final bodyMap = <String, dynamic>{};
+      if (notes != null) bodyMap['notes'] = notes;
+      if (items != null) bodyMap['items'] = items;
+
+      final body = jsonEncode(bodyMap);
+      _debugRequest('ADMIN_UPDATE_TRANSACTION', uri, headers, body);
+      final res = await http.put(uri, headers: headers, body: body);
+      _debugResponse('ADMIN_UPDATE_TRANSACTION', res);
+
+      if (res.statusCode == 200) {
+        final j = _tryDecodeJson(res.body);
+        return (j is Map && j['data'] is Map) 
+            ? Map<String, dynamic>.from(j['data'])
+            : Map<String, dynamic>.from(j);
+      }
+      throw Exception('Failed to update transaction (HTTP ${res.statusCode})');
+    } catch (e) {
+      throw Exception('Update transaction error: $e');
+    }
+  }
+
+  /// PUT /v1/admins/transactions/{id}/status - Update status
+  Future<void> adminUpdateTransactionStatus(String id, String status) async {
+    try {
+      final uri = Uri.parse('${_baseUrl}admins/transactions/$id/status');
+      final headers = await _getAuthHeaders();
+      final body = jsonEncode({'status': status});
+
+      _debugRequest('ADMIN_UPDATE_TRANSACTION_STATUS', uri, headers, body);
+      final res = await http.put(uri, headers: headers, body: body);
+      _debugResponse('ADMIN_UPDATE_TRANSACTION_STATUS', res);
+
+      if (!(res.statusCode == 200 || res.statusCode == 204)) {
+        throw Exception('Failed to update transaction status (HTTP ${res.statusCode})');
+      }
+    } catch (e) {
+      throw Exception('Update transaction status error: $e');
+    }
+  }
+
+  /// POST /v1/admins/transactions/{id}/finalize - Finalize transaction
+  Future<Map<String, dynamic>> adminFinalizeTransaction(String id) async {
+    try {
+      final uri = Uri.parse('${_baseUrl}admins/transactions/$id/finalize');
+      final headers = await _getAuthHeaders();
+
+      _debugRequest('ADMIN_FINALIZE_TRANSACTION', uri, headers, null);
+      final res = await http.post(uri, headers: headers);
+      _debugResponse('ADMIN_FINALIZE_TRANSACTION', res);
+
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        final j = _tryDecodeJson(res.body);
+        return (j is Map && j['data'] is Map) 
+            ? Map<String, dynamic>.from(j['data'])
+            : Map<String, dynamic>.from(j);
+      }
+      throw Exception('Failed to finalize transaction (HTTP ${res.statusCode})');
+    } catch (e) {
+      throw Exception('Finalize transaction error: $e');
+    }
+  }
+
+  /* ==================== INVOICES ==================== */
+
+  /// POST /v1/admins/transactions/{transactionId}/invoice - Create invoice
+  Future<Map<String, dynamic>> adminCreateInvoice(String transactionId) async {
+    try {
+      final uri = Uri.parse('${_baseUrl}admins/transactions/$transactionId/invoice');
+      final headers = await _getAuthHeaders();
+
+      _debugRequest('ADMIN_CREATE_INVOICE', uri, headers, null);
+      final res = await http.post(uri, headers: headers);
+      _debugResponse('ADMIN_CREATE_INVOICE', res);
+
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        final j = _tryDecodeJson(res.body);
+        return (j is Map && j['data'] is Map) 
+            ? Map<String, dynamic>.from(j['data'])
+            : Map<String, dynamic>.from(j);
+      }
+      throw Exception('Failed to create invoice (HTTP ${res.statusCode})');
+    } catch (e) {
+      throw Exception('Create invoice error: $e');
+    }
+  }
+
+  /// GET /v1/admins/invoices/{id} - Get invoice detail
+  Future<Map<String, dynamic>> adminGetInvoice(String id) async {
+    try {
+      final uri = Uri.parse('${_baseUrl}admins/invoices/$id');
+      final headers = await _getAuthHeaders();
+
+      _debugRequest('ADMIN_GET_INVOICE', uri, headers, null);
+      final res = await http.get(uri, headers: headers);
+      _debugResponse('ADMIN_GET_INVOICE', res);
+
+      if (res.statusCode == 200 && _isJsonResponse(res)) {
+        final j = _tryDecodeJson(res.body);
+        return (j is Map && j['data'] is Map) 
+            ? Map<String, dynamic>.from(j['data'])
+            : Map<String, dynamic>.from(j);
+      }
+      throw Exception('Failed to get invoice (HTTP ${res.statusCode})');
+    } catch (e) {
+      throw Exception('Get invoice error: $e');
+    }
+  }
+
+  /// PATCH /v1/admins/invoices/{id}/mark-paid - Mark invoice as paid
+  Future<Map<String, dynamic>> adminMarkInvoicePaid(
+    String id, {
+    String? paymentMethod,
+  }) async {
+    try {
+      final uri = Uri.parse('${_baseUrl}admins/invoices/$id/mark-paid');
+      final headers = await _getAuthHeaders();
+      
+      final bodyMap = <String, dynamic>{};
+      if (paymentMethod != null) bodyMap['payment_method'] = paymentMethod;
+
+      final body = jsonEncode(bodyMap);
+      _debugRequest('ADMIN_MARK_INVOICE_PAID', uri, headers, body);
+      final res = await http.patch(uri, headers: headers, body: body);
+      _debugResponse('ADMIN_MARK_INVOICE_PAID', res);
+
+      if (res.statusCode == 200) {
+        final j = _tryDecodeJson(res.body);
+        return (j is Map && j['data'] is Map) 
+            ? Map<String, dynamic>.from(j['data'])
+            : Map<String, dynamic>.from(j);
+      }
+      throw Exception('Failed to mark invoice as paid (HTTP ${res.statusCode})');
+    } catch (e) {
+      throw Exception('Mark invoice paid error: $e');
     }
   }
 }

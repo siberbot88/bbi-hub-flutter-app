@@ -187,11 +187,15 @@ class ServiceModel {
         Map<String, dynamic>.from(json['customer'] as Map),
       )
           : null,
-      vehicle: (json['vehicle'] is Map)
-          ? Vehicle.fromJson(
-        Map<String, dynamic>.from(json['vehicle'] as Map),
-      )
-          : null,
+      vehicle: () {
+        final vJson = json['vehicle'];
+        if (vJson is Map) {
+          // DEBUG: Log vehicle data from API
+          print('DEBUG ServiceModel.fromJson vehicle: $vJson');
+          return Vehicle.fromJson(Map<String, dynamic>.from(vJson));
+        }
+        return null;
+      }(),
       workshopName: workshopName(),
       mechanic: mechanic(),
 

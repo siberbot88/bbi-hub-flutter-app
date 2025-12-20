@@ -262,9 +262,11 @@ class _AddWalkInServiceDialogState extends State<AddWalkInServiceDialog> {
   final _odometerCtrl = TextEditingController();
   
   final _serviceNameCtrl = TextEditingController();
+  final _descriptionCtrl = TextEditingController(); // For keluhan/description
   // final _categoryCtrl = TextEditingController(); // Removed for Dropdown
   
   String? _selectedCategory;
+  String? _selectedVehicleCategory; // Added
   final List<String> _categoryOptions = ['ringan', 'sedang', 'berat', 'maintenance']; 
 
   bool _loading = false;
@@ -280,6 +282,7 @@ class _AddWalkInServiceDialogState extends State<AddWalkInServiceDialog> {
     _yearCtrl.dispose();
     _odometerCtrl.dispose();
     _serviceNameCtrl.dispose();
+    _descriptionCtrl.dispose();
     // _categoryCtrl.dispose();
     super.dispose();
   }
@@ -298,7 +301,7 @@ class _AddWalkInServiceDialogState extends State<AddWalkInServiceDialog> {
             name: _serviceNameCtrl.text,
             scheduledDate: DateTime.now(), // On the site = Now
             categoryName: _selectedCategory, // Use selected dropdown value
-            description: "Walk-in service", // default desc
+            description: _descriptionCtrl.text.isNotEmpty ? _descriptionCtrl.text : 'Walk-in service',
             
             customerName: _customerNameCtrl.text,
             customerPhone: _customerPhoneCtrl.text,
@@ -307,6 +310,7 @@ class _AddWalkInServiceDialogState extends State<AddWalkInServiceDialog> {
             vehiclePlate: _plateCtrl.text,
             vehicleBrand: _brandCtrl.text,
             vehicleModel: _modelCtrl.text,
+            vehicleCategory: _selectedVehicleCategory, // Added
             vehicleYear: int.tryParse(_yearCtrl.text),
             vehicleOdometer: int.tryParse(_odometerCtrl.text),
         );
@@ -368,13 +372,49 @@ class _AddWalkInServiceDialogState extends State<AddWalkInServiceDialog> {
                        const SizedBox(height: 16),
                        _sectionHeader(Icons.two_wheeler, "Informasi Kendaraan"),
                        _inputField("Plat Nomor *", _plateCtrl, required: true),
-                       Row(
-                         children: [
-                           Expanded(child: _inputField("Merk Kendaraan", _brandCtrl, hint: "Honda, Yamaha...")),
-                           const SizedBox(width: 12),
-                           Expanded(child: _inputField("Model", _modelCtrl, hint: "Beat, Vario...")),
-                         ],
-                       ),
+                        
+                        // Dropdown for Vehicle Type (Mobil, Motor, Truck)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: DropdownButtonFormField<String>(
+                            value: _selectedVehicleCategory,
+                            items: ['mobil', 'motor', 'truck'].map((String val) {
+                              return DropdownMenuItem<String>(
+                                value: val,
+                                child: Text(
+                                  val[0].toUpperCase() + val.substring(1), 
+                                  style: GoogleFonts.poppins(fontSize: 14),
+                                ),
+                              );
+                            }).toList(),
+                            onChanged: (val) => setState(() => _selectedVehicleCategory = val),
+                            validator: (val) => (val == null || val.isEmpty) ? 'Wajib dipilih' : null, // Added validator
+                            decoration: InputDecoration(
+                              labelText: "Jenis Kendaraan",
+                              labelStyle: GoogleFonts.poppins(fontSize: 14, color: Colors.black54),
+                              hintText: "Pilih Jenis Kendaraan", // Added hint text
+                              hintStyle: GoogleFonts.poppins(fontSize: 13, color: Colors.grey.shade400),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide(color: Colors.grey.shade300),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide(color: Colors.grey.shade300),
+                              ),
+                            ),
+                            style: GoogleFonts.poppins(fontSize: 14, color: Colors.black87),
+                          ),
+                        ),
+
+                        Row(
+                          children: [
+                            Expanded(child: _inputField("Merk Kendaraan", _brandCtrl, hint: "Honda, Yamaha...")),
+                            const SizedBox(width: 12),
+                            Expanded(child: _inputField("Model", _modelCtrl, hint: "Beat, Vario...")),
+                          ],
+                        ),
                        Row(
                          children: [
                            Expanded(child: _inputField("Tahun", _yearCtrl, keyboardType: TextInputType.number)),
@@ -386,6 +426,39 @@ class _AddWalkInServiceDialogState extends State<AddWalkInServiceDialog> {
                        const SizedBox(height: 16),
                        _sectionHeader(Icons.build, "Informasi Servis"),
                        _inputField("Nama Servis *", _serviceNameCtrl, hint: "Servis Rutin, Ganti Oli...", required: true),
+                       
+                       // Description/Keluhan field
+                       Padding(
+                         padding: const EdgeInsets.only(bottom: 12),
+                         child: Column(
+                           crossAxisAlignment: CrossAxisAlignment.start,
+                           children: [
+                             Text(
+                               "Keluhan / Deskripsi",
+                               style: GoogleFonts.poppins(fontSize: 12, color: Colors.black54),
+                             ),
+                             const SizedBox(height: 6),
+                             TextFormField(
+                               controller: _descriptionCtrl,
+                               maxLines: 3,
+                               decoration: InputDecoration(
+                                 hintText: "Isi keluhanmu disini....",
+                                 hintStyle: GoogleFonts.poppins(fontSize: 13, color: Colors.grey.shade400),
+                                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                 border: OutlineInputBorder(
+                                   borderRadius: BorderRadius.circular(8),
+                                   borderSide: BorderSide(color: Colors.grey.shade300),
+                                 ),
+                                 enabledBorder: OutlineInputBorder(
+                                   borderRadius: BorderRadius.circular(8),
+                                   borderSide: BorderSide(color: Colors.grey.shade300),
+                                 ),
+                               ),
+                               style: GoogleFonts.poppins(fontSize: 14, color: Colors.black87),
+                             ),
+                           ],
+                         ),
+                       ),
                        
                        // Dropdown for Category
                        Padding(

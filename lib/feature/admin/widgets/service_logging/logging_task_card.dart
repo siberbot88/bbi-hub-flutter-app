@@ -87,7 +87,7 @@ class LoggingTaskCard extends StatelessWidget {
            Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => invoice_form.InvoiceFormPage(task: _toLegacyMap(service)), 
+                builder: (_) => invoice_form.InvoiceFormPage(service: service), 
               ));
         },
         style: ElevatedButton.styleFrom(
@@ -105,7 +105,7 @@ class LoggingTaskCard extends StatelessWidget {
            Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => invoice_form.InvoiceFormPage(task: _toLegacyMap(service)), 
+                builder: (_) => invoice_form.InvoiceFormPage(service: service), 
               ));
         },
         style: ElevatedButton.styleFrom(

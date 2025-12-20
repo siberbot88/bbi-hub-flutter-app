@@ -33,7 +33,7 @@ class ServiceCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(20), // 0.08 * 255
+            color: Colors.black.withAlpha(20),
             blurRadius: 6,
             offset: const Offset(0, 3),
           ),
@@ -58,10 +58,8 @@ class ServiceCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(customerName,
-                        style: AppTextStyles.labelBold()),
-                    Text("ID: $id",
-                        style: AppTextStyles.caption()),
+                    Text(customerName, style: AppTextStyles.labelBold()),
+                    Text("ID: $id", style: AppTextStyles.caption()),
                   ],
                 ),
               ),
@@ -70,7 +68,6 @@ class ServiceCard extends StatelessWidget {
                 children: [
                   Text(ServiceHelpers.formatDate(scheduledDate),
                       style: AppTextStyles.caption(color: AppColors.textPrimary)),
-                  // Jika mau menampilkan info scheduled spesifik
                   Container(
                     margin: const EdgeInsets.only(top: 4),
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -79,7 +76,8 @@ class ServiceCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text("Scheduled",
-                        style: AppTextStyles.caption(color: AppColors.statusPending).copyWith(fontSize: 10, fontWeight: FontWeight.bold)),
+                        style: AppTextStyles.caption(color: AppColors.statusPending)
+                            .copyWith(fontSize: 10, fontWeight: FontWeight.bold)),
                   ),
                 ],
               )
@@ -89,22 +87,18 @@ class ServiceCard extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: Text(
-                  serviceName,
-                  style: AppTextStyles.heading5(),
-                ),
+                child: Text(serviceName, style: AppTextStyles.heading5()),
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: _getVehicleBgColor(category)
-                      .withOpacity(0.2), 
+                  color: _getVehicleBgColor(category).withOpacity(0.2),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   category,
-                  style: AppTextStyles.caption(color: _getVehicleTextColor(category)).copyWith(fontWeight: FontWeight.w600),
+                  style: AppTextStyles.caption(color: _getVehicleTextColor(category))
+                      .copyWith(fontWeight: FontWeight.w600),
                 ),
               )
             ],
@@ -114,115 +108,23 @@ class ServiceCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("Plat Nomor",
-                      style:
-                          AppTextStyles.caption()),
-                  Text(plate,
-                      style: AppTextStyles.bodyMedium(color: AppColors.textPrimary).copyWith(fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 10),
-                  if ((service.acceptanceStatus ?? 'pending').toLowerCase() == 'pending')
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        SizedBox(
-                          height: 36,
-                          child: ElevatedButton(
-                            onPressed: () => showRejectDialog(
-                              context,
-                              onConfirm: (reason, desc) {
-                                context
-                                    .read<AdminServiceProvider>()
-                                    .declineServiceAsAdmin(
-                                      service.id,
-                                      reason: reason,
-                                      reasonDescription: desc,
-                                    );
-                              },
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red.shade700,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 0),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                            ),
-                            child: Text(
-                              "Tolak",
-                              style: AppTextStyles.buttonSmall(color: Colors.white),
-                            ),
-                          ),
-                        ),
-                        SizedBox(
-                          height: 36,
-                          child: ElevatedButton(
-                            onPressed: () => showAcceptDialog(
-                              context,
-                              onConfirm: () {
-                                context
-                                    .read<AdminServiceProvider>()
-                                    .acceptServiceAsAdmin(service.id);
-                              },
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green.shade700,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 0),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                            ),
-                            child: Text(
-                              "Terima",
-                              style: AppTextStyles.buttonSmall(color: Colors.white),
-                            ),
-                          ),
-                        ),
-                      ],
-                    )
-                  else if ((service.acceptanceStatus ?? '').toLowerCase() == 'accepted')
-                     Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.green.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.green),
-                        ),
-                        child: Text("Diterima", style: AppTextStyles.caption(color: Colors.green).copyWith(fontWeight: FontWeight.bold)),
-                     )
-                  else if (['declined', 'rejected', 'canceled', 'cancelled'].contains((service.acceptanceStatus ?? '').toLowerCase()))
-                     Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.red),
-                        ),
-                        child: Text("Ditolak", style: AppTextStyles.caption(color: Colors.red).copyWith(fontWeight: FontWeight.bold)),
-                     )
-                  else 
-                     // Fallback for unknown status or if status is null but not pending
-                     Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.grey),
-                        ),
-                        child: Text(service.acceptanceStatus ?? 'Unknown', style: AppTextStyles.caption(color: Colors.grey)),
-                     )
-                ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Plat Nomor", style: AppTextStyles.caption()),
+                    Text(plate,
+                        style: AppTextStyles.bodyMedium(color: AppColors.textPrimary)
+                            .copyWith(fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 10),
+                    _buildActionButtons(context),
+                  ],
+                ),
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text("Type Motor",
-                      style:
-                          AppTextStyles.caption()),
+                  Text("Type Motor", style: AppTextStyles.caption()),
                   Text(vehicleName,
                       style: AppTextStyles.bodyMedium().copyWith(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
@@ -230,19 +132,14 @@ class ServiceCard extends StatelessWidget {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                            builder: (_) => ServiceDetailPage(service: service)),
+                        MaterialPageRoute(builder: (_) => ServiceDetailPage(service: service)),
                       );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.orange,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                     ),
-                    child: Text(
-                      "Detail",
-                      style: AppTextStyles.buttonSmall(color: Colors.white),
-                    ),
+                    child: Text("Detail", style: AppTextStyles.buttonSmall(color: Colors.white)),
                   ),
                 ],
               )
@@ -251,6 +148,90 @@ class ServiceCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildActionButtons(BuildContext context) {
+    final status = (service.acceptanceStatus ?? 'pending').toLowerCase();
+
+    if (status == 'pending') {
+      return Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          SizedBox(
+            height: 36,
+            child: ElevatedButton(
+              onPressed: () => showRejectDialog(
+                context,
+                onConfirm: (reason, desc) {
+                  context.read<AdminServiceProvider>().declineServiceAsAdmin(
+                    service.id,
+                    reason: reason,
+                    reasonDescription: desc,
+                  );
+                },
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red.shade700,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              ),
+              child: Text("Tolak", style: AppTextStyles.buttonSmall(color: Colors.white)),
+            ),
+          ),
+          SizedBox(
+            height: 36,
+            child: ElevatedButton(
+              onPressed: () => showAcceptDialog(
+                context,
+                onConfirm: () {
+                  context.read<AdminServiceProvider>().acceptServiceAsAdmin(service.id);
+                },
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green.shade700,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              ),
+              child: Text("Terima", style: AppTextStyles.buttonSmall(color: Colors.white)),
+            ),
+          ),
+        ],
+      );
+    } else if (status == 'accepted') {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.green.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.green),
+        ),
+        child: Text("Diterima",
+            style: AppTextStyles.caption(color: Colors.green).copyWith(fontWeight: FontWeight.bold)),
+      );
+    } else if (['declined', 'rejected', 'canceled', 'cancelled'].contains(status)) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.red.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.red),
+        ),
+        child: Text("Ditolak",
+            style: AppTextStyles.caption(color: Colors.red).copyWith(fontWeight: FontWeight.bold)),
+      );
+    } else {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.grey.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.grey),
+        ),
+        child: Text(service.acceptanceStatus ?? 'Unknown',
+            style: AppTextStyles.caption(color: Colors.grey)),
+      );
+    }
   }
 
   Color _getVehicleBgColor(String? category) {
@@ -279,12 +260,11 @@ class ServiceCard extends StatelessWidget {
     if (name.isEmpty) return "?";
     final parts = name.trim().split(' ');
     if (parts.isEmpty) return "?";
-    
+
     if (parts.length == 1) {
-      return parts[0].substring(0, 1).toUpperCase(); // Just first letter if 1 word
+      return parts[0].substring(0, 1).toUpperCase();
     }
-    
-    // Take first letter of first 2 words
+
     return (parts[0][0] + parts[1][0]).toUpperCase();
   }
 }

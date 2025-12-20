@@ -240,6 +240,7 @@ class AdminServiceProvider extends ServiceProvider {
     String? vehiclePlate,
     String? vehicleBrand,
     String? vehicleModel,
+    String? vehicleCategory, // Added
     int? vehicleYear,
     int? vehicleOdometer,
   }) async {
@@ -259,6 +260,7 @@ class AdminServiceProvider extends ServiceProvider {
         vehiclePlate: vehiclePlate ?? '',
         vehicleBrand: vehicleBrand,
         vehicleModel: vehicleModel,
+        vehicleCategory: vehicleCategory, // Added
         vehicleYear: vehicleYear,
         vehicleOdometer: vehicleOdometer,
         
@@ -272,6 +274,101 @@ class AdminServiceProvider extends ServiceProvider {
       return created;
     } catch (e) {
       if (kDebugMode) print('createWalkInService error: $e');
+      rethrow;
+    }
+  }
+
+  // ==================== TRANSACTIONS ====================
+
+  /// Create transaction from service
+  Future<Map<String, dynamic>> createTransaction({
+    required String serviceUuid,
+    String? notes,
+    List<Map<String, dynamic>>? items,
+  }) async {
+    try {
+      final result = await _adminApi.adminCreateTransaction(
+        serviceUuid: serviceUuid,
+        notes: notes,
+        items: items,
+      );
+      if (kDebugMode) print('Transaction created: ${result['id']}');
+      return result;
+    } catch (e) {
+      if (kDebugMode) print('createTransaction error: $e');
+      rethrow;
+    }
+  }
+
+  /// Get transaction detail
+  Future<Map<String, dynamic>> getTransaction(String id) async {
+    try {
+      return await _adminApi.adminGetTransaction(id);
+    } catch (e) {
+      if (kDebugMode) print('getTransaction error: $e');
+      rethrow;
+    }
+  }
+
+  /// Update transaction items and notes
+  Future<Map<String, dynamic>> updateTransaction(
+    String id, {
+    String? notes,
+    List<Map<String, dynamic>>? items,
+  }) async {
+    try {
+      return await _adminApi.adminUpdateTransaction(id, notes: notes, items: items);
+    } catch (e) {
+      if (kDebugMode) print('updateTransaction error: $e');
+      rethrow;
+    }
+  }
+
+  /// Finalize transaction
+  Future<Map<String, dynamic>> finalizeTransaction(String id) async {
+    try {
+      return await _adminApi.adminFinalizeTransaction(id);
+    } catch (e) {
+      if (kDebugMode) print('finalizeTransaction error: $e');
+      rethrow;
+    }
+  }
+
+  // ==================== INVOICES ====================
+
+  /// Create invoice from transaction
+  Future<Map<String, dynamic>> createInvoice(String transactionId) async {
+    try {
+      final result = await _adminApi.adminCreateInvoice(transactionId);
+      if (kDebugMode) print('Invoice created: ${result['id']}');
+      return result;
+    } catch (e) {
+      if (kDebugMode) print('createInvoice error: $e');
+      rethrow;
+    }
+  }
+
+  /// Get invoice detail
+  Future<Map<String, dynamic>> getInvoice(String id) async {
+    try {
+      return await _adminApi.adminGetInvoice(id);
+    } catch (e) {
+      if (kDebugMode) print('getInvoice error: $e');
+      rethrow;
+    }
+  }
+
+  /// Mark invoice as paid
+  Future<Map<String, dynamic>> markInvoicePaid(
+    String id, {
+    String? paymentMethod,
+  }) async {
+    try {
+      final result = await _adminApi.adminMarkInvoicePaid(id, paymentMethod: paymentMethod);
+      if (kDebugMode) print('Invoice marked paid: $id');
+      return result;
+    } catch (e) {
+      if (kDebugMode) print('markInvoicePaid error: $e');
       rethrow;
     }
   }

@@ -175,10 +175,7 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
     // Terima (Accepted): acceptance_status == "accepted"
     final acceptedCount = bookingServices.where((s) => (s.acceptanceStatus ?? '').toLowerCase() == 'accepted').length;
     // Tolak (Declined): acceptance_status == "declined" or "rejected"
-    final declinedCount = bookingServices.where((s) {
-       final st = (s.acceptanceStatus ?? '').toLowerCase();
-       return st == 'declined' || st == 'rejected' || st == 'canceled' || st == 'cancelled';
-    }).length;
+    final declinedCount = bookingServices.where((s) => (s.acceptanceStatus ?? '').toLowerCase() == 'decline').length;
     
     // Filter List
     final filteredServices = bookingServices.where((s) {
