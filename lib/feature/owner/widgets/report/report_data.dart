@@ -145,14 +145,8 @@ class ReportData {
         return count != null ? (count as num).toDouble() : 0.0;
       }).toList();
     } else {
-      // Fallback to seed-like data if backend returns empty
-      peakHourBars = List.generate(8, (i) {
-        // Highlight the peak hours
-        if (peakRange.contains('${8 + (i * 2)}:00')) {
-          return 80.0 + (i % 3) * 5;
-        }
-        return 30.0 + (i % 4) * 10;
-      });
+      // Return zeros if empty
+      peakHourBars = List.filled(8, 0.0);
     }
 
     return ReportData(

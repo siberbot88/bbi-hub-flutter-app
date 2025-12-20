@@ -35,8 +35,8 @@ class _VoucherDetailPageState extends State<VoucherDetailPage> {
       await _apiService.deleteVoucher(_voucher.id);
       if (!mounted) return;
       
-      // Return true to indicate successful deletion
-      Navigator.pop(context, true);
+      // Return specific action string
+      Navigator.pop(context, 'deleted');
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
@@ -84,12 +84,9 @@ class _VoucherDetailPageState extends State<VoucherDetailPage> {
     );
 
     if (result == true) {
-      // Refresh data logic could be here if we fetched fresh data, 
-      // but simpler to just return true to previous page to refresh list.
-      // Or we could fetch the single voucher again. 
-      // For now, let's pop back to list to force full refresh there.
       if (!mounted) return;
-      Navigator.pop(context, true);
+      // Return specific action string
+      Navigator.pop(context, 'updated');
     }
   }
 

@@ -22,6 +22,22 @@ class AuthProvider with ChangeNotifier {
   bool hasRole(String r) => _user?.role == r;
   bool get mustChangePassword => _mustChangePassword;
 
+  // Verification Getters
+  bool get isEmailVerified => _user?.emailVerifiedAt != null;
+  bool get isWorkshopVerified {
+    // If not owner, assume true (mechanic doesn't need workshop verification personally?)
+    // Or logic: Mechanic needs verified workshop too? For now assume only Owner login flow.
+    if (!hasRole('owner')) return true; 
+    
+    // Check user's first workshop status
+    if (_user?.workshops == null || _user!.workshops!.isEmpty) return false; // No workshop = not verified
+    return _user!.workshops!.first.status == 'active';
+  }
+  String get workshopStatus {
+      if (_user?.workshops == null || _user!.workshops!.isEmpty) return 'none';
+      return _user!.workshops!.first.status;
+  }
+
   /* ================= AUTH ================ */
 
   Future<bool> register({
@@ -152,6 +168,14 @@ class AuthProvider with ChangeNotifier {
   void clearMustChangePassword() {
     _mustChangePassword = false;
     notifyListeners();
+  }
+
+  Future<void> sendVerificationEmail() async {
+      try {
+          await _apiService.post('email/resend', {}); // Asumsi ApiService punya method helper atau pakai dio langsung
+      } catch (e) {
+         throw Exception("Gagal mengirim ulang email: $e");
+      }
   }
 
   /* ============== Helpers ============== */

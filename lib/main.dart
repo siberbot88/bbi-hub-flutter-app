@@ -17,6 +17,8 @@ import 'package:bengkel_online_flutter/feature/auth/screens/reset_password_page.
 
 import 'package:bengkel_online_flutter/core/screens/splash_screen.dart';
 import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
+import 'package:bengkel_online_flutter/feature/auth/screens/verify_email_page.dart';
+import 'package:bengkel_online_flutter/feature/auth/screens/workshop_waiting_page.dart';
 
 // OFFLINE DETECTION
 import 'package:bengkel_online_flutter/core/widgets/connectivity_wrapper.dart';
@@ -156,6 +158,8 @@ class _MyAppState extends State<MyApp> {
         "/login": (context) => const login_screen.LoginPage(),
         "/gate": (context) => const LoadingGate(),
         "/main": (context) => const RoleEntry(),
+        "/verify-email": (context) => const VerifyEmailPage(),
+        "/workshop-waiting": (context) => const WorkshopWaitingPage(),
 
         "/home": (context) => const DashboardScreen(),
         "/changePassword": (context) => const change_screen.UbahPasswordPage(),
@@ -212,6 +216,22 @@ class RoleEntry extends StatelessWidget {
     if (!auth.isLoggedIn || role == 'guest') {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.pushReplacementNamed(context, '/login');
+      });
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    // 2. Cek status email verify
+    if (!auth.isEmailVerified) {
+       WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushReplacementNamed(context, '/verify-email');
+      });
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    // 3. Cek status workshop (hanya owner)
+    if (role == 'owner' && !auth.isWorkshopVerified) {
+       WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushReplacementNamed(context, '/workshop-waiting');
       });
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }

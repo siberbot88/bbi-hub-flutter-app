@@ -2,6 +2,7 @@ import 'package:bengkel_online_flutter/core/services/api_service.dart';
 import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
 import 'package:bengkel_online_flutter/core/widgets/custom_alert.dart';
 import 'package:bengkel_online_flutter/core/screens/registers/wave_clippers.dart';
+import 'package:bengkel_online_flutter/core/widgets/clean_notification.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -94,6 +95,44 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
   int _currentStep = 0;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+
+  // Password Strength & Server Error State
+  double _passwordStrength = 0.0;
+  Color _strengthColor = Colors.grey;
+  String _strengthText = "";
+  String? _passwordServerError;
+
+  void _checkStrength(String val) {
+    if (val.isEmpty) {
+      setState(() {
+        _passwordStrength = 0.0;
+        _strengthText = "";
+        _strengthColor = Colors.grey;
+        _passwordServerError = null; // Reset server error on typing
+      });
+      return;
+    }
+
+    double strength = 0;
+    if (val.length >= 8) strength += 0.3;
+    if (val.contains(RegExp(r'[A-Z]'))) strength += 0.3;
+    if (val.contains(RegExp(r'[0-9]')) || val.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) strength += 0.4;
+
+    setState(() {
+      _passwordStrength = strength;
+      if (strength <= 0.3) {
+        _strengthText = "Lemah";
+        _strengthColor = Colors.red;
+      } else if (strength <= 0.6) {
+        _strengthText = "Sedang";
+        _strengthColor = Colors.orange;
+      } else {
+        _strengthText = "Kuat";
+        _strengthColor = Colors.green;
+      }
+      _passwordServerError = null; // Reset server error on typing
+    });
+  }
 
   @override
   void initState() {
@@ -238,18 +277,58 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      CustomAlert.show(
-        context,
-        title: "Registrasi Gagal",
-        message: e.toString().replaceFirst("Exception: ", ""),
-        type: AlertType.error,
-      );
+
+      String msg = e.toString().replaceFirst("Exception: ", "");
+      
+      // Handle "Data Leak" / Password Validation Error specific from Backend
+      if (msg.toLowerCase().contains("password") || msg.toLowerCase().contains("weak")) {
+         setState(() {
+           _passwordServerError = msg; 
+           _goStep(0); // Back to Step 0 if error happens later (though usually validation is immediate)
+         });
+         
+         // Scroll to top or specific location could be added here
+      } else {
+          CleanNotification.show(
+            context,
+            title: 'Gagal Memperbarui Data',
+            message: _translateErrorMessage(msg),
+            type: NotificationType.error,
+            actionText: 'Coba Lagi',
+            onAction: () => _handleRegister(),
+            secondaryActionText: 'Abaikan',
+            onSecondaryAction: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+          );
+      }
+
       if (!authProvider.isLoggedIn) {
         _goStep(0);
       } else if (_createdWorkshopId == null) {
         _goStep(1);
       }
     }
+  }
+
+  String _translateErrorMessage(String msg) {
+    final m = msg.toLowerCase();
+    if (m.contains('connection') || m.contains('network') || m.contains('socket') || m.contains('clientexception')) {
+      return "Gagal terhubung ke server. Periksa koneksi internet Anda.";
+    }
+    if (m.contains('timeout')) {
+      return "Koneksi ke server terlalu lama (timeout). Silakan coba lagi.";
+    }
+    if (m.contains('unprocessable entity') || m.contains('422')) {
+      return "Data yang Anda masukkan tidak valid. Mohon periksa kembali.";
+    }
+    if (m.contains('internal server error') || m.contains('500')) {
+      return "Terjadi kesalahan pada server kami. Mohon coba lagi nanti.";
+    }
+    if (m.contains('unauthorized') || m.contains('401')) {
+      return "Sesi Anda telah berakhir atau tidak valid. Silakan login ulang.";
+    }
+    // Fallback: If map not found, return original but try to make it friendlier if it's raw
+    if (msg.startsWith("Exception:")) return msg.replaceFirst("Exception:", "").trim();
+    return msg;
   }
 
   String? _validateNotEmpty(String? v, String name) => (v == null || v.trim().isEmpty) ? '$name tidak boleh kosong.' : null;
@@ -358,11 +437,15 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
     TextCapitalization textCapitalization = TextCapitalization.none,
     bool? obscureState,
     VoidCallback? onToggleObscure,
+
     FormFieldValidator<String>? validator,
+    ValueChanged<String>? onChanged,
+    String? errorText,
   }) {
     return TextFormField(
       controller: controller,
-      maxLines: maxline,
+      onChanged: onChanged,
+       maxLines: maxline,
       obscureText: isPassword ? (obscureState ?? true) : false,
       keyboardType: keyboardType,
       textCapitalization: textCapitalization,
@@ -370,6 +453,7 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
       autovalidateMode: AutovalidateMode.onUserInteraction,
       decoration: InputDecoration(
         labelText: label,
+        errorText: errorText, // Inject external error text
         labelStyle: GoogleFonts.poppins(color: const Color(0xFFD72B1C), fontSize: 14, fontWeight: FontWeight.w500),
         hintText: hint,
         hintStyle: GoogleFonts.poppins(color: Colors.grey.shade400, fontSize: 13),
@@ -488,7 +572,47 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
                 obscureState: _obscurePassword,
                 onToggleObscure: () => setState(() => _obscurePassword = !_obscurePassword),
                 validator: _validatePassword,
+                onChanged: _checkStrength, // Listen to typing
+                errorText: _passwordServerError, // Show server error here
               ),
+              // Password Strength Indicator UI
+              if (passwordController.text.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0, left: 4, right: 4),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(2),
+                              child: LinearProgressIndicator(
+                                value: _passwordStrength,
+                                backgroundColor: Colors.grey.shade200,
+                                color: _strengthColor,
+                                minHeight: 4,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            _strengthText,
+                            style: TextStyle(color: _strengthColor, fontSize: 11, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                      if (_passwordStrength < 1.0)
+                         Padding(
+                           padding: const EdgeInsets.only(top: 4.0),
+                           child: Text(
+                             "Gunakan minimal 8 karakter, huruf besar, dan simbol.",
+                             style: TextStyle(color: Colors.grey.shade500, fontSize: 10),
+                           ),
+                         ),
+                    ],
+                  ),
+                ),
               const SizedBox(height: 16),
               _buildTextField(
                 controller: confirmPasswordController,
@@ -662,214 +786,111 @@ class _RegisterFlowPageState extends State<RegisterFlowPage>
     return Center(
       child: ScaleTransition(
         scale: _successScaleAnim,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            // Red wave decorations
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: ClipPath(
-                clipper: TopWaveClipper(),
-                child: Container(
-                  height: 180,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        const Color(0xFFD72B1C),
-                        const Color(0xFFE85D4A),
-                      ],
+        child: Container(
+          width: cardWidth,
+          margin: const EdgeInsets.symmetric(horizontal: 24),
+          padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            // Minimalist soft shadow
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 40,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Clean Icon Animation
+              SlideTransition(
+                position: _slideAnim,
+                child: FadeTransition(
+                  opacity: _fadeAnim,
+                  child: Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade50,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.check_rounded,
+                      color: Colors.green.shade600,
+                      size: 60,
                     ),
                   ),
                 ),
               ),
-            ),
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: ClipPath(
-                clipper: BottomWaveClipper(),
-                child: Container(
-                  height: 180,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.bottomLeft,
-                      end: Alignment.topRight,
-                      colors: [
-                        const Color(0xFFD72B1C),
-                        const Color(0xFFE85D4A),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            // Main content
-            Container(
-              width: cardWidth,
-              margin: const EdgeInsets.symmetric(vertical: 40),
-              padding: const EdgeInsets.all(32),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withAlpha(25),
-                    blurRadius: 30,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  FadeTransition(
-                    opacity: _fadeAnim,
-                    child: Text(
-                      "Selamat, bengkel Anda telah resmi\nterdaftar di aplikasi.",
+              const SizedBox(height: 32),
+              
+              // Minimalist Typography
+              FadeTransition(
+                opacity: _fadeAnim,
+                child: Column(
+                  children: [
+                    Text(
+                      "Registrasi Berhasil!",
                       textAlign: TextAlign.center,
                       style: GoogleFonts.poppins(
-                        fontSize: 18,
+                        fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
-                        height: 1.4,
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 32),
-                  // Success illustration with animations
-                  SlideTransition(
-                    position: _slideAnim,
-                    child: FadeTransition(
-                      opacity: _fadeAnim,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          // Background circle
-                          Container(
-                            width: 200,
-                            height: 200,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFD72B1C).withOpacity(0.1),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          // Checkmark with sparkles
-                          Column(
-                            children: [
-                              TweenAnimationBuilder<double>(
-                                tween: Tween(begin: 0.0, end: 1.0),
-                                duration: const Duration(milliseconds: 600),
-                                curve: Curves.elasticOut,
-                                builder: (context, value, child) {
-                                  return Transform.scale(
-                                    scale: value,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(20),
-                                      decoration: BoxDecoration(
-                                        color: Colors.green.shade400,
-                                        shape: BoxShape.circle,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.green.withAlpha(100),
-                                            blurRadius: 20,
-                                            spreadRadius: 5,
-                                          ),
-                                        ],
-                                      ),
-                                      child: const Icon(
-                                        Icons.check,
-                                        color: Colors.white,
-                                        size: 48,
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                              const SizedBox(height: 16),
-                              // Celebration icon with bounce
-                              TweenAnimationBuilder<double>(
-                                tween: Tween(begin: 0.0, end: 1.0),
-                                duration: const Duration(milliseconds: 800),
-                                curve: Curves.bounceOut,
-                                builder: (context, value, child) {
-                                  return Transform.scale(
-                                    scale: value,
-                                    child: Icon(
-                                      Icons.celebration_outlined,
-                                      size: 80,
-                                      color: Colors.orange.shade600,
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                        ],
+                    const SizedBox(height: 12),
+                    Text(
+                      "Selamat, akun bengkel Anda telah aktif. \nMulai kelola bisnismu sekarang.",
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: Colors.grey.shade500,
+                        height: 1.5,
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 32),
-                  FadeTransition(
-                    opacity: _fadeAnim,
-                    child: Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Text(
-                        "Mulailah menambahkan layanan, harga, dan jadwal operasional untuk menarik lebih banyak pelanggan.",
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.poppins(
-                          fontSize: 13,
-                          color: Colors.grey.shade700,
-                          height: 1.5,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  SlideTransition(
-                    position: _slideAnim,
-                    child: FadeTransition(
-                      opacity: _fadeAnim,
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFD72B1C),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            elevation: 8,
-                          ),
-                          onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
-                          child: Text(
-                            "Masuk ke Aplikasi",
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 40),
+              
+              // Clean Action Button
+              FadeTransition(
+                opacity: _fadeAnim,
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pushNamedAndRemoveUntil(context, '/main', (route) => false);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFD72B1C),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      "Masuk ke Dashboard",
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
+
 
   @override
   Widget build(BuildContext context) {

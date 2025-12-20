@@ -39,8 +39,26 @@ class Voucher {
       validFrom: json['valid_from'] != null ? DateTime.parse(json['valid_from']) : DateTime.now(),
       validUntil: json['valid_until'] != null ? DateTime.parse(json['valid_until']) : DateTime.now(),
       isActive: json['is_active'] == 1 || json['is_active'] == true,
-      imageUrl: json['image_url'],
+      imageUrl: _fixImageUrl(json['image_url']),
     );
+  }
+
+  static String? _fixImageUrl(dynamic url) {
+    if (url == null || url.toString().isEmpty) {
+      print("DEBUG_IMAGE: URL is null or empty");
+      return null;
+    }
+    String finalUrl = url.toString();
+    print("DEBUG_IMAGE_ORIGINAL: $finalUrl");
+    
+    // Fix for Android Emulator 127.0.0.1 -> 10.0.2.2
+    if (finalUrl.contains("127.0.0.1")) {
+      finalUrl = finalUrl.replaceAll("127.0.0.1", "10.0.2.2");
+    } else if (finalUrl.contains("localhost")) {
+      finalUrl = finalUrl.replaceAll("localhost", "10.0.2.2");
+    }
+    print("DEBUG_IMAGE_FIXED: $finalUrl");
+    return finalUrl;
   }
 
   Map<String, dynamic> toJson() {
