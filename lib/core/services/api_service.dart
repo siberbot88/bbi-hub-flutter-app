@@ -85,9 +85,7 @@ class ApiService {
 
   // Helper untuk mengambil pesan error dengan aman dari JSON Laravel
   String _getErrorMessage(Map<String, dynamic> json) {
-    final message = json['message'];
-    if (message is String) return message;
-
+    // 1. Prioritaskan 'errors' object (Validasi Laravel)
     final errors = json['errors'];
     if (errors is Map) {
       final firstErrorValue = errors.values.first;
@@ -97,10 +95,43 @@ class ApiService {
       }
     }
 
+    // 2. Fallback ke 'message' generic
+    final message = json['message'];
+    if (message is String) return message;
+
     return 'Terjadi kesalahan yang tidak diketahui';
   }
 
   /* ========================= AUTH ========================= */
+
+  // Generic POST helper
+  Future<dynamic> post(String endpoint, Map<String, dynamic> body) async {
+    try {
+      final uri = Uri.parse('$_baseUrl$endpoint');
+      final headers = await _getAuthHeaders();
+      final bodyString = jsonEncode(body);
+
+      _debugRequest('POST_GENERIC', uri, headers, bodyString);
+      final res = await http.post(uri, headers: headers, body: bodyString);
+      _debugResponse('POST_GENERIC', res);
+
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        if (_isJsonResponse(res)) {
+           return _tryDecodeJson(res.body);
+        }
+        return res.body; 
+      }
+      
+      if (_isJsonResponse(res)) {
+         final j = _tryDecodeJson(res.body);
+         if (j is Map<String, dynamic>) throw Exception(_getErrorMessage(j));
+      }
+      throw Exception('Request failed (HTTP ${res.statusCode})');
+
+    } catch (e) {
+      throw Exception(e.toString().replaceFirst("Exception: ", ""));
+    }
+  }
 
   Future<Map<String, dynamic>> login(String email, String password) async {
     try {

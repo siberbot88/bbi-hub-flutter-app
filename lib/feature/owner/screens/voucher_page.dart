@@ -155,16 +155,26 @@ class _VoucherPageState extends State<VoucherPage> {
           context,
           MaterialPageRoute(builder: (_) => VoucherDetailPage(voucher: voucher)),
         );
-        if (result == true) {
+        if (result != null) {
           _loadData();
-          // Show success alert after deletion
+          
           if (!mounted) return;
-          CustomAlert.show(
-            context,
-            title: "Berhasil",
-            message: "Voucher berhasil dihapus",
-            type: AlertType.success,
-          );
+
+          if (result == 'deleted') {
+            CustomAlert.show(
+              context,
+              title: "Berhasil",
+              message: "Voucher berhasil dihapus",
+              type: AlertType.success,
+            );
+          } else if (result == 'updated') {
+            CustomAlert.show(
+              context,
+              title: "Berhasil",
+              message: "Voucher berhasil diperbarui",
+              type: AlertType.success,
+            );
+          }
         }
       },
       child: Container(

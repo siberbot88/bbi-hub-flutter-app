@@ -20,6 +20,7 @@ class User {
   final bool trialUsed;
   final int? trialDaysRemaining;
   final bool hasPremiumAccess;
+  final DateTime? emailVerifiedAt;
 
   User({
     required this.id,
@@ -38,6 +39,7 @@ class User {
     this.trialUsed = false,
     this.trialDaysRemaining,
     this.hasPremiumAccess = false,
+    this.emailVerifiedAt,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -123,7 +125,7 @@ class User {
       name: (json['name'] ?? '').toString(),
       username: (json['username'] ?? '').toString(),
       email: (json['email'] ?? '').toString(),
-      photo: json['photo']?.toString(),
+      photo: _fixImageUrl(json['photo']),
       role: userRole,
       workshops: parsedWorkshops,
       employment: parsedEmployment,
@@ -137,8 +139,24 @@ class User {
       trialEndsAt: trialEnds,
       trialUsed: json['trial_used'] ?? false,
       trialDaysRemaining: json['trial_days_remaining'],
+
       hasPremiumAccess: json['has_premium_access'] ?? false,
+      emailVerifiedAt: json['email_verified_at'] != null 
+          ? DateTime.tryParse(json['email_verified_at'].toString()) 
+          : null,
     );
+  }
+
+  static String? _fixImageUrl(dynamic url) {
+    if (url == null || url.toString().isEmpty) return null;
+    String finalUrl = url.toString();
+    // Fix for Android Emulator 127.0.0.1 -> 10.0.2.2
+    if (finalUrl.contains("127.0.0.1")) {
+      finalUrl = finalUrl.replaceAll("127.0.0.1", "10.0.2.2");
+    } else if (finalUrl.contains("localhost")) {
+      finalUrl = finalUrl.replaceAll("localhost", "10.0.2.2");
+    }
+    return finalUrl;
   }
 
   bool hasRole(String roleName) => role == roleName;

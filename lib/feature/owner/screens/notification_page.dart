@@ -1,7 +1,10 @@
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:bengkel_online_flutter/core/theme/app_colors.dart';
+import 'package:bengkel_online_flutter/core/theme/app_text_styles.dart';
+import 'package:bengkel_online_flutter/core/widgets/custom_alert.dart';
 import 'package:bengkel_online_flutter/core/services/notification_provider.dart';
 import 'package:bengkel_online_flutter/core/models/notification_model.dart';
 import '../widgets/custom_header.dart';
@@ -48,8 +51,11 @@ class _NotificationPageState extends State<NotificationPage> with SingleTickerPr
             tooltip: 'Tandai semua sudah dibaca',
             onPressed: () {
                context.read<NotificationProvider>().markAsRead('all');
-               ScaffoldMessenger.of(context).showSnackBar(
-                 const SnackBar(content: Text('Semua notifikasi ditandai sudah dibaca')),
+               CustomAlert.show(
+                 context,
+                 title: 'Berhasil',
+                 message: 'Semua notifikasi ditandai sudah dibaca',
+                 type: AlertType.success,
                );
             },
           ),
@@ -189,8 +195,11 @@ class _NotificationCard extends StatelessWidget {
              );
           } else {
              // Default handling
-             ScaffoldMessenger.of(context).showSnackBar(
-               SnackBar(content: Text('Detail untuk ${notif.title} belum tersedia.')),
+             CustomAlert.show(
+               context,
+               title: 'Info',
+               message: 'Detail untuk ${notif.title} belum tersedia.',
+               type: AlertType.info,
              );
           }
         },

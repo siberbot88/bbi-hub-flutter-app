@@ -535,6 +535,41 @@ class _ReportPageState extends State<ReportPage> {
   }
 
   Widget _buildServiceTypeCard(ReportData d) {
+    // Check if breakdown is empty
+    if (d.serviceBreakdown.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+             BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 15, offset: const Offset(0, 4)),
+          ],
+        ),
+         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+             Text('Jenis Service', style: _titleStyle),
+             const SizedBox(height: 20),
+             Center(child: Text("Belum ada data service", style: _subtitleStyle)),
+          ],
+         ),
+      );
+    }
+
+    // Colors for dynamic legend (cycle through)
+    final colors = [
+      const Color(0xFF7C3AED), // Purple
+      const Color(0xFF3B82F6), // Blue
+      const Color(0xFF22C55E), // Green
+      const Color(0xFFF59E0B), // Amber
+      const Color(0xFFEC4899), // Pink
+      const Color(0xFF6366F1), // Indigo
+    ];
+
+    int colorIndex = 0;
+    
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -559,15 +594,14 @@ class _ReportPageState extends State<ReportPage> {
                  child: PieChart(ReportCharts.donutData(d.serviceBreakdown)),
                ),
                const SizedBox(width: 20),
-               // Legend
+               // Legend Dynamic
                Expanded(
                  child: Column(
-                   children: [
-                      _buildLegendRow('Rutin', '35%', const Color(0xFF7C3AED)),
-                      _buildLegendRow('Perbaikan', '28%', const Color(0xFF3B82F6)),
-                      _buildLegendRow('Onderdil', '22%', const Color(0xFF22C55E)),
-                      _buildLegendRow('Body', '15%', const Color(0xFFF59E0B)),
-                   ],
+                   children: d.serviceBreakdown.entries.map((entry) {
+                      final color = colors[colorIndex % colors.length];
+                      colorIndex++;
+                      return _buildLegendRow(entry.key, '${entry.value.toStringAsFixed(1)}%', color);
+                   }).toList(),
                  ),
                )
              ],
@@ -622,6 +656,9 @@ class _ReportPageState extends State<ReportPage> {
   }
 
   Widget _buildPeakHour(ReportData d) {
+    // Check if peak hour data is empty (all zeros)
+    final hasData = d.peakHourBars.any((v) => v > 0);
+
      return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -642,7 +679,7 @@ class _ReportPageState extends State<ReportPage> {
                  crossAxisAlignment: CrossAxisAlignment.start,
                  children: [
                    Text('Peak Hour', style: _titleStyle),
-                   Text('Jam Sibuk bengkel', style: _subtitleStyle),
+                   Text(hasData ? 'Jam Sibuk bengkel' : 'Belum ada data', style: _subtitleStyle),
                  ],
                ),
                Container(
@@ -658,13 +695,20 @@ class _ReportPageState extends State<ReportPage> {
            const SizedBox(height: 24),
            SizedBox(
              height: 160,
-             child: BarChart(
-               ReportCharts.barsData(
-                 values: d.peakHourBars.map((v) => v.toDouble()).toList(),
-                 labels: d.peakHourLabels,
-                 color: const Color(0xFF3B82F6), // Blue
-               )
-             ),
+             child: hasData 
+               ? BarChart(
+                   ReportCharts.barsData(
+                     values: d.peakHourBars.map((v) => v.toDouble()).toList(),
+                     labels: d.peakHourLabels,
+                     color: const Color(0xFF3B82F6), // Blue
+                   )
+                 )
+               : Center(
+                   child: Text(
+                     "Grafik muncul saat ada transaksi",
+                     style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                   ),
+                 ),
            )
         ],
       ),
