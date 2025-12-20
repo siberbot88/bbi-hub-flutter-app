@@ -33,28 +33,14 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fetchData();
-    });
+    // NOTE: Do NOT call _fetchData() here!
+    // Parent (ServicePageAdmin) already fetches data for the shared AdminServiceProvider.
+    // Calling fetch here would cause a race condition and overwrite the parent's data.
   }
 
-  void _fetchData() {
-    final auth = context.read<AuthProvider>();
-    final workshopUuid = auth.user?.workshopUuid;
-    final startOfDay = DateTime(displayedYear, displayedMonth, selectedDay, 0, 0, 0);
-    final endOfDay = DateTime(displayedYear, displayedMonth, selectedDay, 23, 59, 59);
-
-    final dateFrom = DateFormat('yyyy-MM-dd HH:mm:ss').format(startOfDay);
-    final dateTo = DateFormat('yyyy-MM-dd HH:mm:ss').format(endOfDay);
-    
-    context.read<AdminServiceProvider>().fetchServices(
-      dateFrom: dateFrom,
-      dateTo: dateTo,
-      workshopUuid: workshopUuid,
-      // We don't limit by status here because logging page shows Pending (Mechanic), In Progress, and Completed.
-      // But we MUST exclude those that are NOT accepted yet (handled in filtering later).
-    );
-  }
+  // NOTE: _fetchData is kept for calendar navigation but should NOT be called from initState
+  // The parent already loads all data, and we filter client-side
+  // void _fetchData() { ... } - removed to prevent any accidental calls
 
   DateTime get selectedDate =>
       DateTime(displayedYear, displayedMonth, selectedDay);
@@ -198,7 +184,7 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
             onNextMonth: _nextMonth,
             onDaySelected: (day) {
               setState(() => selectedDay = day);
-              _fetchData();
+              // No need to fetch - data is already loaded by parent
             },
           ),
           const SizedBox(height: 12),
@@ -292,7 +278,7 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
           displayedYear -= 1;
         }
         selectedDay = 1;
-        _fetchData();
+        // No need to fetch - data is already loaded by parent
       });
 
   void _nextMonth() => setState(() {
@@ -302,7 +288,7 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
           displayedYear += 1;
         }
         selectedDay = 1;
-        _fetchData();
+        // No need to fetch - data is already loaded by parent
       });
 
   Widget _bulletPoint(String text) {

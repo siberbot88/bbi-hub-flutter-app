@@ -146,24 +146,71 @@ class ServiceProvider extends ChangeNotifier {
         perPage: perPage ?? _perPage,
       );
 
-      final data = res['data'];
-      final listJson = data is List ? data : const <dynamic>[];
+      // DEBUG: Log the raw response structure
+      if (kDebugMode) {
+        print('[ServiceProvider] res keys: ${res.keys.toList()}');
+        print('[ServiceProvider] res["data"] type: ${res["data"]?.runtimeType}');
+      }
+
+      // Handle both formats:
+      // 1. Flat: { "data": [...], "current_page": 1 }
+      // 2. Nested (Laravel): { "data": { "data": [...], "current_page": 1 } }
+      dynamic data = res['data'];
+      List<dynamic> listJson = const <dynamic>[];
+      
+      if (data is List) {
+        // Format 1: data is directly the list
+        listJson = data;
+      } else if (data is Map) {
+        // Format 2: Laravel pagination - data is nested
+        final nestedData = data['data'];
+        if (nestedData is List) {
+          listJson = nestedData;
+        }
+        // Also extract pagination from nested object
+        if (data['current_page'] != null) {
+          _currentPage = _parseInt(data['current_page'], fallback: page);
+        }
+        if (data['last_page'] != null) {
+          _totalPages = _parseInt(data['last_page'], fallback: 1);
+        }
+        if (data['per_page'] != null) {
+          _perPage = _parseInt(data['per_page'], fallback: perPage ?? _perPage);
+        }
+      }
+      
+      if (kDebugMode) {
+        print('[ServiceProvider] listJson length: ${listJson.length}');
+        if (listJson.isNotEmpty) {
+          print('[ServiceProvider] First item type field: ${listJson.first["type"]}');
+        }
+      }
 
       _items = listJson
           .whereType<Map<String, dynamic>>()
           .map(ServiceModel.fromJson)
           .toList();
 
-      // meta pagination
-      _currentPage = _parseInt(res['current_page'], fallback: page);
-      _totalPages = _parseInt(res['last_page'], fallback: 1);
-      _perPage = _parseInt(res['per_page'], fallback: perPage ?? _perPage);
+      // meta pagination (fallback to top-level if not already set from nested)
+      if (res['current_page'] != null) {
+        _currentPage = _parseInt(res['current_page'], fallback: page);
+      }
+      if (res['last_page'] != null) {
+        _totalPages = _parseInt(res['last_page'], fallback: 1);
+      }
+      if (res['per_page'] != null) {
+        _perPage = _parseInt(res['per_page'], fallback: perPage ?? _perPage);
+      }
 
       if (kDebugMode) {
         print(
           '[ServiceProvider($runtimeType)] loaded items=${_items.length}, '
               'currentPage=$_currentPage / $_totalPages',
         );
+        // Log each item's type for debugging
+        for (var item in _items) {
+          print('  -> id=${item.id}, type=${item.type}, name=${item.name}');
+        }
       }
     } catch (e) {
       _lastError = e.toString();

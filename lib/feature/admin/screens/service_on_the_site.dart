@@ -35,27 +35,13 @@ class _ServiceOnTheSitePageState extends State<ServiceOnTheSitePage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fetchData();
-    });
+    // NOTE: Do NOT call _fetchData() here!
+    // Parent (ServicePageAdmin) already fetches data for the shared AdminServiceProvider.
+    // Calling fetch here would cause a race condition and overwrite the parent's data.
   }
 
-  void _fetchData() {
-    final auth = context.read<AuthProvider>();
-    final workshopUuid = auth.user?.workshopUuid;
-    final startOfDay = DateTime(displayedYear, displayedMonth, selectedDay, 0, 0, 0);
-    final endOfDay = DateTime(displayedYear, displayedMonth, selectedDay, 23, 59, 59);
-    
-    final dateFrom = DateFormat('yyyy-MM-dd HH:mm:ss').format(startOfDay);
-    final dateTo = DateFormat('yyyy-MM-dd HH:mm:ss').format(endOfDay);
-    print("DEBUG: service_on_the_site _fetchData -> Selected: $selectedDate, From: $dateFrom, To: $dateTo");
-    
-    context.read<AdminServiceProvider>().fetchServices(
-      dateFrom: dateFrom,
-      dateTo: dateTo,
-      workshopUuid: workshopUuid,
-    );
-  }
+  // _fetchData is no longer needed since parent handles it
+  // Keep the calendar navigation methods but just call setState to update UI
 
   void _prevMonth() {
     setState(() {
@@ -66,7 +52,7 @@ class _ServiceOnTheSitePageState extends State<ServiceOnTheSitePage> {
       }
       selectedDay = 1;
     });
-    _fetchData();
+    // No need to fetch - data is already loaded by parent, we just filter client-side
   }
 
   void _nextMonth() {
@@ -78,7 +64,7 @@ class _ServiceOnTheSitePageState extends State<ServiceOnTheSitePage> {
       }
       selectedDay = 1;
     });
-    _fetchData();
+    // No need to fetch - data is already loaded by parent, we just filter client-side
   }
 
   @override
@@ -133,7 +119,7 @@ class _ServiceOnTheSitePageState extends State<ServiceOnTheSitePage> {
             onNextMonth: _nextMonth,
             onDaySelected: (day) {
               setState(() => selectedDay = day);
-              _fetchData();
+              // No need to fetch - data is already loaded by parent
             },
           ),
           const SizedBox(height: 20),

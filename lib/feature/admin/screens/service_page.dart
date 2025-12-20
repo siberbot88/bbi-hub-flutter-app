@@ -47,20 +47,13 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
   void _fetchData() {
     final auth = context.read<AuthProvider>();
     final workshopUuid = auth.user?.workshopUuid;
-    final startOfDay = DateTime(displayedYear, displayedMonth, selectedDay, 0, 0, 0);
-    final endOfDay = DateTime(displayedYear, displayedMonth, selectedDay, 23, 59, 59);
     
-    // Format to ISO string or format expected by backend (usually YYYY-MM-DD HH:mm:ss)
-    final dateFrom = DateFormat('yyyy-MM-dd HH:mm:ss').format(startOfDay);
-    final dateTo = DateFormat('yyyy-MM-dd HH:mm:ss').format(endOfDay);
-    print("DEBUG: _fetchData UI -> Selected: $selectedDate, From: $dateFrom, To: $dateTo");
+    print("DEBUG: _fetchData UI -> Fetching ALL services without date filter");
     
-    // Fetch ALL services for the date
+    // Fetch ALL services without date filter to show all data
     context.read<AdminServiceProvider>().fetchServices(
-      dateFrom: dateFrom,
-      dateTo: dateTo,
       workshopUuid: workshopUuid,
-      // Removed status: 'pending' to get all services for stats and filtering
+      perPage: 100, // Increase page size to get more results
     );
   }
 
@@ -185,7 +178,7 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
       if (selectedFilter == 'Semua') return true;
       if (selectedFilter == 'Menunggu') return acceptance == 'pending';
       if (selectedFilter == 'Terima') return acceptance == 'accepted';
-      if (selectedFilter == 'Tolak') return acceptance == 'declined' || acceptance == 'rejected' || acceptance == 'canceled' || acceptance == 'cancelled';
+      if (selectedFilter == 'Tolak') return acceptance == 'decline' || acceptance == 'rejected' || acceptance == 'canceled' || acceptance == 'cancelled';
       return true;
     }).toList();
 
