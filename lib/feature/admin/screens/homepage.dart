@@ -1,26 +1,38 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../../core/services/auth_provider.dart';
+import '../providers/admin_service_provider.dart';
+import 'package:bengkel_online_flutter/core/models/dashboard_stats.dart';
 import 'service_page.dart';
+import 'feedback.dart';
 import '../widgets/home/home_app_bar.dart';
 import '../widgets/home/home_stat_card.dart';
 import '../widgets/home/home_quick_feature.dart';
 
 // Admin Homepage - Clean entry point
 class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+  final void Function(int, {int? serviceTab, String? serviceFilter})? onTabChange;
+  
+  const HomePage({super.key, this.onTabChange});
   
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      appBar: HomeAppBar(),
-      body: HomeContent(),
+    final user = context.watch<AuthProvider>().user;
+    return Scaffold(
+      appBar: HomeAppBar(
+        userName: user?.name ?? "Admin",
+      ),
+      body: HomeContent(onTabChange: onTabChange),
     );
   }
 }
 
 // Home content with stats, quick features, and banners
 class HomeContent extends StatefulWidget {
-  const HomeContent({super.key});
+  final void Function(int, {int? serviceTab, String? serviceFilter})? onTabChange;
+  
+  const HomeContent({super.key, this.onTabChange});
 
   @override
   State<HomeContent> createState() => _HomeContentState();
@@ -30,6 +42,10 @@ class _HomeContentState extends State<HomeContent> {
   final PageController _bannerController = PageController();
   Timer? _autoScrollTimer;
   int _currentBannerIndex = 0;
+  
+  // Dashboard stats from API
+  DashboardStats? _stats;
+  bool _loadingStats = true;
 
   final List<BannerData> banners = [
     BannerData(imagePath: 'assets/image/banner1.png'),
@@ -44,6 +60,28 @@ class _HomeContentState extends State<HomeContent> {
   void initState() {
     super.initState();
     if (autoScroll) _startAutoScroll();
+    _fetchDashboardStats();
+  }
+  
+  void _fetchDashboardStats() async {
+    try {
+      final provider = context.read<AdminServiceProvider>();
+      final auth = context.read<AuthProvider>();
+      final stats = await provider.fetchDashboardStats(
+        workshopUuid: auth.user?.workshopUuid,
+      );
+      if (mounted) {
+        setState(() {
+          _stats = stats;
+          _loadingStats = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _loadingStats = false);
+        print('Error fetching home stats: $e');
+      }
+    }
   }
 
   void _startAutoScroll() {
@@ -109,7 +147,8 @@ class _HomeContentState extends State<HomeContent> {
             ),
             TextButton(
               onPressed: () {
-                Navigator.pushNamed(context, '/dashboard');
+                // Switch to Dashboard tab (index 2)
+                widget.onTabChange?.call(2);
               },
               child: const Text("Lihat detail",
                   style: TextStyle(color: Color(0xFFDC2626))),
@@ -118,7 +157,7 @@ class _HomeContentState extends State<HomeContent> {
         ),
         const SizedBox(height: 8),
 
-        // Stat cards grid
+        // Stat cards grid - use API data
         GridView.count(
           crossAxisCount: 2,
           shrinkWrap: true,
@@ -126,26 +165,30 @@ class _HomeContentState extends State<HomeContent> {
           mainAxisSpacing: 12,
           crossAxisSpacing: 12,
           childAspectRatio: 1.6,
-          children: const [
+          children: [
             HomeStatCard(
               title: "Servis Hari ini",
-              value: "24",
+              value: "${_stats?.servicesToday ?? 0}",
               assetPath: "assets/icons/servishariini.svg",
+              isLoading: _loadingStats,
             ),
             HomeStatCard(
               title: "Perlu di Assign",
-              value: "12",
+              value: "${_stats?.needsAssignment ?? 0}",
               assetPath: "assets/icons/assign.svg",
+              isLoading: _loadingStats,
             ),
             HomeStatCard(
-              title: "Feedback",
-              value: "5",
+              title: "Sedang Dikerjakan",
+              value: "${_stats?.inProgress ?? 0}",
               assetPath: "assets/icons/feedback.svg",
+              isLoading: _loadingStats,
             ),
             HomeStatCard(
               title: "Selesai",
-              value: "2",
+              value: "${_stats?.completed ?? 0}",
               assetPath: "assets/icons/selesai.svg",
+              isLoading: _loadingStats,
             ),
           ],
         ),
@@ -190,19 +233,30 @@ class _HomeContentState extends State<HomeContent> {
                     assetPath: 'assets/icons/riwayatservis.svg',
                     label: "Riwayat\nServis",
                     iconSize: 26,
-                    onTap: () {},
+                    onTap: () {
+                      // Tab 1 (Service), Sub-tab 2 (Logging), Filter Lunas
+                      widget.onTabChange?.call(1, serviceTab: 2, serviceFilter: "Lunas");
+                    },
                   ),
                   HomeQuickFeature(
                     assetPath: 'assets/icons/terimajadwal.svg',
                     label: "Terima\nJadwal",
                     iconSize: 26,
-                    onTap: () {},
+                    onTap: () {
+                      // Tab 1 (Service), Sub-tab 0 (Scheduled), Filter Menunggu
+                      widget.onTabChange?.call(1, serviceTab: 0, serviceFilter: "Menunggu");
+                    },
                   ),
                   HomeQuickFeature(
                     assetPath: 'assets/icons/feedback.svg',
                     label: "Umpan\nBalik",
                     iconSize: 26,
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const FeedbackPage()),
+                      );
+                    },
                   ),
                 ].map((w) => SizedBox(width: itemWidth, child: w)).toList(),
               ),

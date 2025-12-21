@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class LoggingFilterTabs extends StatelessWidget {
+class ServiceFilterTabs extends StatelessWidget {
   final String selectedFilter;
   final Function(String) onFilterChanged;
 
-  const LoggingFilterTabs({
+  const ServiceFilterTabs({
     super.key,
     required this.selectedFilter,
     required this.onFilterChanged,
@@ -13,7 +13,7 @@ class LoggingFilterTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tabs = ["All", "Pending", "In Progress", "Completed", "Lunas"];
+    final tabs = ["Semua", "Menunggu", "Terima", "Tolak"];
     return SizedBox(
       height: 40,
       child: ListView.separated(

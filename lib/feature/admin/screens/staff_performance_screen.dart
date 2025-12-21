@@ -395,6 +395,14 @@ class StaffPerformanceCard extends StatelessWidget {
 
   const StaffPerformanceCard({super.key, required this.staff});
 
+  String _getInitials(String name) {
+    if (name.isEmpty) return "?";
+    final parts = name.trim().split(' ');
+    if (parts.isEmpty) return "?";
+    if (parts.length == 1) return parts[0].substring(0, 1).toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -427,10 +435,11 @@ class StaffPerformanceCard extends StatelessWidget {
                       children: [
                         CircleAvatar(
                           radius: 26,
-                          backgroundColor: Colors.grey[200],
-                          backgroundImage: NetworkImage(staff.avatarUrl),
-                          onBackgroundImageError: (_, __) {},
-                          child: const Icon(Icons.person, color: Colors.grey),
+                          backgroundColor: AppTheme.primaryRed.withOpacity(0.1),
+                          child: Text(
+                            _getInitials(staff.name),
+                            style: AppTheme.staffName.copyWith(color: AppTheme.primaryRed),
+                          ),
                         ),
                         const SizedBox(width: 16),
                         Expanded(

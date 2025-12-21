@@ -39,6 +39,9 @@ class ServiceModel {
   /// pending / in progress / completed / menunggu pembayaran / lunas / cancelled
   final String status;
 
+  /// Type service: booking / on-site
+  final String? type;
+
   /// status penerimaan (dari kolom `acceptance_status`)
   final String? acceptanceStatus;
 
@@ -53,6 +56,7 @@ class ServiceModel {
   final String? workshopUuid;
   final String? vehicleId;
   final String? mechanicUuid; // <--- dari kolom mechanic_uuid
+  final String? transactionUuid; // <--- transaction ID dari backend saat service completed
 
   // relasi
   final Customer? customer;
@@ -86,6 +90,7 @@ class ServiceModel {
     this.scheduledDate,
     this.estimatedTime,
     required this.status,
+    this.type,
     this.acceptanceStatus,
     this.acceptedAt,
     this.completedAt,
@@ -93,6 +98,7 @@ class ServiceModel {
     this.workshopUuid,
     this.vehicleId,
     this.mechanicUuid,
+    this.transactionUuid,
     this.customer,
     this.vehicle,
     this.workshopName,
@@ -166,6 +172,7 @@ class ServiceModel {
       scheduledDate: parseDT(json['scheduled_date']),
       estimatedTime: parseDT(json['estimated_time']),
       status: (json['status'] ?? '').toString(),
+      type: json['type']?.toString(),
 
       /// status & waktu status
       acceptanceStatus: json['acceptance_status']?.toString(),
@@ -176,17 +183,22 @@ class ServiceModel {
       workshopUuid: json['workshop_uuid']?.toString(),
       vehicleId: vehicleId(),
       mechanicUuid: json['mechanic_uuid']?.toString(),
+      transactionUuid: json['transaction_uuid']?.toString() ?? json['transaction_id']?.toString(),
 
       customer: (json['customer'] is Map)
           ? Customer.fromJson(
         Map<String, dynamic>.from(json['customer'] as Map),
       )
           : null,
-      vehicle: (json['vehicle'] is Map)
-          ? Vehicle.fromJson(
-        Map<String, dynamic>.from(json['vehicle'] as Map),
-      )
-          : null,
+      vehicle: () {
+        final vJson = json['vehicle'];
+        if (vJson is Map) {
+          // DEBUG: Log vehicle data from API
+          print('DEBUG ServiceModel.fromJson vehicle: $vJson');
+          return Vehicle.fromJson(Map<String, dynamic>.from(vJson));
+        }
+        return null;
+      }(),
       workshopName: workshopName(),
       mechanic: mechanic(),
 
@@ -272,6 +284,7 @@ class ServiceModel {
       if (estimatedTime != null)
         'estimated_time': estimatedTime!.toIso8601String(),
       'status': status,
+      if (type != null) 'type': type,
       if (acceptanceStatus != null) 'acceptance_status': acceptanceStatus,
       if (acceptedAt != null) 'accepted_at': acceptedAt!.toIso8601String(),
       if (completedAt != null) 'completed_at': completedAt!.toIso8601String(),

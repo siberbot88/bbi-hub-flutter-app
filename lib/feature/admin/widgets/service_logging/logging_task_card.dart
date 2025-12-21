@@ -4,7 +4,8 @@ import '../../../../core/theme/app_text_styles.dart';
 import 'logging_helpers.dart';
 import '../../screens/service_pending.dart' as pending;
 import '../../screens/service_progress.dart' as progress;
-import '../../screens/service_complete.dart' as complete;
+import '../../screens/invoice_form.dart' as invoice_form;
+import '../../screens/invoice_view.dart' as invoice_view;
 import 'package:bengkel_online_flutter/core/models/service.dart';
 
 class LoggingTaskCard extends StatelessWidget {
@@ -15,6 +16,14 @@ class LoggingTaskCard extends StatelessWidget {
     required this.service,
   });
 
+  String _getInitials(String name) {
+    if (name.isEmpty) return "?";
+    final parts = name.trim().split(' ');
+    if (parts.isEmpty) return "?";
+    if (parts.length == 1) return parts[0].substring(0, 1).toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+
   @override
   Widget build(BuildContext context) {
     Color statusColor;
@@ -22,9 +31,9 @@ class LoggingTaskCard extends StatelessWidget {
     // Statuses: pending, in_progress, completed, canceled
     final status = service.status ?? 'Pending';
 
-    if (status.toLowerCase() == "completed") {
+    if (status.toLowerCase() == "completed" || status.toLowerCase() == "lunas") {
       statusColor = AppColors.statusCompleted;
-    } else if (status.toLowerCase() == "in_progress" || status.toLowerCase() == "on_process") {
+    } else if (status.toLowerCase() == "in_progress" || status.toLowerCase() == "progress" || status.toLowerCase() == "in progress" || status.toLowerCase() == "on_process") {
       statusColor = AppColors.statusInProgress;
     } else if (status.toLowerCase() == "pending") {
       statusColor = AppColors.statusPending; // Pending mechanic assignment
@@ -35,10 +44,11 @@ class LoggingTaskCard extends StatelessWidget {
     Widget actionButton;
 
     // Logic for buttons based on status
-    if (status.toLowerCase() == 'pending') {
+    final statusLower = status.toLowerCase();
+    
+    if (statusLower == 'pending') {
       actionButton = ElevatedButton(
         onPressed: () {
-          // TODO: Use ServiceModel in ServicePendingDetail
            Navigator.push(
               context,
               MaterialPageRoute(
@@ -54,10 +64,9 @@ class LoggingTaskCard extends StatelessWidget {
         child: Text("Tetapkan Mekanik",
             style: AppTextStyles.buttonSmall(color: Colors.white).copyWith(fontSize: 12)),
       );
-    } else if (status.toLowerCase() == 'in_progress' || status.toLowerCase() == "on_process") {
+    } else if (statusLower == 'in_progress' || statusLower == 'progress' || statusLower == 'in progress' || statusLower == "on_process") {
       actionButton = ElevatedButton(
         onPressed: () {
-          // TODO: Use ServiceModel in ServiceProgressDetail
            Navigator.push(
               context,
               MaterialPageRoute(
@@ -73,14 +82,13 @@ class LoggingTaskCard extends StatelessWidget {
         child: Text("Lihat Detail",
             style: AppTextStyles.buttonSmall(color: Colors.white).copyWith(fontSize: 12)),
       );
-    } else if (status.toLowerCase() == 'completed') {
+    } else if (statusLower == 'completed' || statusLower == 'menunggu pembayaran') {
       actionButton = ElevatedButton(
         onPressed: () {
-          // TODO: Use ServiceModel in ServiceCompleteDetail
            Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => complete.ServiceCompleteDetail(task: _toLegacyMap(service)),
+                builder: (_) => invoice_form.InvoiceFormPage(service: service), 
               ));
         },
         style: ElevatedButton.styleFrom(
@@ -89,7 +97,25 @@ class LoggingTaskCard extends StatelessWidget {
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         ),
-        child: Text("Buat Invoice",
+        child: Text("Input Nota",
+            style: AppTextStyles.buttonSmall(color: Colors.white).copyWith(fontSize: 12)),
+      );
+    } else if (statusLower == 'lunas') {
+        actionButton = ElevatedButton(
+        onPressed: () {
+           Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => invoice_view.InvoiceViewPage(service: service), 
+              ));
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.green, // Green for lunas
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        ),
+        child: Text("Lihat Nota",
             style: AppTextStyles.buttonSmall(color: Colors.white).copyWith(fontSize: 12)),
       );
     } else {
@@ -153,24 +179,36 @@ class LoggingTaskCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                      radius: 14,
-                      backgroundImage: NetworkImage(
-                          "https://i.pravatar.cc/150?img=${service.id}")),
-                  const SizedBox(width: 8),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(service.displayCustomerName,
-                          style: AppTextStyles.labelBold()),
-                      Text("ID: ${service.id}",
-                          style: AppTextStyles.caption()),
-                    ],
-                  ),
-                ],
+              Expanded(
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                        radius: 14,
+                        backgroundColor: Colors.blue.withOpacity(0.1),
+                        child: Text(
+                          _getInitials(service.displayCustomerName),
+                          style: AppTextStyles.caption(color: Colors.blue)
+                              .copyWith(fontWeight: FontWeight.bold, fontSize: 10),
+                        ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(service.displayCustomerName,
+                              style: AppTextStyles.labelBold(),
+                              overflow: TextOverflow.ellipsis),
+                          Text("ID: ${service.id}",
+                              style: AppTextStyles.caption(),
+                              overflow: TextOverflow.ellipsis),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               actionButton,
             ],
           ),

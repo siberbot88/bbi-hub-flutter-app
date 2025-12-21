@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:math' as math;
+import 'package:google_fonts/google_fonts.dart';
 
 /// Custom AppBar with gradient background, roundels, and stats pill
 class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -157,7 +158,13 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                           backgroundColor: Colors.white.withAlpha(230),
                           backgroundImage: avatar,
                           child: avatar == null
-                              ? const Icon(Icons.person, color: Colors.black)
+                              ? Text(
+                                  _getInitials(userName),
+                                  style: GoogleFonts.poppins(
+                                      color: const Color(0xFFDC2626), 
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14),
+                                )
                               : null,
                         ),
                       ),
@@ -166,7 +173,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                   const SizedBox(height: 76),
                   const Padding(padding: EdgeInsets.only(left: 20)),
                   Text(
-                    'Selamat $waktu, $userName',
+                    'Selamat $waktu, $userName', // userName displays user.name, passed from home_app_bar_wrapper or similar
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: greetingSize,
@@ -373,4 +380,12 @@ String _greeting(DateTime d) {
   if (h >= 11 && h < 15) return 'Siang';
   if (h >= 15 && h < 19) return 'Sore';
   return 'Malam';
+}
+
+String _getInitials(String name) {
+  if (name.isEmpty) return "A";
+  final parts = name.trim().split(' ');
+  if (parts.isEmpty) return "A";
+  if (parts.length == 1) return parts[0][0].toUpperCase();
+  return (parts[0][0] + parts[1][0]).toUpperCase();
 }

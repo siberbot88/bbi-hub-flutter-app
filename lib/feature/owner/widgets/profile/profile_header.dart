@@ -13,6 +13,7 @@ class ProfileHeader extends StatelessWidget {
   final String workshopEmail;
   final String roleName;
   final Workshop? workshop;
+  final VoidCallback? onEditTap;
 
   const ProfileHeader({
     super.key,
@@ -23,6 +24,7 @@ class ProfileHeader extends StatelessWidget {
     required this.workshopEmail,
     required this.roleName,
     this.workshop,
+    this.onEditTap,
   });
 
   @override
@@ -169,6 +171,11 @@ class ProfileHeader extends StatelessWidget {
                           ),
                         ),
                         onPressed: () {
+                          if (onEditTap != null) {
+                            onEditTap!();
+                            return;
+                          }
+                          
                           if (workshop != null) {
                             Navigator.push(
                               context,

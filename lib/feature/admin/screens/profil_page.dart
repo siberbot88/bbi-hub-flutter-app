@@ -7,6 +7,7 @@ import 'package:bengkel_online_flutter/core/models/user.dart';
 // Import widgets from owner feature (reusing them)
 import 'package:bengkel_online_flutter/feature/owner/widgets/profile/profile_header.dart';
 import 'package:bengkel_online_flutter/feature/owner/widgets/profile/profile_menu_card.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/edit_user_screen.dart';
 
 class ProfilePageAdmin extends StatelessWidget {
   const ProfilePageAdmin({super.key});
@@ -67,6 +68,14 @@ class ProfilePageAdmin extends StatelessWidget {
                   initials: initials,
                   workshopEmail: adminEmail,
                   roleName: roleName,
+                  onEditTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const EditUserScreen(),
+                      ),
+                    );
+                  },
                 ),
                 // Reusing ProfileMenuCard from Owner feature
                 ProfileMenuCard(width: width),

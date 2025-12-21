@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -10,12 +11,12 @@ import 'package:bengkel_online_flutter/core/models/service.dart';
 import '../widgets/service_logging/logging_summary_boxes.dart';
 import '../widgets/service_logging/logging_calendar.dart';
 import '../widgets/service_logging/logging_filter_tabs.dart';
-import '../widgets/service_logging/logging_time_slots.dart';
 import '../widgets/service_logging/logging_task_card.dart';
-import '../widgets/service_logging/logging_helpers.dart';
+// import '../widgets/service_logging/logging_helpers.dart';
 
 class ServiceLoggingPage extends StatefulWidget {
-  const ServiceLoggingPage({super.key});
+  final String? initialFilter;
+  const ServiceLoggingPage({super.key, this.initialFilter});
 
   @override
   State<ServiceLoggingPage> createState() => _ServiceLoggingPageState();
@@ -27,35 +28,29 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
   int selectedDay = DateTime.now().day;
 
   String searchText = "";
-  String selectedLoggingFilter = "All";
+  late String selectedLoggingFilter;
   String? selectedTimeSlot;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fetchData();
-    });
+    selectedLoggingFilter = widget.initialFilter ?? "All";
+    // NOTE: Do NOT call _fetchData() here!
+    // Parent (ServicePageAdmin) already fetches data for the shared AdminServiceProvider.
+    // Calling fetch here would cause a race condition and overwrite the parent's data.
   }
 
-  void _fetchData() {
-    final auth = context.read<AuthProvider>();
-    final workshopUuid = auth.user?.workshopUuid;
-    final dateStr = DateFormat('yyyy-MM-dd').format(selectedDate);
-
-    // Fetch ALL services for the date, then we filter client-side if needed for 'accepted' status
-    // Or if API supports filtering by acceptance_status, use that.
-    // Assuming API 'status' param maps to service status (pending, in_progress, etc), not acceptance.
-    // So we fetch by date and workshop, then filter for acceptanceStatus == 'accepted'.
-    
-    context.read<AdminServiceProvider>().fetchServices(
-      dateFrom: dateStr,
-      dateTo: dateStr,
-      workshopUuid: workshopUuid,
-      // We don't limit by status here because logging page shows Pending (Mechanic), In Progress, and Completed.
-      // But we MUST exclude those that are NOT accepted yet (handled in filtering later).
-    );
+  @override
+  void didUpdateWidget(ServiceLoggingPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialFilter != oldWidget.initialFilter && widget.initialFilter != null) {
+      setState(() => selectedLoggingFilter = widget.initialFilter!);
+    }
   }
+
+  // NOTE: _fetchData is kept for calendar navigation but should NOT be called from initState
+  // The parent already loads all data, and we filter client-side
+  // void _fetchData() { ... } - removed to prevent any accidental calls
 
   DateTime get selectedDate =>
       DateTime(displayedYear, displayedMonth, selectedDay);
@@ -68,9 +63,11 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
         // Di logging page, 'Pending' berarti Accepted but waiting for Mechanic
         return status == 'pending';
       case 'In Progress':
-        return status == 'in_progress' || status == 'on_process';
+        return status == 'in_progress' || status == 'progress' || status == 'in progress';
       case 'Completed':
-        return status == 'completed';
+        return status == 'completed' || status == 'menunggu pembayaran';
+      case 'Lunas':
+        return status == 'lunas';
       default:
         return false;
     }
@@ -79,7 +76,7 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
   List<ServiceModel> _getFilteredTasks(List<ServiceModel> allServices) {
     return allServices.where((service) {
       // 1. Must be Accepted by Admin
-      if (service.acceptanceStatus != 'accepted') return false;
+      if ((service.acceptanceStatus ?? '').toLowerCase() != 'accepted') return false;
 
       // 2. Date match (API filters by date, but double check)
        // bool dateMatch = LoggingHelpers.isSameDate(service.scheduledDate ?? DateTime.now(), selectedDate);
@@ -89,16 +86,7 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
       bool statusMatch = _matchesFilterKey(service, selectedLoggingFilter);
       if (!statusMatch) return false;
 
-      // 4. Time Slot Filter
-      // Assuming time match logic based on hours
-      if (selectedTimeSlot != null) {
-        // Simple string match or parsing. Current implementation is string based.
-        // Let's rely on string match for now if service has time property, otherwise skip or implement better time logic later.
-        // For now, let's ignore time slot filter if model doesn't support it well, or try to match formatted time.
-        // if (task['time'] != selectedTimeSlot) return false;
-      }
-
-      // 5. Search Text
+      // ... (search logic)
       if (searchText.trim().isNotEmpty) {
         final q = searchText.toLowerCase();
         final title = (service.name).toLowerCase();
@@ -132,18 +120,34 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
         
     // In Progress: Mechanic Assigned
     final inProgress = acceptedServicesForDate
-        .where((t) => (t.status ?? '').toLowerCase() == 'in_progress' || (t.status ?? '').toLowerCase() == 'on_process')
+        .where((t) {
+            final st = (t.status ?? '').toLowerCase();
+            return st == 'in_progress' || st == 'progress' || st == 'in progress';
+        })
         .length;
         
-    // Completed
+    // Completed (Menunggu Pembayaran considered completed in terms of work, but maybe not finalized)
+    // User requested "Lunas" box separate.
+    // Let's assume 'completed' and 'menunggu pembayaran' go to Completed box vs Lunas box.
     final completed = acceptedServicesForDate
-        .where((t) => (t.status ?? '').toLowerCase() == 'completed')
+        .where((t) {
+           final st = (t.status ?? '').toLowerCase();
+           return st == 'completed' || st == 'menunggu pembayaran';
+        })
         .length;
+
+    // Lunas
+    final lunas = acceptedServicesForDate
+        .where((t) => (t.status ?? '').toLowerCase() == 'lunas')
+        .length;
+
+    // Declined (Ditolak) - unused in summary boxes currently
+    // final declined = ...
 
     final loggingFiltered = _getFilteredTasks(allServices);
     final title = selectedTimeSlot == null
         ? "Semua Tugas"
-        : "Tugas untuk jam $selectedTimeSlot"; // Time slot logic is pending proper implementation
+        : "Tugas untuk jam $selectedTimeSlot"; 
 
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: 90),
@@ -151,10 +155,35 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 8),
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.blue.shade200),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Pencatatan menampilkan semua order yang sudah diterima:",
+                  style: GoogleFonts.poppins(
+                      fontSize: 13, fontWeight: FontWeight.w600, color: Colors.blue.shade900),
+                ),
+                const SizedBox(height: 4),
+                _bulletPoint("Booking yang diterima"),
+                _bulletPoint("Walk-in (otomatis diterima)"),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
           LoggingSummaryBoxes(
             pending: pending,
             inProgress: inProgress,
             completed: completed,
+            lunas: lunas,
           ),
           const SizedBox(height: 12),
           LoggingCalendar(
@@ -165,7 +194,7 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
             onNextMonth: _nextMonth,
             onDaySelected: (day) {
               setState(() => selectedDay = day);
-              _fetchData();
+              // No need to fetch - data is already loaded by parent
             },
           ),
           const SizedBox(height: 12),
@@ -203,7 +232,7 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
             const Icon(Icons.search, color: Colors.grey),
             const SizedBox(width: 8),
             Expanded(
-                child: TextField(
+              child: TextField(
                 decoration: InputDecoration.collapsed(
                   hintText: "Search logging...",
                   hintStyle: AppTextStyles.caption(),
@@ -237,7 +266,7 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
           if (filtered.isEmpty)
             Center(
               child: Padding(
-                padding: EdgeInsets.all(24.0),
+                padding: const EdgeInsets.all(24.0),
                 child: Text(
                   "Tidak ada tugas yang sesuai dengan filter.",
                   textAlign: TextAlign.center,
@@ -259,7 +288,7 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
           displayedYear -= 1;
         }
         selectedDay = 1;
-        _fetchData();
+        // No need to fetch - data is already loaded by parent
       });
 
   void _nextMonth() => setState(() {
@@ -269,6 +298,16 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
           displayedYear += 1;
         }
         selectedDay = 1;
-        _fetchData();
+        // No need to fetch - data is already loaded by parent
       });
+
+  Widget _bulletPoint(String text) {
+    return Row(
+      children: [
+        const Icon(Icons.circle, size: 6, color: Colors.blue),
+        const SizedBox(width: 8),
+        Text(text, style: GoogleFonts.poppins(fontSize: 12, color: Colors.black87)),
+      ],
+    );
+  }
 }

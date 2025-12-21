@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:bengkel_online_flutter/core/services/api_service.dart';
 import 'package:bengkel_online_flutter/core/models/service.dart';
 import 'package:bengkel_online_flutter/core/providers/service_provider.dart';
+import 'package:bengkel_online_flutter/core/models/employment.dart';
+import 'package:bengkel_online_flutter/core/models/dashboard_stats.dart';
 
 /// Provider khusus ADMIN
 /// Extend ServiceProvider supaya:
@@ -23,6 +25,7 @@ class AdminServiceProvider extends ServiceProvider {
     int page = 1,
     int perPage = 10,
   }) {
+    print("DEBUG: fetching services with dateFrom=$dateFrom, dateTo=$dateTo, status=$status");
     return _adminApi.adminFetchServicesRaw(
       page: page,
       perPage: perPage,
@@ -63,10 +66,12 @@ class AdminServiceProvider extends ServiceProvider {
         mechanicUuid: mechanicUuid,
       );
 
+      // Optimistic local update - immediately update local state
+      _updateLocalServiceAcceptance(id, 'accepted', newStatus: 'in_progress');
+
       if (refresh) {
-        // refresh detail & list dengan logic bawaan ServiceProvider
+        // Refresh detail for the specific service
         await fetchDetail(id);
-        await fetchServices(page: currentPage);
       }
     } catch (e) {
       if (kDebugMode) print('acceptServiceAsAdmin error: $e');
@@ -89,13 +94,63 @@ class AdminServiceProvider extends ServiceProvider {
         reasonDescription: reasonDescription,
       );
 
+      // Optimistic local update - immediately update local state
+      _updateLocalServiceAcceptance(id, 'declined', newReason: reason, newReasonDescription: reasonDescription);
+
       if (refresh) {
+        // Refresh detail for the specific service
         await fetchDetail(id);
-        await fetchServices(page: currentPage);
       }
     } catch (e) {
       if (kDebugMode) print('declineServiceAsAdmin error: $e');
       rethrow;
+    }
+  }
+
+  /// Helper to update local service state optimistically
+  void _updateLocalServiceAcceptance(
+    String id, 
+    String newAcceptanceStatus, {
+    String? newStatus,
+    String? newReason,
+    String? newReasonDescription,
+  }) {
+    final idx = findItemIndex(id);
+    if (idx >= 0) {
+      final oldService = items[idx];
+      final updatedService = ServiceModel(
+        id: oldService.id,
+        code: oldService.code,
+        name: oldService.name,
+        description: oldService.description,
+        price: oldService.price,
+        scheduledDate: oldService.scheduledDate,
+        estimatedTime: oldService.estimatedTime,
+        status: newStatus ?? oldService.status,
+        type: oldService.type,
+        acceptanceStatus: newAcceptanceStatus,
+        acceptedAt: newAcceptanceStatus == 'accepted' ? DateTime.now() : oldService.acceptedAt,
+        completedAt: oldService.completedAt,
+        customerUuid: oldService.customerUuid,
+        workshopUuid: oldService.workshopUuid,
+        vehicleId: oldService.vehicleId,
+        mechanicUuid: oldService.mechanicUuid,
+        customer: oldService.customer,
+        vehicle: oldService.vehicle,
+        workshopName: oldService.workshopName,
+        mechanic: oldService.mechanic,
+        items: oldService.items,
+        note: oldService.note,
+        categoryName: oldService.categoryName,
+        reason: newReason ?? oldService.reason,
+        reasonDescription: newReasonDescription ?? oldService.reasonDescription,
+        feedbackMechanic: oldService.feedbackMechanic,
+        createdAt: oldService.createdAt,
+        updatedAt: DateTime.now(),
+      );
+      
+      // Use parent's protected method to update item
+      updateLocalItemAt(idx, updatedService);
     }
   }
 
@@ -137,6 +192,247 @@ class AdminServiceProvider extends ServiceProvider {
       }
     } catch (e) {
       if (kDebugMode) print('deleteServiceAsAdmin error: $e');
+      rethrow;
+    }
+  }
+
+  /// ADMIN: Update Service Status safely (wraps ApiService)
+  Future<void> updateServiceStatusAsAdmin(String id, String status) async {
+      await _adminApi.adminUpdateServiceStatus(id, status);
+      await fetchDetail(id); // refresh logic
+  }
+  /// ADMIN: Fetch Dashboard Stats
+  Future<DashboardStats> fetchDashboardStats({String? workshopUuid}) {
+    return _adminApi.adminFetchDashboardStats(workshopUuid: workshopUuid);
+  }
+
+  /// ADMIN: Fetch Employee List
+  Future<List<Employment>> fetchEmployees({
+    int page = 1, 
+    int perPage = 15,
+    String? search,
+    String? role,
+    String? workshopUuid,
+  }) {
+    return _adminApi.adminFetchEmployees(
+      page: page, 
+      perPage: perPage,
+      search: search,
+      role: role,
+      workshopUuid: workshopUuid,
+    );
+  }
+  /// ADMIN: Create Walk-in Service
+  Future<ServiceModel> createWalkInService({
+    required String workshopUuid,
+    required String name,
+    required DateTime scheduledDate,
+    String? categoryName,
+    num? price,
+    String? description,
+    
+    // Customer Info (Walk-in)
+    String? customerName,
+    String? customerPhone,
+    String? customerEmail,
+    
+    // Vehicle Info
+    String? vehiclePlate,
+    String? vehicleBrand,
+    String? vehicleModel,
+    String? vehicleCategory, // Added
+    int? vehicleYear,
+    int? vehicleOdometer,
+  }) async {
+    try {
+      final created = await _adminApi.adminCreateWalkInService(
+        workshopUuid: workshopUuid,
+        name: name,
+        scheduledDate: scheduledDate,
+        categoryName: categoryName,
+        price: price,
+        description: description,
+        
+        customerName: customerName ?? 'Walk-in Customer',
+        customerPhone: customerPhone ?? '',
+        customerEmail: customerEmail,
+        
+        vehiclePlate: vehiclePlate ?? '',
+        vehicleBrand: vehicleBrand,
+        vehicleModel: vehicleModel,
+        vehicleCategory: vehicleCategory, // Added
+        vehicleYear: vehicleYear,
+        vehicleOdometer: vehicleOdometer,
+        
+        // Status is handled by backend (default accepted)
+      );
+      
+      // Update local list
+      addLocalItem(created);
+      // notifyListeners() is called inside addLocalItem
+      
+      return created;
+    } catch (e) {
+      if (kDebugMode) print('createWalkInService error: $e');
+      rethrow;
+    }
+  }
+
+  // ==================== TRANSACTIONS ====================
+
+  /// Create transaction from service with items
+  Future<Map<String, dynamic>> createTransaction({
+    required String serviceUuid,
+    String? notes,
+    List<Map<String, dynamic>>? items,
+  }) async {
+    try {
+      final result = await _adminApi.adminCreateTransaction(
+        serviceUuid: serviceUuid,
+        notes: notes,
+        items: items,
+      );
+      if (kDebugMode) print('Transaction created: ${result['id']}');
+      return result;
+    } catch (e) {
+      if (kDebugMode) print('createTransaction error: $e');
+      rethrow;
+    }
+  }
+
+  /// Add item to transaction (if needed separately)
+  Future<Map<String, dynamic>> addTransactionItem({
+    required String transactionUuid,
+    required String name,
+    required String serviceType,
+    required num price,
+    int quantity = 1,
+  }) async {
+    try {
+      final result = await _adminApi.adminAddTransactionItem(
+        transactionUuid: transactionUuid,
+        name: name,
+        serviceType: serviceType,
+        price: price,
+        quantity: quantity,
+      );
+      if (kDebugMode) print('Transaction item added: ${result['id']}');
+      return result;
+    } catch (e) {
+      if (kDebugMode) print('addTransactionItem error: $e');
+      rethrow;
+    }
+  }
+
+  /// Get transaction detail
+  Future<Map<String, dynamic>> getTransaction(String id) async {
+    try {
+      return await _adminApi.adminGetTransaction(id);
+    } catch (e) {
+      if (kDebugMode) print('getTransaction error: $e');
+      rethrow;
+    }
+  }
+
+  /// Update transaction items and notes
+  Future<Map<String, dynamic>> updateTransaction(
+    String id, {
+    String? notes,
+    List<Map<String, dynamic>>? items,
+  }) async {
+    try {
+      return await _adminApi.adminUpdateTransaction(id, notes: notes, items: items);
+    } catch (e) {
+      if (kDebugMode) print('updateTransaction error: $e');
+      rethrow;
+    }
+  }
+
+  /// Finalize transaction
+  Future<Map<String, dynamic>> finalizeTransaction(String id) async {
+    try {
+      return await _adminApi.adminFinalizeTransaction(id);
+    } catch (e) {
+      if (kDebugMode) print('finalizeTransaction error: $e');
+      rethrow;
+    }
+  }
+
+  // ==================== INVOICES ====================
+
+  /// Create invoice from transaction
+  Future<Map<String, dynamic>> createInvoice(String transactionId) async {
+    try {
+      final result = await _adminApi.adminCreateInvoice(transactionId);
+      if (kDebugMode) print('Invoice created: ${result['id']}');
+      return result;
+    } catch (e) {
+      if (kDebugMode) print('createInvoice error: $e');
+      rethrow;
+    }
+  }
+
+  /// Get invoice detail
+  Future<Map<String, dynamic>> getInvoice(String id) async {
+    try {
+      return await _adminApi.adminGetInvoice(id);
+    } catch (e) {
+      if (kDebugMode) print('getInvoice error: $e');
+      rethrow;
+    }
+  }
+
+  /// Mark invoice as paid
+  Future<Map<String, dynamic>> markInvoicePaid(
+    String id, {
+    String? paymentMethod,
+  }) async {
+    try {
+      final result = await _adminApi.adminMarkInvoicePaid(id, paymentMethod: paymentMethod);
+      if (kDebugMode) print('Invoice marked paid: $id');
+      return result;
+    } catch (e) {
+      if (kDebugMode) print('markInvoicePaid error: $e');
+      rethrow;
+    }
+  }
+
+  // ==================== VOUCHERS ====================
+
+  /// Validate voucher and get discount preview
+  Future<Map<String, dynamic>> validateVoucher({
+    required String code,
+    required num amount,
+    String? workshopUuid,
+  }) async {
+    try {
+      final result = await _adminApi.adminValidateVoucher(
+        code: code,
+        amount: amount,
+        workshopUuid: workshopUuid,
+      );
+      if (kDebugMode) print('Voucher validation: ${result['valid']}');
+      return result;
+    } catch (e) {
+      if (kDebugMode) print('validateVoucher error: $e');
+      rethrow;
+    }
+  }
+
+  /// Apply voucher to transaction
+  Future<Map<String, dynamic>> applyVoucher({
+    required String transactionId,
+    required String voucherCode,
+  }) async {
+    try {
+      final result = await _adminApi.adminApplyVoucher(
+        transactionId: transactionId,
+        voucherCode: voucherCode,
+      );
+      if (kDebugMode) print('Voucher applied to transaction: $transactionId');
+      return result;
+    } catch (e) {
+      if (kDebugMode) print('applyVoucher error: $e');
       rethrow;
     }
   }

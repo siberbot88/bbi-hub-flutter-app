@@ -10,10 +10,19 @@ class ServiceCompleteDetail extends StatelessWidget {
 
   const ServiceCompleteDetail({super.key, required this.task});
 
+  String _getInitials(String name) {
+    if (name.isEmpty) return "?";
+    final parts = name.trim().split(' ');
+    if (parts.isEmpty) return "?";
+    if (parts.length == 1) return parts[0].substring(0, 1).toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+
   @override
   Widget build(BuildContext context) {
     final DateTime? orderDate = task['date'] is DateTime ? task['date'] : null;
     const mainColor = Color(0xFFDC2626);
+    final customerName = task['user'] ?? "-";
 
     // 🔹 Tentukan jenis kendaraan
     final String motorType =
@@ -27,7 +36,6 @@ class ServiceCompleteDetail extends StatelessWidget {
         showBack: true,
       ),
       backgroundColor: mainColor,
-
       
    // ✅ Tombol sticky di bawah
 bottomNavigationBar: SafeArea(
@@ -94,19 +102,25 @@ bottomNavigationBar: SafeArea(
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
-                    radius: 22,
-                    backgroundImage: NetworkImage(
-                      "https://i.pravatar.cc/150?img=${task['id']}",
-                    ),
-                  ),
+                   CircleAvatar(
+                     radius: 22,
+                     backgroundColor: Colors.red.shade50,
+                     child: Text(
+                        _getInitials(customerName),
+                        style: GoogleFonts.poppins(
+                          color: mainColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                     ),
+                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          task['user'] ?? "-",
+                          customerName,
                           style: GoogleFonts.poppins(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
