@@ -1,7 +1,11 @@
-// 📄 lib/feature/admin/screens/feedback_page.dart
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../widgets/custom_header.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/theme/app_radius.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/repositories/feedback_repository.dart';
+import '../../../../core/models/feedback_model.dart';
+import '../widgets/custom_header.dart'; // Ensure correct import
 
 class FeedbackPage extends StatefulWidget {
   const FeedbackPage({super.key});
@@ -11,488 +15,443 @@ class FeedbackPage extends StatefulWidget {
 }
 
 class _FeedbackPageState extends State<FeedbackPage> {
-  static const _redDark = Color(0xFF9B0D0D);
-  static const _bg = Color(0xFFF4F4F6);
+  final FeedbackRepository _repository = FeedbackRepository();
+  final ScrollController _scrollController = ScrollController();
 
+  // State
+  bool _isLoading = true;
+  bool _isLoadingMore = false;
+  String _errorMessage = '';
+  
+  // Data
+  FeedbackSummary? _summary;
+  List<FeedbackItem> _reviews = [];
+  int _currentPage = 1;
+  int _lastPage = 1;
   String _selectedFilter = 'semua'; // semua | 5 | 4 | 3 | 2 | 1
 
-  final _reviews = <_Review>[
-    _Review(
-      initials: 'BS',
-      name: 'Budi Santoso',
-      ago: '1 hari lalu',
-      stars: 5,
-      service: 'Ganti Oli & Tune Up',
-      text:
-          'Pelayanan sangat memuaskan! Mekanik ramah dan profesional. Harga juga transparan, dijelaskan detail sebelum pengerjaan. Pasti balik lagi!',
-    ),
-    _Review(
-      initials: 'SN',
-      name: 'Siti Nurhaliza',
-      ago: '2 hari lalu',
-      stars: 5,
-      service: 'Service Berkala',
-      text:
-          'Bengkel terbaik yang pernah saya kunjungi. Ruang tunggu nyaman, wifi kenceng, dan pengerjaan cepat. Recommended!',
-    ),
-    _Review(
-      initials: 'AW',
-      name: 'Andi Wijaya',
-      ago: '1 minggu lalu',
-      stars: 4,
-      service: 'Perbaikan AC Mobil',
-      text:
-          'Overall bagus, AC mobil jadi dingin lagi. Cuma agak lama nunggu karena ramai. Tapi hasil kerjanya oke.',
-    ),
-    _Review(
-      initials: 'DL',
-      name: 'Dewi Lestari',
-      ago: '1 minggu lalu',
-      stars: 5,
-      service: 'Ganti Ban & Balancing',
-      text:
-          'Cepat dan rapi! Mekaniknya juga kasih saran untuk perawatan ban. Tempatnya bersih dan nyaman.',
-    ),
-    _Review(
-      initials: 'RH',
-      name: 'Rudi Hartono',
-      ago: '2 minggu lalu',
-      stars: 5,
-      service: 'Servis Rem',
-      text:
-          'Bagus, rem mobil jadi pakem lagi. Harga standar, sesuai dengan kualitas pekerjaan.',
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _fetchFeedback();
+    _scrollController.addListener(_onScroll);
+  }
 
   @override
-  Widget build(BuildContext context) {
-    final filtered = _selectedFilter == 'semua'
-        ? _reviews
-        : _reviews.where((r) => r.stars.toString() == _selectedFilter).toList();
-
-    return Scaffold(
-      backgroundColor: _bg,
-      appBar: const CustomHeader(
-        title: 'Rating & Ulasan',
-        showBack: true,
-        roundedBottomRadius: 28,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-        children: [
-          _searchBar(),
-          const SizedBox(height: 14),
-          _ratingSummaryCard(),
-          const SizedBox(height: 12),
-          _filterChips(),
-          const SizedBox(height: 12),
-          ...filtered
-              .map((r) => _reviewCard(r))
-              .expand((w) => [w, const SizedBox(height: 12)]),
-          _seeMore(),
-        ],
-      ),
-    );
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
-  // ---------- SEARCH ----------
-  Widget _searchBar() {
-    return Container(
-      height: 44,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          )
-        ],
-      ),
-      child: TextField(
-        style: GoogleFonts.poppins(fontSize: 13),
-        decoration: InputDecoration(
-          hintText: 'Cari ulasan...',
-          hintStyle: GoogleFonts.poppins(color: Colors.black38, fontSize: 13),
-          prefixIcon: const Icon(Icons.search, color: Colors.black38),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.only(top: 12),
-        ),
-      ),
-    );
-  }
-
-  // ---------- RATING SUMMARY CARD ----------
-  Widget _ratingSummaryCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          )
-        ],
-      ),
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              // kiri: angka besar + bintang + total ulasan
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('4.8',
-                        style: GoogleFonts.poppins(
-                            fontSize: 34, fontWeight: FontWeight.w700)),
-                    const SizedBox(height: 4),
-                    _starsRow(5, size: 18),
-                    const SizedBox(height: 4),
-                    Text('247 Ulasan',
-                        style: GoogleFonts.poppins(
-                            fontSize: 12, color: Colors.black54)),
-                  ],
-                ),
-              ),
-              // kanan: progress bar 5/4/3
-              SizedBox(
-                width: 160,
-                child: Column(
-                  children: const [
-                    _RatingBarRow(label: '5', percent: 0.86, count: 198),
-                    SizedBox(height: 8),
-                    _RatingBarRow(label: '4', percent: 0.16, count: 37),
-                    SizedBox(height: 8),
-                    _RatingBarRow(label: '3', percent: 0.06, count: 10),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          // badges
-          Row(
-            children: [
-              _statBadge(
-                icon: Icons.thumb_up_alt_rounded,
-                label: '96% Kepuasan',
-              ),
-              const SizedBox(width: 10),
-              _statBadge(
-                icon: Icons.calendar_month_rounded,
-                label: '4.9 Bulan ini',
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _statBadge({required IconData icon, required String label}) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF4C7C7),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 20,
-              height: 20,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, size: 14, color: _redDark),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(label,
-                  style: GoogleFonts.poppins(
-                      fontSize: 12.5,
-                      color: _redDark,
-                      fontWeight: FontWeight.w600)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ---------- FILTER CHIPS ----------
-  Widget _filterChips() {
-    final filters = ['semua', '5', '4', '3', '2', '1'];
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(children: filters.map((f) => _chip(f)).toList()),
-    );
-  }
-
-  Widget _chip(String value) {
-    final isAll = value == 'semua';
-    final selected = _selectedFilter == value;
-
-    final Color bg;
-    final Color border;
-    final Color textColor;
-
-    if (isAll) {
-      bg = selected ? const Color(0xFFFFA63A) : const Color(0xFFFFE1BD);
-      border = Colors.transparent;
-      textColor = selected ? Colors.white : const Color(0xFF9B6A2E);
-    } else {
-      bg = Colors.white;
-      border = selected ? const Color(0xFF999999) : const Color(0xFFDDDDDD);
-      textColor = Colors.black87;
+  void _onScroll() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+      if (!_isLoadingMore && _currentPage < _lastPage) {
+        _loadMore();
+      }
     }
-
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: GestureDetector(
-        onTap: () => setState(() => _selectedFilter = value),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          decoration: BoxDecoration(
-            color: bg,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: border),
-          ),
-          child: Row(
-            children: [
-              if (isAll) ...const [
-                Icon(Icons.filter_alt, size: 16, color: Colors.orange),
-                SizedBox(width: 6),
-              ] else ...const [
-                Icon(Icons.star,
-                    size: 16, color: Color.fromARGB(255, 248, 248, 247)),
-                SizedBox(width: 6),
-              ],
-              Text(isAll ? 'semua' : value,
-                  style: GoogleFonts.poppins(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
-                      color: textColor)),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
-  // ---------- REVIEW CARD ----------
-  Widget _reviewCard(_Review r) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 10,
-              offset: const Offset(0, 4))
-        ],
-      ),
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-      child: Column(
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _initialsAvatar(r.initials),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Nama + waktu
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(r.name,
-                              style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w700, fontSize: 13.5)),
-                        ),
-                        Text(r.ago,
-                            style: GoogleFonts.poppins(
-                                fontSize: 12, color: Colors.black45)),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    _starsRow(r.stars),
-                    const SizedBox(height: 8),
-                    _serviceTag(r.service),
-                    const SizedBox(height: 10),
-                    Text(r.text,
-                        style: GoogleFonts.poppins(
-                            fontSize: 13, color: Colors.black87)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFFA63A),
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18)),
-              ),
-              child: Text('Balas',
-                  style: GoogleFonts.poppins(
-                      fontSize: 13, fontWeight: FontWeight.w600)),
-            ),
-          ),
-        ],
-      ),
-    );
+  Future<void> _fetchFeedback({bool refresh = false}) async {
+    if (!refresh) {
+      setState(() => _isLoading = true);
+    }
+    
+    try {
+      final response = await _repository.getFeedback(page: 1, filter: _selectedFilter);
+      if (mounted) {
+        setState(() {
+          _summary = response.summary;
+          _reviews = response.reviews;
+          _currentPage = response.meta.currentPage;
+          _lastPage = response.meta.lastPage;
+          _isLoading = false;
+          _errorMessage = '';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = e.toString();
+        });
+      }
+    }
   }
 
-  Widget _initialsAvatar(String initials) {
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: const BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: LinearGradient(
-          colors: [Color(0xFF64B5F6), Color(0xFF42A5F5)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      alignment: Alignment.center,
-      child: Text(initials,
-          style: GoogleFonts.poppins(
-              color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12)),
-    );
+  Future<void> _loadMore() async {
+    setState(() => _isLoadingMore = true);
+    try {
+      final nextPage = _currentPage + 1;
+      final response = await _repository.getFeedback(page: nextPage, filter: _selectedFilter);
+      if (mounted) {
+        setState(() {
+          _reviews.addAll(response.reviews);
+          _currentPage = response.meta.currentPage;
+          _lastPage = response.meta.lastPage;
+          _isLoadingMore = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoadingMore = false);
+    }
   }
 
-  Widget _starsRow(int count, {double size = 16}) {
-    return Row(
-      children: List.generate(
-        5,
-        (i) => Icon(
-          i < count ? Icons.star : Icons.star_border,
-          size: size,
-          color: const Color(0xFFFFB300),
-        ),
-      ),
-    );
+  void _onFilterChanged(String filter) {
+    if (_selectedFilter == filter) return;
+    setState(() {
+      _selectedFilter = filter;
+      _reviews.clear();
+      _summary = null; 
+    });
+    _fetchFeedback();
   }
-
-  Widget _serviceTag(String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEDEDED),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(label,
-          style: GoogleFonts.poppins(
-              fontSize: 12.5,
-              color: Colors.black54,
-              fontWeight: FontWeight.w500)),
-    );
-  }
-
-  Widget _seeMore() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 4),
-      child: Center(
-        child: Text(
-          'Lihat lebih banyak lagi',
-          style: GoogleFonts.poppins(
-            fontSize: 13.5,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ---------- SMALL WIDGETS ----------
-class _RatingBarRow extends StatelessWidget {
-  final String label;
-  final double percent; // 0..1
-  final int count;
-  const _RatingBarRow({
-    required this.label,
-    required this.percent,
-    required this.count,
-  });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        const Icon(Icons.star, size: 16, color: Color(0xFFFFB300)),
-        const SizedBox(width: 4),
-        Text(label,
-            style: GoogleFonts.poppins(
-                fontSize: 12.5, fontWeight: FontWeight.w600)),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Stack(
-            alignment: Alignment.centerLeft,
-            children: [
-              Container(
-                height: 8,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE6E6E6),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-              FractionallySizedBox(
-                widthFactor: percent.clamp(0.0, 1.0),
-                child: Container(
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFB300),
-                    borderRadius: BorderRadius.circular(20),
+    return Scaffold(
+      backgroundColor: AppColors.backgroundLight,
+      appBar: CustomHeader(
+        title: "Ulasan Pelanggan",
+        onBack: () => Navigator.pop(context),
+      ),
+      body: _isLoading && _reviews.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: () => _fetchFeedback(refresh: true),
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Padding(
+                  padding: AppSpacing.screenPadding,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AppSpacing.verticalSpaceLG,
+                      
+                      // Show Summary if loaded
+                      if (_summary != null) ...[
+                        _buildRatingOverview(_summary!),
+                        AppSpacing.verticalSpaceXXL,
+                      ],
+                      
+                      _buildFilterChips(),
+                      AppSpacing.verticalSpaceLG,
+                      
+                      if (_reviews.isEmpty)
+                         _buildEmptyState(),
+                      
+                      if (_reviews.isNotEmpty)
+                        _buildReviewList(),
+                        
+                      if (_isLoadingMore)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 20),
+                          child: Center(child: CircularProgressIndicator()),
+                        ),
+                        
+                      AppSpacing.verticalSpaceXXL,
+                    ],
                   ),
                 ),
               ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 8),
-        Text('$count',
-            style: GoogleFonts.poppins(fontSize: 12, color: Colors.black54)),
-      ],
+            ),
     );
   }
-}
 
-class _Review {
-  final String initials;
-  final String name;
-  final String ago;
-  final int stars;
-  final String service;
-  final String text;
+  Widget _buildEmptyState() {
+    return Container(
+      padding: const EdgeInsets.all(40),
+      alignment: Alignment.center,
+      child: Column(
+        children: [
+          Icon(Icons.rate_review_outlined, size: 60, color: Colors.grey[300]),
+          const SizedBox(height: 16),
+          Text(
+            "Belum ada ulasan",
+            style: AppTextStyles.heading4(color: AppColors.textPrimary),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _selectedFilter == 'semua' 
+                ? "Pelanggan belum memberikan ulasan."
+                : "Tidak ada ulasan dengan rating $_selectedFilter bintang.",
+            textAlign: TextAlign.center,
+            style: AppTextStyles.bodyMedium(color: AppColors.textSecondary),
+          ),
+        ],
+      ),
+    );
+  }
 
-  const _Review({
-    required this.initials,
-    required this.name,
-    required this.ago,
-    required this.stars,
-    required this.service,
-    required this.text,
-  });
+  Widget _buildRatingOverview(FeedbackSummary d) {
+    return Container(
+      padding: AppSpacing.paddingXL,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: AppRadius.radiusXL,
+        border: Border.all(color: AppColors.border, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(10),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 4,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  d.average.toStringAsFixed(1),
+                  style: AppTextStyles.heading1(color: AppColors.textPrimary).copyWith(
+                    fontSize: 52,
+                    height: 1,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                AppSpacing.verticalSpaceXS,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(5, (index) {
+                     // Handle partial stars visually if needed, simpler for now
+                     bool isActive = index < d.average.round();
+                    return Icon(
+                      Icons.star_rounded,
+                      color: isActive ? AppColors.accentOrange : Colors.grey[300],
+                      size: 22,
+                    );
+                  }),
+                ),
+                AppSpacing.verticalSpaceSM,
+                Text(
+                  '${d.total} Ulasan',
+                  style: AppTextStyles.bodySmall(color: AppColors.textSecondary),
+                ),
+              ],
+            ),
+          ),
+          Container(width: 1, height: 90, color: AppColors.divider),
+          AppSpacing.horizontalSpaceXL,
+          Expanded(
+            flex: 6,
+            child: Column(
+              children: [
+                _buildProgressBar('5', d.distribution['5'] ?? 0),
+                _buildProgressBar('4', d.distribution['4'] ?? 0),
+                _buildProgressBar('3', d.distribution['3'] ?? 0),
+                _buildProgressBar('2', d.distribution['2'] ?? 0),
+                _buildProgressBar('1', d.distribution['1'] ?? 0),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProgressBar(String label, double percent) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        children: [
+          Text(
+            label,
+            style: AppTextStyles.bodySmall(color: AppColors.textSecondary).copyWith(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          AppSpacing.horizontalSpaceSM,
+          const Icon(Icons.star_rounded, size: 14, color: AppColors.accentOrange),
+          AppSpacing.horizontalSpaceSM,
+          Expanded(
+            child: ClipRRect(
+              borderRadius: AppRadius.radiusSM,
+              child: LinearProgressIndicator(
+                value: percent,
+                backgroundColor: AppColors.backgroundLight,
+                valueColor: const AlwaysStoppedAnimation<Color>(AppColors.accentOrange),
+                minHeight: 7,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterChips() {
+    final filters = ['semua', '5', '4', '3', '2', '1'];
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
+      child: Row(
+        children: filters.map((filter) {
+          final isSelected = _selectedFilter == filter;
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: ChoiceChip(
+              label: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (filter != 'semua') ...[
+                    Icon(
+                      Icons.star_rounded,
+                      size: 16,
+                      color: isSelected ? Colors.white : AppColors.accentOrange,
+                    ),
+                    const SizedBox(width: 4),
+                  ],
+                  Text(
+                    filter == 'semua' ? 'Semua' : filter,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                      color: isSelected ? Colors.white : AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+              selected: isSelected,
+              onSelected: (bool selected) {
+                if(selected) _onFilterChanged(filter);
+              },
+              backgroundColor: Colors.white,
+              selectedColor: AppColors.primaryRed,
+              shape: RoundedRectangleBorder(
+                borderRadius: AppRadius.radiusXL,
+                side: BorderSide(
+                  color: isSelected ? Colors.transparent : AppColors.border,
+                  width: 1,
+                ),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              elevation: isSelected ? 2 : 0,
+              shadowColor: AppColors.primaryRed.withAlpha(76),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildReviewList() {
+    return Column(
+      children: _reviews.map((review) => _buildReviewCard(review)).toList(),
+    );
+  }
+
+  Widget _buildReviewCard(FeedbackItem review) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(20),
+      // ... (rest of styling same as before)
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: AppRadius.radiusLG,
+        border: Border.all(color: AppColors.border.withAlpha(128), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(8),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Quote Icon
+          Icon(
+            Icons.format_quote_rounded,
+            size: 32,
+            color: AppColors.accentOrange.withAlpha(76),
+          ),
+          AppSpacing.verticalSpaceSM,
+          
+          // Review Text
+          Text(
+            review.comment.isEmpty ? "Tidak ada komentar." : review.comment,
+            style: AppTextStyles.bodyMedium(color: AppColors.textPrimary).copyWith(
+              height: 1.6,
+              fontSize: 14,
+              fontStyle: review.comment.isEmpty ? FontStyle.italic : FontStyle.normal,
+              color: review.comment.isEmpty ? Colors.grey : AppColors.textPrimary,
+            ),
+          ),
+          
+          AppSpacing.verticalSpaceLG,
+          
+          // User Info
+          Row(
+            children: [
+              // Avatar
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: review.avatarColor.withAlpha(38),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    review.initials,
+                    style: AppTextStyles.heading5(color: review.avatarColor).copyWith(
+                      fontSize: 15,
+                    ),
+                  ),
+                ),
+              ),
+              AppSpacing.horizontalSpaceMD,
+              
+              // Name, Stars, Time
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      review.customerName,
+                      style: AppTextStyles.heading5(color: AppColors.textPrimary).copyWith(
+                        fontSize: 15,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        ...List.generate(5, (i) {
+                          return Icon(
+                            Icons.star_rounded,
+                            size: 14,
+                            color: i < review.rating
+                                ? AppColors.accentOrange
+                                : AppColors.border,
+                          );
+                        }),
+                        AppSpacing.horizontalSpaceSM,
+                        Text(
+                          review.timeAgo,
+                          style: AppTextStyles.caption(color: AppColors.textHint).copyWith(
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                    // Show Service Name
+                    Text(
+                      review.serviceName,
+                       style: AppTextStyles.caption(color: AppColors.textSecondary).copyWith(fontSize: 10),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }

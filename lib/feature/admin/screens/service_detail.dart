@@ -3,17 +3,41 @@ import 'package:google_fonts/google_fonts.dart';
 import '../widgets/custom_header.dart';
 import '../widgets/reject_dialog.dart';
 import '../widgets/accept_dialog.dart';
+import 'package:provider/provider.dart';
+import 'package:bengkel_online_flutter/feature/admin/providers/admin_service_provider.dart';
+import 'package:bengkel_online_flutter/core/models/service.dart';
+import '../widgets/service/service_helpers.dart';
 
 class ServiceDetailPage extends StatelessWidget {
-  final Map<String, dynamic> task;
+  final ServiceModel service;
 
-  const ServiceDetailPage({super.key, required this.task});
+  const ServiceDetailPage({super.key, required this.service});
+
+  String _getInitials(String name) {
+    if (name.isEmpty) return "?";
+    final parts = name.trim().split(' ');
+    if (parts.isEmpty) return "?";
+    if (parts.length == 1) return parts[0].substring(0, 1).toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
 
   @override
   Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);
-    final textScale = mq.textScaleFactor.clamp(0.9, 1.15);
+    final textScale = mq.textScaler.scale(1.0).clamp(0.9, 1.15);
     double s(double size) => (size * textScale);
+
+    // Helpers
+    final id = service.id;
+    final customerName = service.displayCustomerName;
+    final scheduledDate = service.scheduledDate ?? DateTime.now();
+    final dateOrder = service.createdAt ?? DateTime.now();
+    final vehicleName = service.displayVehicleName;
+    final plate = service.displayVehiclePlate;
+    final category = service.vehicle?.category ?? service.vehicle?.type ?? "Unknown";
+    final phone = service.customer?.phoneNumber ?? '-'; // Asumsi ada phone number di customer atau di mana saja
+    final address = service.customer?.address ?? '-'; // Asumsi ada address
+    final desc = service.reasonDescription ?? service.description ?? '-';
 
     Widget divider() => Divider(
           color: Colors.grey.shade300,
@@ -53,7 +77,7 @@ class ServiceDetailPage extends StatelessWidget {
                           borderRadius: BorderRadius.circular(14),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.06),
+                              color: Colors.black.withAlpha(15),
                               blurRadius: 8,
                               offset: const Offset(0, 4),
                             ),
@@ -66,12 +90,18 @@ class ServiceDetailPage extends StatelessWidget {
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                CircleAvatar(
-                                  radius: 24,
-                                  backgroundImage: NetworkImage(
-                                    "https://i.pravatar.cc/150?img=${task['id']}",
-                                  ),
-                                ),
+                                 CircleAvatar(
+                                   radius: 24,
+                                   backgroundColor: Colors.red.shade50,
+                                   child: Text(
+                                      _getInitials(customerName),
+                                      style: GoogleFonts.poppins(
+                                        color: const Color(0xFFB70F0F),
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18,
+                                      ),
+                                   ),
+                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
@@ -79,14 +109,14 @@ class ServiceDetailPage extends StatelessWidget {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        task['name'] ?? '-',
+                                        customerName,
                                         style: GoogleFonts.poppins(
                                           fontSize: s(18),
                                           fontWeight: FontWeight.w700,
                                         ),
                                       ),
                                       Text(
-                                        "ID: ${task['id'] ?? '-'}",
+                                        "ID: $id",
                                         style: GoogleFonts.poppins(
                                           fontSize: s(13),
                                           color: Colors.grey[600],
@@ -102,7 +132,7 @@ class ServiceDetailPage extends StatelessWidget {
                                         style: TextStyle(
                                             fontSize: s(12),
                                             color: Colors.grey[600])),
-                                    Text("2 September 2025",
+                                    Text(ServiceHelpers.formatDate(dateOrder),
                                         style: GoogleFonts.poppins(
                                             fontSize: s(14),
                                             fontWeight: FontWeight.w600)),
@@ -141,7 +171,7 @@ class ServiceDetailPage extends StatelessWidget {
                                           style: TextStyle(
                                               fontSize: s(12),
                                               color: Colors.grey[600])),
-                                      Text(task['motor'] ?? 'BEAT 2012',
+                                      Text(vehicleName,
                                           style: GoogleFonts.poppins(
                                               fontSize: s(15),
                                               fontWeight: FontWeight.w700)),
@@ -156,7 +186,7 @@ class ServiceDetailPage extends StatelessWidget {
                                           style: TextStyle(
                                               fontSize: s(12),
                                               color: Colors.grey[600])),
-                                      Text("8 AM - 12 PM :\n7 September 2025",
+                                      Text("${ServiceHelpers.formatDate(scheduledDate)}", // Simplified for now
                                           textAlign: TextAlign.right,
                                           style: GoogleFonts.poppins(
                                               fontSize: s(15),
@@ -180,7 +210,7 @@ class ServiceDetailPage extends StatelessWidget {
                                           style: TextStyle(
                                               fontSize: s(12),
                                               color: Colors.grey[600])),
-                                      Text(task['plate'] ?? 'SU 814 NTO',
+                                      Text(plate,
                                           style: GoogleFonts.poppins(
                                               fontSize: s(15),
                                               fontWeight: FontWeight.w700)),
@@ -205,7 +235,7 @@ class ServiceDetailPage extends StatelessWidget {
                                               BorderRadius.circular(20),
                                         ),
                                         child: Text(
-                                          "Sepeda Motor",
+                                          category,
                                           style: GoogleFonts.poppins(
                                             fontSize: s(13),
                                             fontWeight: FontWeight.w600,
@@ -238,12 +268,12 @@ class ServiceDetailPage extends StatelessWidget {
                                             horizontal: 10, vertical: 6),
                                         decoration: BoxDecoration(
                                           color: Colors.grey.shade200
-                                              .withOpacity(0.6),
+                                              .withAlpha(153),
                                           borderRadius:
                                               BorderRadius.circular(20),
                                         ),
                                         child: Text(
-                                          "Pemeliharaan",
+                                          service.categoryName ?? "Pemeliharaan",
                                           style: GoogleFonts.poppins(
                                             fontSize: s(13),
                                             fontWeight: FontWeight.w600,
@@ -262,7 +292,7 @@ class ServiceDetailPage extends StatelessWidget {
                                           style: TextStyle(
                                               fontSize: s(12),
                                               color: Colors.grey[600])),
-                                      Text("08956733xxx",
+                                      Text(phone,
                                           style: GoogleFonts.poppins(
                                               fontSize: s(14),
                                               fontWeight: FontWeight.w600)),
@@ -283,7 +313,7 @@ class ServiceDetailPage extends StatelessWidget {
                                         fontSize: s(12),
                                         color: Colors.grey[600])),
                                 Text(
-                                  "Jl. Medokan Ayu No.13, Kecamatan Gunung Anyar",
+                                  address,
                                   style: GoogleFonts.poppins(
                                     fontSize: s(14),
                                     fontWeight: FontWeight.w500,
@@ -310,8 +340,7 @@ class ServiceDetailPage extends StatelessWidget {
                                 color: Colors.red.shade50,
                               ),
                               child: Text(
-                                task['desc'] ??
-                                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit...",
+                                desc,
                                 style: TextStyle(fontSize: s(13)),
                               ),
                             ),
@@ -328,60 +357,124 @@ class ServiceDetailPage extends StatelessWidget {
         ),
       ),
 
-      // 🔹 Tombol bawah tetap
+      // 🔹 Tombol bawah (Conditional)
       bottomNavigationBar: Container(
         color: Colors.white,
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-        child: Row(
-          children: [
-            Expanded(
-              child: SizedBox(
-                height: 58,
-                child: ElevatedButton(
-                  onPressed: () => showRejectDialog(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    elevation: 4,
+        child: _buildBottomActions(context),
+      ),
+    );
+  }
+
+  Widget _buildBottomActions(BuildContext context) {
+    final status = (service.acceptanceStatus ?? '').toLowerCase();
+
+    // 1. If Pending -> Show Accept & Decline
+    if (status == 'pending') {
+      return Row(
+        children: [
+          Expanded(
+            child: SizedBox(
+              height: 58,
+              child: ElevatedButton(
+                onPressed: () => showRejectDialog(
+                  context,
+                  onConfirm: (reason, desc) {
+                    context.read<AdminServiceProvider>().declineServiceAsAdmin(
+                          service.id,
+                          reason: reason,
+                          reasonDescription: desc,
+                        );
+                    Navigator.pop(context);
+                    Navigator.pop(context);
+                  },
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
                   ),
-                  child: Text(
-                    "Tolak",
-                    style: GoogleFonts.poppins(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+                  elevation: 4,
+                ),
+                child: Text(
+                  "Tolak",
+                  style: GoogleFonts.poppins(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
                 ),
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: SizedBox(
-                height: 58,
-                child: ElevatedButton(
-                  onPressed: () => showAcceptDialog(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    elevation: 4,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: SizedBox(
+              height: 58,
+              child: ElevatedButton(
+                onPressed: () => showAcceptDialog(
+                  context,
+                  onConfirm: () {
+                    context
+                        .read<AdminServiceProvider>()
+                        .acceptServiceAsAdmin(service.id);
+                    Navigator.pop(context);
+                  },
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
                   ),
-                  child: Text(
-                    "Terima",
-                    style: GoogleFonts.poppins(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+                  elevation: 4,
+                ),
+                child: Text(
+                  "Terima",
+                  style: GoogleFonts.poppins(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
                 ),
               ),
             ),
-          ],
+          ),
+        ],
+      );
+    }
+
+    // 2. If already processed, show disabled button
+    Color btnColor = Colors.grey;
+    String btnText = "Status: $status";
+
+    if (status == 'accepted') {
+      btnColor = Colors.green.withOpacity(0.5);
+      btnText = "Sudah Diterima";
+    } else if (status == 'declined' || status == 'rejected') {
+      btnColor = Colors.red.withOpacity(0.5);
+      btnText = "Sudah Ditolak";
+    }
+
+    return SizedBox(
+      height: 58,
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: null, // Disabled
+        style: ElevatedButton.styleFrom(
+          backgroundColor: btnColor,
+          disabledBackgroundColor: btnColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+          elevation: 0,
+        ),
+        child: Text(
+          btnText,
+          style: GoogleFonts.poppins(
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
       ),
     );

@@ -1,19 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'package:bengkel_online_flutter/feature/admin/providers/admin_service_provider.dart';
 import '../widgets/custom_header.dart';
-import '../widgets/assign_dialog.dart';
 import 'package:flutter_svg/flutter_svg.dart';          
-
 
 class ServiceProgressDetail extends StatelessWidget {
   final Map<String, dynamic> task;
 
   const ServiceProgressDetail({super.key, required this.task});
 
+  String _getInitials(String name) {
+    if (name.isEmpty) return "?";
+    final parts = name.trim().split(' ');
+    if (parts.isEmpty) return "?";
+    
+    if (parts.length == 1) {
+      return parts[0].substring(0, 1).toUpperCase(); 
+    }
+    
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+
   @override
   Widget build(BuildContext context) {
     final DateTime? orderDate = task['date'] is DateTime ? task['date'] : null;
     const mainColor = Color(0xFFDC2626);
+    final serviceId = task['id']?.toString() ?? "";
+    final customerName = task['user'] ?? "Unknown";
 
     // 🔹 Tentukan jenis kendaraan
     final String motorType =
@@ -27,53 +41,72 @@ class ServiceProgressDetail extends StatelessWidget {
         showBack: true,
       ),
       backgroundColor: mainColor,
-
       
-   // ✅ Tombol sticky di bawah
-bottomNavigationBar: SafeArea(
-  child: Container(
-    color: Colors.white, // 🔹 Background belakang tombol
-    padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-    child: SizedBox(
-      width: double.infinity,
-      height: 58,
-      child: ElevatedButton.icon(
-        onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              // 1. Teks pesan yang ingin ditampilkan
-              content: Text('Menunggu teknisi untuk menandai sebagai tugas selesai'),
-              // 2. Mengatur berapa lama pesan tampil
-              duration: Duration(seconds: 3),
+      // ✅ Tombol sticky di bawah
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          color: Colors.white,
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          child: SizedBox(
+            width: double.infinity,
+            height: 58,
+            child: ElevatedButton.icon(
+              onPressed: () async {
+                // Call API to completed
+                try {
+                  if (serviceId.isEmpty) {
+                     ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('ID Service tidak valid')),
+                     );
+                     return;
+                  }
+
+                  await context.read<AdminServiceProvider>().updateServiceStatusAsAdmin(serviceId, 'completed');
+
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Tugas berhasil ditandai selesai!'),
+                        backgroundColor: Colors.green,
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                    Navigator.pop(context); // Go back to refresh logic
+                  }
+                } catch (e) {
+                   if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Gagal: $e'), backgroundColor: Colors.red),
+                    );
+                   }
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2E7D32), // Green for completion action
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                elevation: 4,
+                shadowColor: Colors.black.withAlpha(38),
+              ),
+              icon: SvgPicture.asset(
+                'assets/icons/assign.svg', 
+                height: 22,
+                width: 22,
+                colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+              ),
+              label: Text(
+                "Tandai Selesai",
+                style: GoogleFonts.poppins(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
             ),
-          );
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF9A9999),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
-          ),
-          elevation: 4,
-          shadowColor: Colors.black.withOpacity(0.15),
-        ),
-        icon: SvgPicture.asset(
-          'assets/icons/assign.svg', // 🔹 Ikon SVG lokal
-          height: 22,
-          width: 22,
-          colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
-        ),
-        label: Text(
-          "Menunggu Mekanik Selesai",
-          style: GoogleFonts.poppins(
-            fontSize: 15,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
           ),
         ),
       ),
-    ),
-  ),
-),
 
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -85,7 +118,7 @@ bottomNavigationBar: SafeArea(
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withAlpha(13),
                 blurRadius: 6,
                 offset: const Offset(0, 3),
               ),
@@ -98,10 +131,16 @@ bottomNavigationBar: SafeArea(
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
+                   CircleAvatar(
                     radius: 22,
-                    backgroundImage: NetworkImage(
-                      "https://i.pravatar.cc/150?img=${task['id']}",
+                    backgroundColor: Colors.red.shade50,
+                    child: Text(
+                      _getInitials(customerName),
+                      style: GoogleFonts.poppins(
+                        color: mainColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -110,7 +149,7 @@ bottomNavigationBar: SafeArea(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          task['user'] ?? "-",
+                          customerName,
                           style: GoogleFonts.poppins(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -175,7 +214,7 @@ bottomNavigationBar: SafeArea(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                   decoration: BoxDecoration(
-                    color: mainColor.withOpacity(0.15),
+                    color: mainColor.withAlpha(38),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -201,7 +240,7 @@ bottomNavigationBar: SafeArea(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                   decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(0.15),
+                    color: Colors.orange.withAlpha(38),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -240,7 +279,7 @@ bottomNavigationBar: SafeArea(
                 decoration: BoxDecoration(
                   border: Border.all(color: mainColor, width: 1),
                   borderRadius: BorderRadius.circular(8),
-                  color: mainColor.withOpacity(0.05),
+                  color: mainColor.withAlpha(13),
                 ),
                 child: Text(
                   task['desc'] ?? "Penggantian bantalan rem lengkap dan kalibrasi sistem untuk unit excavator",

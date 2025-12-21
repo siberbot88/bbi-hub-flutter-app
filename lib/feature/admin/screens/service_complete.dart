@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../widgets/custom_header.dart';
-import '../widgets/assign_dialog.dart';
 import 'package:flutter_svg/flutter_svg.dart';  
 import 'invoice_form.dart';        
 
@@ -11,10 +10,19 @@ class ServiceCompleteDetail extends StatelessWidget {
 
   const ServiceCompleteDetail({super.key, required this.task});
 
+  String _getInitials(String name) {
+    if (name.isEmpty) return "?";
+    final parts = name.trim().split(' ');
+    if (parts.isEmpty) return "?";
+    if (parts.length == 1) return parts[0].substring(0, 1).toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+
   @override
   Widget build(BuildContext context) {
     final DateTime? orderDate = task['date'] is DateTime ? task['date'] : null;
     const mainColor = Color(0xFFDC2626);
+    final customerName = task['user'] ?? "-";
 
     // 🔹 Tentukan jenis kendaraan
     final String motorType =
@@ -28,7 +36,6 @@ class ServiceCompleteDetail extends StatelessWidget {
         showBack: true,
       ),
       backgroundColor: mainColor,
-
       
    // ✅ Tombol sticky di bawah
 bottomNavigationBar: SafeArea(
@@ -51,7 +58,7 @@ bottomNavigationBar: SafeArea(
             borderRadius: BorderRadius.circular(30),
           ),
           elevation: 4,
-          shadowColor: Colors.black.withOpacity(0.15),
+          shadowColor: Colors.black.withAlpha(38),
         ),
         icon: SvgPicture.asset(
           'assets/icons/assign.svg', // 🔹 Ikon SVG lokal
@@ -82,7 +89,7 @@ bottomNavigationBar: SafeArea(
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withAlpha(13),
                 blurRadius: 6,
                 offset: const Offset(0, 3),
               ),
@@ -95,19 +102,25 @@ bottomNavigationBar: SafeArea(
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
-                    radius: 22,
-                    backgroundImage: NetworkImage(
-                      "https://i.pravatar.cc/150?img=${task['id']}",
-                    ),
-                  ),
+                   CircleAvatar(
+                     radius: 22,
+                     backgroundColor: Colors.red.shade50,
+                     child: Text(
+                        _getInitials(customerName),
+                        style: GoogleFonts.poppins(
+                          color: mainColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                     ),
+                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          task['user'] ?? "-",
+                          customerName,
                           style: GoogleFonts.poppins(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -172,7 +185,7 @@ bottomNavigationBar: SafeArea(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                   decoration: BoxDecoration(
-                    color: mainColor.withOpacity(0.15),
+                    color: mainColor.withAlpha(38),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -198,7 +211,7 @@ bottomNavigationBar: SafeArea(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                   decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.4),
+                    color: Colors.green.withAlpha(102),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -237,7 +250,7 @@ bottomNavigationBar: SafeArea(
                 decoration: BoxDecoration(
                   border: Border.all(color: mainColor, width: 1),
                   borderRadius: BorderRadius.circular(8),
-                  color: mainColor.withOpacity(0.05),
+                  color: mainColor.withAlpha(13),
                 ),
                 child: Text(
                   task['desc'] ?? "Penggantian bantalan rem lengkap dan kalibrasi sistem untuk unit excavator",

@@ -2,14 +2,16 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-void showRejectDialog(BuildContext context) {
-  final List<String> reasons = [
-    "Harga tidak sesuai",
-    "Jadwal bentrok",
-    "Lokasi terlalu jauh",
-    "Lainnya"
-  ];
-  String? selectedReason;
+void showRejectDialog(BuildContext context, {required Function(String, String) onConfirm}) {
+  final Map<String, String> reasonMap = {
+    "Antrian Penuh": "antrian sedang full",
+    "Jadwal Bentrok": "jadwal bentrok",
+    "Lokasi Terlalu Jauh": "lokasi terlalu jauh",
+    "Kendaraan Tidak Sesuai": "kendaraan tidak sesuai",
+    "Lainnya": "lainnya",
+  };
+  
+  String? selectedReasonValue;
   final TextEditingController notesController = TextEditingController();
 
   showDialog(
@@ -48,14 +50,14 @@ void showRejectDialog(BuildContext context) {
                       style: GoogleFonts.poppins(fontSize: 13)),
                   const SizedBox(height: 6),
                   DropdownButtonFormField<String>(
-                    value: selectedReason,
-                    items: reasons
+                    value: selectedReasonValue,
+                    items: reasonMap.entries
                         .map((e) => DropdownMenuItem(
-                              value: e,
-                              child: Text(e),
+                              value: e.value,
+                              child: Text(e.key),
                             ))
                         .toList(),
-                    onChanged: (val) => setState(() => selectedReason = val),
+                    onChanged: (val) => setState(() => selectedReasonValue = val),
                     decoration: InputDecoration(
                       hintText: "Pilih alasan anda",
                       border: OutlineInputBorder(
@@ -104,7 +106,11 @@ void showRejectDialog(BuildContext context) {
                         child: ElevatedButton(
                           onPressed: () {
                             Navigator.pop(context); // Tutup popup pertama
-                            showConfirmRejectDialog(context); // Muncul popup kedua
+                            showConfirmRejectDialog(
+                                context,
+                                onConfirm,
+                                selectedReasonValue ?? "lainnya",
+                                notesController.text); // Muncul popup kedua
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.red[700],
@@ -128,7 +134,12 @@ void showRejectDialog(BuildContext context) {
   );
 }
 
-void showConfirmRejectDialog(BuildContext context) {
+void showConfirmRejectDialog(
+  BuildContext context,
+  Function(String, String) onConfirm,
+  String reason,
+  String description,
+) {
   showDialog(
     context: context,
     builder: (context) {
@@ -166,7 +177,7 @@ void showConfirmRejectDialog(BuildContext context) {
                     child: ElevatedButton(
                       onPressed: () {
                         Navigator.pop(context); // close confirm dialog
-                        // TODO: aksi menolak service di sini
+                        onConfirm(reason, description);
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red[700],

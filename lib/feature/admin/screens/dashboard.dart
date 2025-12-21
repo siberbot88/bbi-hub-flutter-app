@@ -1,8 +1,12 @@
-// 📄 lib/feature/admin/screens/dashboard.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
+import 'package:provider/provider.dart';
+
+import 'package:bengkel_online_flutter/feature/admin/providers/admin_service_provider.dart';
+import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
+import 'package:bengkel_online_flutter/core/models/dashboard_stats.dart';
 
 // tab lain
 import 'tabs/technician_tab.dart';
@@ -20,20 +24,47 @@ class _DashboardPageState extends State<DashboardPage> {
   String selectedRange = "Hari ini";
   String chartFilter = "Week";
 
-  final List<Map<String, dynamic>> mostFrequent = const [
-    {'name': 'Ganti Oli', 'count': 18},
-    {'name': 'Servis Rem', 'count': 12},
-    {'name': 'Rotasi Ban', 'count': 8},
-  ];
+  DashboardStats? _stats;
+  bool _loading = true;
 
-  final List<_ChartData> chartData = const [
-    _ChartData('Jan', 3),
-    _ChartData('Feb', 2),
-    _ChartData('Mar', 4),
-    _ChartData('Apr', 5.5),
-    _ChartData('May', 4.5),
-    _ChartData('Jun', 5),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchDashboardData();
+    });
+  }
+
+  void _fetchDashboardData() async {
+    final provider = context.read<AdminServiceProvider>();
+    final auth = context.read<AuthProvider>();
+    try {
+      final stats = await provider.fetchDashboardStats(
+          workshopUuid: auth.user?.workshopUuid);
+      if (mounted) {
+        setState(() {
+          _stats = stats;
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+        });
+        print("Error fetching dashboard: $e");
+      }
+    }
+  }
+
+  // Mapper for Chart
+  List<_ChartData> get _chartData {
+    if (_stats == null) return [];
+    return _stats!.trend.map((t) => _ChartData(t.date, t.total.toDouble())).toList();
+  }
+
+  // Mapper for Most Frequent
+  List<TopService> get _mostFrequent => _stats?.topServices ?? [];
 
   @override
   Widget build(BuildContext context) {
@@ -82,7 +113,7 @@ class _DashboardPageState extends State<DashboardPage> {
           Text(
             "Memantau layanan, teknisi, pendapatan, dan pelanggan",
             style: GoogleFonts.poppins(
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withAlpha(230),
               fontSize: 12,
             ),
           ),
@@ -121,6 +152,7 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _buildTabContent() {
     switch (selectedTab) {
       case "Servis":
+         if (_loading) return const Center(child: CircularProgressIndicator());
         return SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
           child: Column(
@@ -138,6 +170,8 @@ class _DashboardPageState extends State<DashboardPage> {
         return TechnicianTab(
           selectedRange: selectedRange,
           onRangeChange: (v) => setState(() => selectedRange = v),
+          mechanics: _stats?.mechanicStats ?? [],
+          isLoading: _loading,
         );
       case "Pelanggan":
         return CustomerTab(
@@ -145,6 +179,9 @@ class _DashboardPageState extends State<DashboardPage> {
           chartFilter: chartFilter,
           onRangeChange: (v) => setState(() => selectedRange = v),
           onChartFilterChange: (f) => setState(() => chartFilter = f),
+          customerStats: _stats?.customerStats,
+          trend: _stats?.trend ?? [],
+          isLoading: _loading,
         );
       default:
         return const SizedBox.shrink();
@@ -153,6 +190,12 @@ class _DashboardPageState extends State<DashboardPage> {
 
   // ---------- SERVIS SECTION ----------
   Widget _buildServisSection() {
+    // Use API data or default to 0 if not available
+    final servicesToday = _stats?.servicesToday ?? 0;
+    final needsAssignment = _stats?.needsAssignment ?? 0;
+    final inProgress = _stats?.inProgress ?? 0;
+    final completed = _stats?.completed ?? 0;
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -184,22 +227,22 @@ class _DashboardPageState extends State<DashboardPage> {
           children: [
             _summaryCardPrimary(
               title: "Servis Hari Ini",
-              value: "12",
+              value: "$servicesToday",
               icon: 'assets/icons/servis.svg',
             ),
             _summaryCardWhite(
               title: "Perlu di Assign",
-              value: "8",
+              value: "$needsAssignment",
               icon: 'assets/icons/assign.svg',
             ),
             _summaryCardWhite(
-              title: "Feedback",
-              value: "4",
+              title: "Sedang Dikerjakan",
+              value: "$inProgress",
               icon: 'assets/icons/pelanggan.svg',
             ),
             _summaryCardWhite(
               title: "Selesai",
-              value: "2",
+              value: "$completed",
               icon: 'assets/icons/completed.svg',
             ),
           ],
@@ -224,7 +267,7 @@ class _DashboardPageState extends State<DashboardPage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withAlpha(20),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -279,7 +322,7 @@ class _DashboardPageState extends State<DashboardPage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withAlpha(20),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -323,8 +366,12 @@ class _DashboardPageState extends State<DashboardPage> {
 
   // ---------- HELPER ICON ----------
   Widget _buildIcon(String path, {Color? color, double size = 24}) {
+    final colorFilter = color != null 
+        ? ColorFilter.mode(color, BlendMode.srcIn) 
+        : null;
+    
     if (path.endsWith('.svg')) {
-      return SvgPicture.asset(path, width: size, height: size, color: color);
+      return SvgPicture.asset(path, width: size, height: size, colorFilter: colorFilter);
     } else {
       return Image.asset(path, width: size, height: size, color: color);
     }
@@ -340,7 +387,7 @@ class _DashboardPageState extends State<DashboardPage> {
         borderRadius: BorderRadius.circular(24), // Bentuk pill
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.10),
+            color: Colors.black.withAlpha(26),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -385,7 +432,7 @@ class _DashboardPageState extends State<DashboardPage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withAlpha(13),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -412,15 +459,15 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
           ]),
           const SizedBox(height: 10),
-          ...mostFrequent.map(
+          ..._mostFrequent.map(
             (item) => Padding(
               padding: const EdgeInsets.symmetric(vertical: 6),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(item['name'] as String,
+                  Text(item.categoryService,
                       style: GoogleFonts.poppins(fontSize: 14)),
-                  Text("${item['count']}",
+                  Text("${item.count}",
                       style: GoogleFonts.poppins(
                           fontWeight: FontWeight.w600, fontSize: 14)),
                 ],
@@ -441,7 +488,7 @@ class _DashboardPageState extends State<DashboardPage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withAlpha(13),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -488,6 +535,14 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
           ]),
           const SizedBox(height: 16),
+          if (_chartData.isEmpty)
+             SizedBox(
+               height: 200, 
+               child: Center(
+                 child: Text("Belum ada data grafik.", style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey))
+               )
+             )
+          else 
           SfCartesianChart(
             plotAreaBorderWidth: 0,
             primaryXAxis: CategoryAxis(
@@ -501,7 +556,7 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
             series: <CartesianSeries<_ChartData, String>>[
               LineSeries<_ChartData, String>(
-                dataSource: chartData,
+                dataSource: _chartData,
                 xValueMapper: (d, _) => d.month,
                 yValueMapper: (d, _) => d.value,
                 color: const Color(0xFFB388FF),

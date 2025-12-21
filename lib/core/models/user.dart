@@ -11,6 +11,19 @@ class User {
   final List<Workshop>? workshops;
   final Employment? employment;
   final bool mustChangePassword;
+<<<<<<< HEAD
+=======
+  final String? subscriptionStatus; // 'active', 'pending', expired, 'trial', null
+  final String? subscriptionPlanName;
+  final DateTime? subscriptionExpiredAt;
+  
+  // Trial fields
+  final DateTime? trialEndsAt;
+  final bool trialUsed;
+  final int? trialDaysRemaining;
+  final bool hasPremiumAccess;
+  final DateTime? emailVerifiedAt;
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
 
   User({
     required this.id,
@@ -22,6 +35,17 @@ class User {
     this.workshops,
     this.employment,
     this.mustChangePassword = false,
+<<<<<<< HEAD
+=======
+    this.subscriptionStatus,
+    this.subscriptionPlanName,
+    this.subscriptionExpiredAt,
+    this.trialEndsAt,
+    this.trialUsed = false,
+    this.trialDaysRemaining,
+    this.hasPremiumAccess = false,
+    this.emailVerifiedAt,
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -59,8 +83,37 @@ class User {
       }
     }
 
+<<<<<<< HEAD
     // Parse must_change_password dengan aman
     bool _parseMustChange(dynamic v) {
+=======
+    // Parse subscription status & details
+    String? subStatus;
+    String? subPlanName;
+    DateTime? subExpiredAt;
+
+    if (json['owner_subscription'] is Map<String, dynamic>) {
+      final sub = json['owner_subscription'];
+      subStatus = sub['status']?.toString();
+      
+      // Parse Plan Name
+      final planData = sub['plan'] ?? sub['subscription_plan'];
+      if (planData is Map<String, dynamic>) {
+        subPlanName = planData['name']?.toString();
+      }
+      
+      // Parse Expiry
+      if (sub['expires_at'] != null) {
+        subExpiredAt = DateTime.tryParse(sub['expires_at'].toString());
+      }
+    } else if (json['subscription_status'] is String) {
+       // Fallback flattened
+       subStatus = json['subscription_status'];
+    }
+
+    // Parse must_change_password dengan aman
+    bool parseMustChange(dynamic v) {
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
       if (v is bool) return v;
       if (v is num) return v == 1;
       if (v is String) {
@@ -70,11 +123,23 @@ class User {
       return false;
     }
 
+<<<<<<< HEAD
+=======
+    // Parse trial information
+    DateTime? trialEnds;
+    if (json['trial_ends_at'] != null) {
+      try {
+        trialEnds = DateTime.parse(json['trial_ends_at'].toString());
+      } catch (_) {}
+    }
+
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
     return User(
       id: (json['id'] ?? '').toString(),
       name: (json['name'] ?? '').toString(),
       username: (json['username'] ?? '').toString(),
       email: (json['email'] ?? '').toString(),
+<<<<<<< HEAD
       photo: json['photo']?.toString(),
       role: userRole,
       workshops: parsedWorkshops,
@@ -94,4 +159,63 @@ class User {
     }
     return null;
   }
+=======
+      photo: _fixImageUrl(json['photo']),
+      role: userRole,
+      workshops: parsedWorkshops,
+      employment: parsedEmployment,
+      mustChangePassword: parseMustChange(
+          json['must_change_password'] ?? json['mustChangePassword']),
+      subscriptionStatus: json['subscription_status'] ?? subStatus,
+      subscriptionPlanName: subPlanName,
+      subscriptionExpiredAt: subExpiredAt,
+      
+      // Trial data
+      trialEndsAt: trialEnds,
+      trialUsed: json['trial_used'] ?? false,
+      trialDaysRemaining: json['trial_days_remaining'],
+
+      hasPremiumAccess: json['has_premium_access'] ?? false,
+      emailVerifiedAt: json['email_verified_at'] != null 
+          ? DateTime.tryParse(json['email_verified_at'].toString()) 
+          : null,
+    );
+  }
+
+  static String? _fixImageUrl(dynamic url) {
+    if (url == null || url.toString().isEmpty) return null;
+    String finalUrl = url.toString();
+    // Fix for Android Emulator 127.0.0.1 -> 10.0.2.2
+    if (finalUrl.contains("127.0.0.1")) {
+      finalUrl = finalUrl.replaceAll("127.0.0.1", "10.0.2.2");
+    } else if (finalUrl.contains("localhost")) {
+      finalUrl = finalUrl.replaceAll("localhost", "10.0.2.2");
+    }
+    return finalUrl;
+  }
+
+  bool hasRole(String roleName) => role == roleName;
+  String? get workshopUuid {
+    if (workshops != null && workshops!.isNotEmpty) {
+      return workshops!.first.id;
+    }
+    if (employment != null && employment!.workshop != null) {
+      return employment!.workshop!.id;
+    }
+    return null;
+  }
+  
+  // Membership/Subscription helpers
+  
+  // Check if user is in trial
+  bool get isInTrial {
+    if (trialEndsAt == null) return false;
+    return trialEndsAt!.isAfter(DateTime.now());
+  }
+  
+  // Premium access includes both paid subscription AND trial
+  bool get isPremium => hasPremiumAccess || subscriptionStatus == 'active' || isInTrial;
+  
+  String? get membershipStatus => subscriptionStatus; // Alias for backward compatibility
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
 }

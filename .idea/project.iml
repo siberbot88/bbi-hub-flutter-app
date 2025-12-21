@@ -81,6 +81,15 @@
       <excludeFolder url="file://$MODULE_DIR$/windows/flutter/ephemeral/.plugin_symlinks/shared_preferences_windows/example/.dart_tool" />
       <excludeFolder url="file://$MODULE_DIR$/windows/flutter/ephemeral/.plugin_symlinks/shared_preferences_windows/example/.pub" />
       <excludeFolder url="file://$MODULE_DIR$/windows/flutter/ephemeral/.plugin_symlinks/shared_preferences_windows/example/build" />
+<<<<<<< HEAD
+=======
+      <excludeFolder url="file://$MODULE_DIR$/android/.gradle" />
+      <excludeFolder url="file://$MODULE_DIR$/android/build" />
+      <excludeFolder url="file://$MODULE_DIR$/ios/Flutter/ephemeral" />
+      <excludeFolder url="file://$MODULE_DIR$/linux/flutter/ephemeral" />
+      <excludeFolder url="file://$MODULE_DIR$/macos/Flutter/ephemeral" />
+      <excludeFolder url="file://$MODULE_DIR$/windows/flutter/ephemeral" />
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

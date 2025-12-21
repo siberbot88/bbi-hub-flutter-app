@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 class Workshop {
   final String id;
   final String userUuid;
@@ -19,6 +21,7 @@ class Workshop {
   final String closingTime;
   final String operationalDays;
   final bool isActive;
+  final String status;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -43,6 +46,7 @@ class Workshop {
     required this.closingTime,
     required this.operationalDays,
     required this.isActive,
+    this.status = 'pending',
     this.createdAt,
     this.updatedAt,
   });
@@ -72,6 +76,19 @@ class Workshop {
       return DateTime.tryParse(value);
     }
 
+    // Helper untuk sanitize URL localhost ke 10.0.2.2 (untuk Android Emulator)
+    String? sanitizeUrl(String? url) {
+      if (url == null) return null;
+      // Basic check, ideally check standard platform logic but this is safe enough for typical dev setup
+      if (url.contains('localhost')) {
+        return url.replaceAll('localhost', '10.0.2.2');
+      }
+      if (url.contains('127.0.0.1')) {
+        return url.replaceAll('127.0.0.1', '10.0.2.2');
+      }
+      return url;
+    }
+
     try {
       return Workshop(
         id: json['id'] as String? ?? 'unknown_workshop_id',
@@ -82,7 +99,7 @@ class Workshop {
         address: json['address'] as String? ?? '',
         phone: json['phone'] as String? ?? '',
         email: json['email'] as String? ?? '',
-        photo: json['photo'] as String?,
+        photo: sanitizeUrl(json['photo'] as String?),
         city: json['city'] as String? ?? '',
         province: json['province'] as String? ?? '',
         country: json['country'] as String? ?? '',
@@ -94,15 +111,16 @@ class Workshop {
         closingTime: json['closing_time'] as String? ?? '00:00',
         operationalDays: json['operational_days'] as String? ?? '',
         isActive: parseBoolSafe(json['is_active']),
+        status: json['status'] as String? ?? 'pending',
         createdAt: parseDateTimeSafe(json['created_at']),
         updatedAt: parseDateTimeSafe(json['updated_at']),
       );
     } catch (e) {
       // Jika terjadi error saat parsing, print errornya
-      print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-      print('FATAL ERROR parsing Workshop JSON: $e');
-      print('Problematic Workshop JSON: $json');
-      print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+      if (kDebugMode) {
+        debugPrint('FATAL ERROR parsing Workshop JSON: $e');
+        debugPrint('Problematic Workshop JSON: $json');
+      }
       // Lemparkan error agar `User.fromJson` bisa menangkapnya
       throw Exception('Failed to parse Workshop: $e');
     }
@@ -135,4 +153,3 @@ class Workshop {
     };
   }
 }
-

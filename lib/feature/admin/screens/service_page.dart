@@ -1,13 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'service_detail.dart';
-import '../widgets/custom_header.dart';
-import '../widgets/reject_dialog.dart';
-import '../widgets/accept_dialog.dart';
+import 'package:provider/provider.dart';
+
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
+
 import 'service_logging.dart';
+import 'service_on_the_site.dart';
+import '../widgets/custom_header.dart';
+import '../widgets/service/service_tab_selector.dart';
+import '../widgets/service/service_calendar_section.dart';
+import '../widgets/service/service_card.dart';
+import '../widgets/service/service_helpers.dart';
+import '../widgets/service/service_summary_boxes.dart';
+import '../widgets/service/service_filter_tabs.dart';
+
+import 'package:bengkel_online_flutter/feature/admin/providers/admin_service_provider.dart';
+import 'package:bengkel_online_flutter/core/models/service.dart';
+import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
+import 'package:intl/intl.dart';
 
 class ServicePageAdmin extends StatefulWidget {
-  const ServicePageAdmin({super.key});
+  final int? initialTab;
+  final String? initialFilter;
+  const ServicePageAdmin({super.key, this.initialTab, this.initialFilter});
 
   @override
   State<ServicePageAdmin> createState() => _ServicePageAdminState();
@@ -17,61 +32,89 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
   int displayedMonth = DateTime.now().month;
   int displayedYear = DateTime.now().year;
   int selectedDay = DateTime.now().day;
-  String selectedFilter = "All";
-
-  // 🔹 Tambahan: buat tab index
-  int selectedTab = 0; // 0 = Scheduled, 1 = Logging
-
-  final List<Map<String, dynamic>> allTasks = [
-    {
-      "id": "1",
-      "name": "Prabowo",
-      "date": DateTime(2025, 9, 2),
-      "service": "Engine Oil Change",
-      "plate": "SU 814 NTO",
-      "motor": "BEAT 2012",
-      "vehicleCategory": "Sepeda Motor",
-      "location": "WORKSHOP",
-      "status": "Waiting",
-    },
-    {
-      "id": "2",
-      "name": "Ayu",
-      "date": DateTime(2025, 9, 4),
-      "service": "Battery Check",
-      "plate": "XY 9999",
-      "motor": "Honda 2020",
-      "vehicleCategory": "Mobil",
-      "location": "ON-SITE",
-      "status": "Accept",
-    },
-  ];
+  late String selectedFilter;
+  late int selectedTab; // 0 = Scheduled, 1 = Logging
 
   DateTime get selectedDate =>
       DateTime(displayedYear, displayedMonth, selectedDay);
-
-  bool isSameDate(DateTime a, DateTime b) =>
-      a.year == b.year && a.month == b.month && a.day == b.day;
-
-  int daysInMonth(int year, int month) => DateTime(year, month + 1, 0).day;
-
-  bool _matchesFilterKey(Map<String, dynamic> t, String filterKey) {
-    if (filterKey == 'All') return true;
-    return (t['status'] as String).toLowerCase() == filterKey.toLowerCase();
+      
+  @override
+  void initState() {
+    super.initState();
+    selectedTab = widget.initialTab ?? 0;
+    selectedFilter = widget.initialFilter ?? "Semua";
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchData();
+    });
   }
 
-  int _countTasks(String filterKey) {
-    return allTasks
-        .where((t) =>
-            isSameDate(t['date'] as DateTime, selectedDate) &&
-            _matchesFilterKey(t, filterKey))
-        .length;
+  @override
+  void didUpdateWidget(ServicePageAdmin oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialTab != oldWidget.initialTab && widget.initialTab != null) {
+      setState(() => selectedTab = widget.initialTab!);
+    }
+    if (widget.initialFilter != oldWidget.initialFilter && widget.initialFilter != null) {
+      setState(() => selectedFilter = widget.initialFilter!);
+    }
+  }
+
+  void _fetchData() {
+    final auth = context.read<AuthProvider>();
+    final workshopUuid = auth.user?.workshopUuid;
+    
+    print("DEBUG: _fetchData UI -> Fetching ALL services without date filter");
+    
+    // Fetch ALL services without date filter to show all data
+    context.read<AdminServiceProvider>().fetchServices(
+      workshopUuid: workshopUuid,
+      perPage: 100, // Increase page size to get more results
+    );
+  }
+
+  void _prevMonth() {
+    setState(() {
+      displayedMonth--;
+      if (displayedMonth < 1) {
+        displayedMonth = 12;
+        displayedYear--;
+      }
+      final daysInMonth = ServiceHelpers.daysInMonth(displayedYear, displayedMonth);
+      if (selectedDay > daysInMonth) {
+        selectedDay = daysInMonth; // Clamp to last day of new month
+      } else {
+        selectedDay = 1; // Or default to 1 as before? User said "tanggal yg digunakan juga belum sesuai". 
+        // If I switch month, usually I want to see the 1st, or stay on same day index?
+        // Let's reset to 1 as it's safer, or clamp. The previous code reset to 1.
+        // But user said "tanggal yg digunakan belum sesuai". maybe they want to keep the day?
+        // I will reset to 1 but ensure it's valid.
+        selectedDay = 1;
+      }
+      print("DEBUG: PrevMonth -> Month: $displayedMonth, Year: $displayedYear, Day: $selectedDay");
+    });
+    _fetchData();
+  }
+
+  void _nextMonth() {
+    setState(() {
+      displayedMonth++;
+      if (displayedMonth > 12) {
+        displayedMonth = 1;
+        displayedYear++;
+      }
+      selectedDay = 1; // Default to 1st of next month
+    });
+    _fetchData();
   }
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<AdminServiceProvider>();
+
+
+
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: AppColors.backgroundLight,
       appBar: const CustomHeader(
         title: "Service",
         showBack: false,
@@ -80,116 +123,17 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 8),
-
-          // 🔹 Tab Scheduled & Logging
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                // 🔸 Scheduled
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => setState(() => selectedTab = 0),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      decoration: BoxDecoration(
-                        color: selectedTab == 0
-                            ? const Color(0xFFB70F0F)
-                            : Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                            color: const Color(0xFFB70F0F), width: 2),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.calendar_today,
-                              size: 18,
-                              color: selectedTab == 0
-                                  ? Colors.white
-                                  : const Color(0xFFB70F0F)),
-                          const SizedBox(width: 6),
-                          Text(
-                            "Scheduled",
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: selectedTab == 0
-                                  ? Colors.white
-                                  : const Color(0xFFB70F0F),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(width: 12),
-
-                // 🔸 Logging
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => setState(() => selectedTab = 1),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      decoration: BoxDecoration(
-                        color: selectedTab == 1
-                            ? const Color(0xFFB70F0F)
-                            : Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                            color: const Color(0xFFB70F0F), width: 2),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.show_chart,
-                              size: 18,
-                              color: selectedTab == 1
-                                  ? Colors.white
-                                  : const Color(0xFFB70F0F)),
-                          const SizedBox(width: 6),
-                          Text(
-                            "Logging",
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: selectedTab == 1
-                                  ? Colors.white
-                                  : const Color(0xFFB70F0F),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          ServiceTabSelector(
+            selectedTab: selectedTab,
+            onTabChanged: (index) => setState(() => selectedTab = index),
           ),
-
-          // 🔹 Konten tab
           Expanded(
             child: IndexedStack(
               index: selectedTab,
               children: [
-                // Tab Scheduled (kode asli kamu)
-                SingleChildScrollView(
-                  padding: const EdgeInsets.only(bottom: 80),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 16),
-                      _calendarSection(),
-                      const SizedBox(height: 12),
-                      _scheduledList(),
-                    ],
-                  ),
-                ),
-
-                // Tab Logging (panggil page Logging)
-                const ServiceLoggingPage(),
+                _buildScheduledTab(provider),
+                const ServiceOnTheSitePage(),
+                ServiceLoggingPage(initialFilter: widget.initialFilter),
               ],
             ),
           ),
@@ -198,346 +142,127 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
     );
   }
 
-  Widget _scheduledList() {
-    final scheduled = allTasks
-        .where((t) => isSameDate(t['date'] as DateTime, selectedDate))
-        .where((t) => _matchesFilterKey(t, selectedFilter))
-        .toList();
+  Widget _buildScheduledTab(AdminServiceProvider provider) {
+    /*
+    if (provider.loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    */
+    // We don't block UI on loading because calendar needs to be visible or at least structure
+    // But for now let's keep it simple or just show loading in the list area if needed.
+    // Provider loading might be global for the list.
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: scheduled.isEmpty
-          ? Center(
-              child: Text("No scheduled tasks", style: GoogleFonts.poppins()))
-          : Column(
-              children: scheduled
-                  .map((t) => _serviceCardFromMap(context, t))
-                  .toList(),
-            ),
-    );
-  }
-
-  Widget _calendarSection() {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            children: [
-              Text(
-                "${_monthName(displayedMonth)} $displayedYear",
-                style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-              const Spacer(),
-              IconButton(
-                icon: const Icon(Icons.chevron_left, size: 20),
-                onPressed: _prevMonth,
-              ),
-              IconButton(
-                icon: const Icon(Icons.chevron_right, size: 20),
-                onPressed: _nextMonth,
-              ),
-            ],
-          ),
+    if (provider.error != null) {
+      return Center(
+        child: Text(
+          provider.error!,
+          style: AppTextStyles.bodyMedium(color: AppColors.error),
         ),
-        SizedBox(
-          height: 80,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: daysInMonth(displayedYear, displayedMonth),
-            itemBuilder: (context, index) {
-              final day = index + 1;
-              final dt = DateTime(displayedYear, displayedMonth, day);
-              final isSelected = isSameDate(dt, selectedDate);
+      );
+    }
 
-              return GestureDetector(
-                onTap: () => setState(() => selectedDay = day),
-                child: Container(
-                  width: 60,
-                  margin:
-                      const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: isSelected ? Colors.red[100] : Colors.grey[200],
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isSelected ? Colors.red : Colors.transparent,
-                      width: 2,
-                    ),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        _weekdayShort(dt.weekday),
-                        style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.bold, fontSize: 12),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        "$day",
-                        style: GoogleFonts.poppins(
-                            fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
+    final allServices = provider.items;
 
-  Widget _serviceCardFromMap(BuildContext context, Map<String, dynamic> t) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
+    // Calculate Stats
+    // All: Total services for the date (Booking Only)
+    // Filter out Walk-ins first (Show Booking Only)
+    // Menampilkan semua yang BUKAN on-site (termasuk type null atau 'booking')
+    final bookingServices = allServices.where((s) {
+       final type = (s.type ?? '').toLowerCase();
+       return type != 'on-site'; // Semua yang bukan on-site dianggap booking
+    }).toList();
+    
+    print('DEBUG service_page: allServices=${allServices.length}, bookingServices=${bookingServices.length}');
+    for (var s in allServices) {
+      print('  -> id=${s.id}, type=${s.type}, name=${s.name}');
+    }
+
+    final allCount = bookingServices.length;
+    // Menunggu (Pending): acceptance_status == "pending"
+    final pendingCount = bookingServices.where((s) => (s.acceptanceStatus ?? '').toLowerCase() == 'pending').length;
+    // Terima (Accepted): acceptance_status == "accepted"
+    final acceptedCount = bookingServices.where((s) => (s.acceptanceStatus ?? '').toLowerCase() == 'accepted').length;
+    // Tolak (Declined): acceptance_status == "declined" or "rejected"
+    final declinedCount = bookingServices.where((s) => (s.acceptanceStatus ?? '').toLowerCase() == 'decline').length;
+    
+    // Filter List
+    final filteredServices = bookingServices.where((s) {
+      final acceptance = (s.acceptanceStatus ?? '').toLowerCase();
+      // final status = (s.status).toLowerCase();
+      
+      if (selectedFilter == 'Semua') return true;
+      if (selectedFilter == 'Menunggu') return acceptance == 'pending';
+      if (selectedFilter == 'Terima') return acceptance == 'accepted';
+      if (selectedFilter == 'Tolak') return acceptance == 'decline' || acceptance == 'rejected' || acceptance == 'canceled' || acceptance == 'cancelled';
+      return true;
+    }).toList();
+
+
+    return SingleChildScrollView(
+      padding:  const EdgeInsets.only(bottom: 80),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 🔹 User + Date Order + Scheduled
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              CircleAvatar(
-                radius: 18,
-                backgroundImage:
-                    NetworkImage("https://i.pravatar.cc/150?img=${t['id']}"),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(t['name'],
-                        style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.w600, fontSize: 14)),
-                    Text("ID: ${t['id']}",
-                        style: GoogleFonts.poppins(
-                            fontSize: 12, color: Colors.grey[600])),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(_formatDate(t['date'] as DateTime),
-                      style: GoogleFonts.poppins(
-                          fontSize: 12, color: Colors.grey[700])),
-                  Text("Scheduled : 7 September 2025",
-                      style: GoogleFonts.poppins(
-                          fontSize: 12, color: Colors.grey[600])),
-                ],
-              )
-            ],
+          const SizedBox(height: 16),
+          // Add Summary Boxes
+          ServiceSummaryBoxes(
+            all: allCount,
+            accepted: acceptedCount,
+            pending: pendingCount,
+            declined: declinedCount,
           ),
-
-          const SizedBox(height: 10),
-
-          // 🔹 Service Title + Category Kendaraan
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  t['service'],
-                  style: GoogleFonts.poppins(
-                      fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color:
-                      _getVehicleBgColor(t['vehicleCategory']).withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  t['vehicleCategory'] ?? "Unknown",
-                  style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: _getVehicleTextColor(t['vehicleCategory'])),
-                ),
-              )
-            ],
-          ),
-
           const SizedBox(height: 12),
-
-          // 🔹 Plat + Motor + Buttons
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("Plat Nomor",
-                      style: GoogleFonts.poppins(
-                          fontSize: 12, color: Colors.grey)),
-                  Text(t['plate'],
-                      style: GoogleFonts.poppins(
-                          fontSize: 15, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Builder(
-                        builder: (ctx) => ElevatedButton(
-                          onPressed: () => showRejectDialog(ctx),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red.shade700,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                          ),
-                          child: Text(
-                            "Tolak",
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                        onPressed: () => showAcceptDialog(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green.shade700,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                        ),
+          
+          ServiceCalendarSection(
+            displayedMonth: displayedMonth,
+            displayedYear: displayedYear,
+            selectedDay: selectedDay,
+            onPrevMonth: _prevMonth,
+            onNextMonth: _nextMonth,
+            onDaySelected: (day) {
+              setState(() => selectedDay = day);
+              _fetchData();
+            },
+          ),
+          
+          const SizedBox(height: 20),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text("Daftar Penjadwalan", style: AppTextStyles.heading4()),
+          ),
+          const SizedBox(height: 12),
+          
+          // Add Filter Tabs
+           ServiceFilterTabs(
+            selectedFilter: selectedFilter,
+            onFilterChanged: (filter) =>
+                setState(() => selectedFilter = filter),
+          ),
+          
+          const SizedBox(height: 12),
+          
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: provider.loading 
+                ? const Center(child: CircularProgressIndicator()) 
+                : filteredServices.isEmpty
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
                         child: Text(
-                          "Terima",
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
+                          "Tidak ada tugas yang sesuai.",
+                          style: AppTextStyles.bodyMedium(color: AppColors.textSecondary),
                         ),
                       ),
-                    ],
-                  )
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text("Type Motor",
-                      style: GoogleFonts.poppins(
-                          fontSize: 12, color: Colors.grey)),
-                  Text(t['motor'],
-                      style: GoogleFonts.poppins(
-                          fontSize: 15, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => ServiceDetailPage(task: t)),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30)),
+                    )
+                  : Column(
+                      children: filteredServices.map((s) {
+                        return ServiceCard(service: s);
+                      }).toList(),
                     ),
-                    child: Text(
-                      "Detail",
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              )
-            ],
-          )
+          ),
         ],
       ),
     );
   }
-
-  Color _getVehicleBgColor(String? category) {
-    switch (category?.toLowerCase()) {
-      case "sepeda motor":
-        return Colors.red.shade100;
-      case "mobil":
-        return Colors.orange.shade200;
-      default:
-        return Colors.grey.shade300;
-    }
-  }
-
-  Color _getVehicleTextColor(String? category) {
-    switch (category?.toLowerCase()) {
-      case "sepeda motor":
-        return Colors.red.shade700;
-      case "mobil":
-        return Colors.orange.shade800;
-      default:
-        return Colors.black87;
-    }
-  }
-
-  String _formatDate(DateTime d) => "${d.day} ${_monthName(d.month)} ${d.year}";
-  String _monthName(int m) => [
-        "",
-        "January",
-        "February",
-        "March",
-        "April",
-        "May",
-        "June",
-        "July",
-        "August",
-        "September",
-        "October",
-        "November",
-        "December"
-      ][m];
-  String _weekdayShort(int wd) =>
-      ["", "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"][wd];
-
-  void _prevMonth() => setState(() {
-        displayedMonth--;
-        if (displayedMonth < 1) {
-          displayedMonth = 12;
-          displayedYear--;
-        }
-        selectedDay = 1;
-      });
-
-  void _nextMonth() => setState(() {
-        displayedMonth++;
-        if (displayedMonth > 12) {
-          displayedMonth = 1;
-          displayedYear++;
-        }
-        selectedDay = 1;
-      });
 }

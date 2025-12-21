@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../widgets/custom_header.dart';
+import '../widgets/invoice/invoice_customer_header.dart';
+import '../widgets/invoice/invoice_service_info.dart';
+import '../widgets/invoice/invoice_service_list.dart';
+import '../providers/admin_service_provider.dart';
+import 'package:bengkel_online_flutter/core/models/service.dart';
 import 'invoice_payment.dart';
 
-
 class InvoiceFormPage extends StatefulWidget {
-  final Map<String, dynamic>? task;
+  final ServiceModel service;
 
-  const InvoiceFormPage({super.key, this.task});
+  const InvoiceFormPage({super.key, required this.service});
 
   @override
   State<InvoiceFormPage> createState() => _InvoiceFormPageState();
@@ -17,38 +21,84 @@ class InvoiceFormPage extends StatefulWidget {
 class _InvoiceFormPageState extends State<InvoiceFormPage> {
   final Color mainColor = const Color(0xFFDC2626);
   final TextEditingController technicianNoteController = TextEditingController();
+  final TextEditingController voucherController = TextEditingController();
+  
+  bool _isLoading = false;
+  bool _isValidatingVoucher = false;
+  String? _transactionId;
+  
+  // Voucher state
+  bool _voucherApplied = false;
+  String? _voucherCode;
+  num _discountAmount = 0;
+  String? _voucherError;
 
-  final List<Map<String, dynamic>> serviceList = [
-    {"nama": "Servis besar", "jenis": "Jasa Pekerjaan", "harga": 450000},
-    {"nama": "Ganti Kampas rem", "jenis": "Sparepart", "harga": 250000},
-    {"nama": "Ganti Ban Belakang", "jenis": "Sparepart", "harga": 380000},
-  ];
+  // Service items that can be edited
+  late List<Map<String, dynamic>> serviceList;
 
   final List<String> jenisOptions = [
-    "Jasa Pekerjaan",
+    "Servis Ringan",
+    "Servis Sedang",
+    "Servis Berat",
     "Sparepart",
     "Biaya Tambahan",
-    "Lainnya (PPN, dll)"
+    "Lainnya"
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize with service items if available, otherwise default
+    if (widget.service.items != null && widget.service.items!.isNotEmpty) {
+      serviceList = widget.service.items!.map((item) => {
+        "nama": item.name ?? "",
+        "jenis": _mapItemType(item.serviceTypeName),
+        "harga": (item.price).toInt(),
+      }).toList();
+    } else {
+      serviceList = [
+        {"nama": widget.service.name, "jenis": "Servis Ringan", "harga": (widget.service.price ?? 0).toInt()},
+      ];
+    }
+  }
+
+  String _mapItemType(String? type) {
+    switch (type?.toLowerCase()) {
+      case 'servis ringan': return 'Servis Ringan';
+      case 'servis sedang': return 'Servis Sedang';
+      case 'servis berat': return 'Servis Berat';
+      case 'sparepart': return 'Sparepart';
+      case 'biaya tambahan': return 'Biaya Tambahan';
+      default: return 'Lainnya';
+    }
+  }
+
+  String _reverseMapItemType(String jenis) {
+    switch (jenis) {
+      case 'Servis Ringan': return 'servis ringan';
+      case 'Servis Sedang': return 'servis sedang';
+      case 'Servis Berat': return 'servis berat';
+      case 'Sparepart': return 'sparepart';
+      case 'Biaya Tambahan': return 'biaya tambahan';
+      default: return 'lainnya';
+    }
+  }
 
   void _addService() {
     setState(() {
-      serviceList.add({"nama": "", "jenis": "Jasa Pekerjaan", "harga": 0});
+      serviceList.add({"nama": "", "jenis": "Servis Ringan", "harga": 0});
     });
   }
 
   void _editService(int index) {
-    final namaController =
-        TextEditingController(text: serviceList[index]["nama"]);
-    final hargaController =
-        TextEditingController(text: serviceList[index]["harga"].toString());
+    final namaController = TextEditingController(text: serviceList[index]["nama"]);
+    final hargaController = TextEditingController(text: serviceList[index]["harga"].toString());
     String selectedJenis = serviceList[index]["jenis"];
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title:
-            Text("Edit Servis", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        title: Text("Edit Servis", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -60,9 +110,7 @@ class _InvoiceFormPageState extends State<InvoiceFormPage> {
             DropdownButtonFormField<String>(
               value: selectedJenis,
               decoration: const InputDecoration(labelText: "Jenis Servis"),
-              items: jenisOptions
-                  .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                  .toList(),
+              items: jenisOptions.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
               onChanged: (value) => selectedJenis = value!,
             ),
             const SizedBox(height: 8),
@@ -80,8 +128,7 @@ class _InvoiceFormPageState extends State<InvoiceFormPage> {
               setState(() {
                 serviceList[index]["nama"] = namaController.text;
                 serviceList[index]["jenis"] = selectedJenis;
-                serviceList[index]["harga"] =
-                    int.tryParse(hargaController.text) ?? 0;
+                serviceList[index]["harga"] = int.tryParse(hargaController.text) ?? 0;
               });
               Navigator.pop(context);
             },
@@ -96,437 +143,363 @@ class _InvoiceFormPageState extends State<InvoiceFormPage> {
     setState(() => serviceList.removeAt(index));
   }
 
-  Widget _smallBox({required Widget child}) {
-    return Container(
-      height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      decoration: BoxDecoration(
-        border: Border.all(color: mainColor, width: 1.1),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: child,
-    );
+  void _onJenisChanged(int index, String value) {
+    setState(() {
+      serviceList[index]['jenis'] = value;
+    });
   }
 
-@override
-Widget build(BuildContext context) {
-  final task = widget.task ?? {};
-  final DateTime? orderDate = task['date'] is DateTime ? task['date'] : null;
+  int get _subtotal {
+    return serviceList.fold(0, (sum, item) => sum + ((item['harga'] as int?) ?? 0));
+  }
 
-  return Scaffold(
-    backgroundColor: Colors.white,
-    appBar: const CustomHeader(title: "Invoice Form", showBack: true),
-    body: Column(
-      children: [
-        // --- Area Scrollable ---
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // === Header User ===
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    CircleAvatar(
-                      radius: 20,
-                      backgroundImage: NetworkImage(
-                        "https://i.pravatar.cc/150?img=${task['id'] ?? 1}",
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(task['user'] ?? "Prabowo",
-                              style: GoogleFonts.poppins(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600)),
-                          const SizedBox(height: 2),
-                          Text("ID: ${task['id'] ?? '4589930272'}",
-                              style: GoogleFonts.poppins(
-                                  fontSize: 12, color: Colors.grey[700])),
-                        ],
-                      ),
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text("Tanggal order",
-                            style: GoogleFonts.poppins(
-                                fontSize: 12, color: Colors.grey[700])),
-                        Text(
-                          orderDate != null
-                              ? _formatDate(orderDate)
-                              : "2 September 2025",
-                          style: GoogleFonts.poppins(
-                              fontSize: 12, fontWeight: FontWeight.w600),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+  int get _totalAmount {
+    return (_subtotal - _discountAmount).toInt();
+  }
 
-                const SizedBox(height: 18),
+  Future<void> _validateVoucher() async {
+    final code = voucherController.text.trim();
+    if (code.isEmpty) return;
 
-                // === Informasi Servis ===
-                Center(
-                  child: Text("Informasi Servis",
-                      style: GoogleFonts.poppins(
-                          fontSize: 16, fontWeight: FontWeight.bold)),
-                ),
-                const SizedBox(height: 12),
+    setState(() {
+      _isValidatingVoucher = true;
+      _voucherError = null;
+    });
 
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text("Model Kendaraan",
-                                style: GoogleFonts.poppins(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500)),
-                            const SizedBox(height: 4),
-                            Text(task['model'] ?? "BEAT2012",
-                                style: GoogleFonts.poppins(
-                                    color: Colors.blueAccent, fontSize: 13)),
-                            const SizedBox(height: 8),
-                            Text("Plat Nomor",
-                                style: GoogleFonts.poppins(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500)),
-                            const SizedBox(height: 4),
-                            Text(task['plate'] ?? "SU 814 NTO",
-                                style: GoogleFonts.poppins(fontSize: 13)),
-                          ]),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text("Penjadwalan",
-                                style: GoogleFonts.poppins(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500)),
-                            const SizedBox(height: 4),
-                            Text(
-                                task['jadwal'] ??
-                                    "8:00 - 10:00 AM : 05/08/2025",
-                                style:
-                                    GoogleFonts.poppins(fontSize: 13)),
-                            const SizedBox(height: 8),
-                            Text("Jenis Kendaraan",
-                                style: GoogleFonts.poppins(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500)),
-                            const SizedBox(height: 4),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                  color: const Color(0xFFFFE5E5),
-                                  borderRadius:
-                                      BorderRadius.circular(14)),
-                              child: Text(
-                                  task['jenis'] ?? "Sepeda Motor",
-                                  style: GoogleFonts.poppins(
-                                      color: mainColor,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600)),
+    try {
+      final provider = context.read<AdminServiceProvider>();
+      final result = await provider.validateVoucher(
+        code: code,
+        amount: _subtotal,
+      );
+
+      if (mounted) {
+        setState(() {
+          _isValidatingVoucher = false;
+          if (result['valid'] == true) {
+            _voucherApplied = true;
+            _voucherCode = code;
+            // Safely parse discount_amount (may come as String or num)
+            final discountRaw = result['discount_amount'];
+            _discountAmount = discountRaw is num 
+                ? discountRaw 
+                : num.tryParse(discountRaw?.toString() ?? '0') ?? 0;
+            _voucherError = null;
+          } else {
+            _voucherApplied = false;
+            _voucherCode = null;
+            _discountAmount = 0;
+            _voucherError = result['message']?.toString() ?? 'Voucher tidak valid';
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isValidatingVoucher = false;
+          _voucherApplied = false;
+          _voucherError = e.toString().replaceFirst('Exception: ', '');
+        });
+      }
+    }
+  }
+
+  void _removeVoucher() {
+    setState(() {
+      _voucherApplied = false;
+      _voucherCode = null;
+      _discountAmount = 0;
+      _voucherError = null;
+      voucherController.clear();
+    });
+  }
+
+  Future<void> _createTransactionAndContinue() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final provider = context.read<AdminServiceProvider>();
+      
+      // Check if transaction already exists (backend creates it when service marked complete)
+      String? txnId = widget.service.transactionUuid;
+      
+      if (txnId == null || txnId.isEmpty) {
+        // Fallback: Create transaction if not exists
+        print('DEBUG: No transactionUuid found, creating new transaction...');
+        final transactionData = await provider.createTransaction(
+          serviceUuid: widget.service.id,
+          notes: technicianNoteController.text,
+        );
+        txnId = transactionData['id']?.toString();
+      } else {
+        print('DEBUG: Using existing transactionUuid: $txnId');
+      }
+      
+      _transactionId = txnId;
+      
+      if (_transactionId == null) {
+        throw Exception('Transaction ID not available');
+      }
+
+      // Add each item separately via transaction-items endpoint
+      for (final item in serviceList) {
+        await provider.addTransactionItem(
+          transactionUuid: _transactionId!,
+          name: item['nama'] ?? '',
+          serviceType: _reverseMapItemType(item['jenis'] ?? 'Jasa Pekerjaan'),
+          price: item['harga'] ?? 0,
+          quantity: 1,
+        );
+      }
+
+      if (mounted && _transactionId != null) {
+        // Navigate to payment page with transaction data
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => PaymentInvoicePage(
+              service: widget.service,
+              transactionId: _transactionId!,
+              items: serviceList,
+              totalAmount: _totalAmount,
+              subtotal: _subtotal,
+              discountAmount: _discountAmount.toInt(),
+              voucherCode: _voucherCode,
+              notes: technicianNoteController.text,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal membuat transaksi: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Build legacy task map for compatibility with existing widgets
+    final task = {
+      'id': widget.service.id,
+      'user': widget.service.displayCustomerName,
+      'date': widget.service.scheduledDate ?? DateTime.now(),
+      'title': widget.service.name,
+      'desc': widget.service.description ?? '-',
+      'plate': widget.service.displayVehiclePlate,
+      'motor': widget.service.displayVehicleName,
+      'status': widget.service.status,
+      'category': widget.service.categoryName ?? 'Servis',
+    };
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: const CustomHeader(title: "Invoice Form", showBack: true),
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  InvoiceCustomerHeader(task: task),
+                  const SizedBox(height: 18),
+                  Center(
+                    child: Text("Informasi Servis",
+                        style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold)),
+                  ),
+                  const SizedBox(height: 12),
+                  InvoiceServiceInfo(task: task, mainColor: mainColor),
+                  const SizedBox(height: 18),
+                  InvoiceServiceList(
+                    serviceList: serviceList,
+                    jenisOptions: jenisOptions,
+                    mainColor: mainColor,
+                    onAdd: _addService,
+                    onEdit: _editService,
+                    onDelete: _deleteService,
+                    onJenisChanged: _onJenisChanged,
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Voucher Input Section
+                  Text("Kode Voucher (Opsional)", style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: voucherController,
+                          enabled: !_voucherApplied,
+                          decoration: InputDecoration(
+                            hintText: "Masukkan kode voucher...",
+                            hintStyle: GoogleFonts.poppins(fontSize: 13),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(color: Colors.grey.shade400),
                             ),
-                          ]),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 18),
-
-                // === Input Servis Form ===
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text("Input Servis Form",
-                        style: GoogleFonts.poppins(
-                            fontSize: 15, fontWeight: FontWeight.w600)),
-                    InkWell(
-                      onTap: _addService,
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                            color: mainColor,
-                            borderRadius: BorderRadius.circular(8)),
-                        child: SvgPicture.asset('assets/icons/plus.svg',
-                            width: 16,
-                            height: 16,
-                            colorFilter: const ColorFilter.mode(
-                                Colors.white, BlendMode.srcIn)),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text("Nama Servis / Jenis / Harga",
-                    style: GoogleFonts.poppins(
-                        fontSize: 12, color: Colors.black87)),
-                const SizedBox(height: 10),
-
-                // === Daftar Servis (Tinggi dan Lebar Konsisten) ===
-                Column(
-                  children: List.generate(serviceList.length, (index) {
-                    final item = serviceList[index];
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 5),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          // Nama Servis
-                          Expanded(
-                            flex: 38,
-                            child: Container(
-                              height: 48,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8),
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                    color: mainColor, width: 1.1),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                item['nama'].isEmpty
-                                    ? "Isi nama servis..."
-                                    : item['nama'],
-                                style: GoogleFonts.poppins(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: mainColor),
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                              ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(color: mainColor),
                             ),
+                            disabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(color: Colors.grey.shade300),
+                            ),
+                            filled: _voucherApplied,
+                            fillColor: _voucherApplied ? Colors.green.withOpacity(0.1) : null,
+                            suffixIcon: _voucherApplied
+                                ? const Icon(Icons.check_circle, color: Colors.green)
+                                : null,
                           ),
-                          const SizedBox(width: 8),
-
-                          // Jenis
-                          Expanded(
-                            flex: 30,
-                            child: Container(
-                              height: 48,
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 8),
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                    color: mainColor, width: 1.1),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: DropdownButtonHideUnderline(
-                              child: DropdownButton<String>(
-                                isExpanded: true,
-                                value: item['jenis'],
-                                icon: SvgPicture.asset(
-                                'assets/icons/dropdown.svg',
-                          width: 16,
-                          height: 16,
                         ),
-                        items: jenisOptions
-                            .map(
-                              (e) => DropdownMenuItem(
-                                value: e,
-                                child: Text(
-                                  e,
-                                  style: GoogleFonts.poppins(fontSize: 13),
-                                  overflow: TextOverflow.ellipsis, // ✅ biar teks panjang jadi "..."
-                                  maxLines: 1,
-                                ),
+                      ),
+                      const SizedBox(width: 10),
+                      _voucherApplied
+                          ? IconButton(
+                              onPressed: _removeVoucher,
+                              icon: const Icon(Icons.close, color: Colors.red),
+                              style: IconButton.styleFrom(
+                                backgroundColor: Colors.red.withOpacity(0.1),
                               ),
                             )
-                            .toList(),
-                        onChanged: (v) {
-                          setState(() {
-                            item['jenis'] = v!;
-                          });
-                        },
-                      ),
-
+                          : ElevatedButton(
+                              onPressed: _isValidatingVoucher ? null : _validateVoucher,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: mainColor,
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                               ),
+                              child: _isValidatingVoucher
+                                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                  : Text("Apply", style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w600)),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-
-                          // Harga
-                          Expanded(
-                            flex: 32,
-                            child: Container(
-                              height: 48,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8),
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                    color: mainColor, width: 1.1),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                "Rp. ${item['harga']}",
-                                style: GoogleFonts.poppins(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.black87),
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-
-                          // Tombol Aksi
+                    ],
+                  ),
+                  if (_voucherError != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Text(_voucherError!, style: GoogleFonts.poppins(fontSize: 12, color: Colors.red)),
+                    ),
+                  if (_voucherApplied)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Text("Voucher berhasil diterapkan!", style: GoogleFonts.poppins(fontSize: 12, color: Colors.green, fontWeight: FontWeight.w500)),
+                    ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Price Breakdown
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: mainColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text("Subtotal", style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[700])),
+                            Text("Rp ${_subtotal.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}",
+                                style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[700])),
+                          ],
+                        ),
+                        if (_voucherApplied && _discountAmount > 0) ...[
+                          const SizedBox(height: 8),
                           Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              InkWell(
-                                onTap: () => _deleteService(index),
-                                borderRadius: BorderRadius.circular(8),
-                                child: Container(
-                                  width: 40,
-                                  height: 48,
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                        color: Colors.red, width: 1.5),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: SvgPicture.asset(
-                                    'assets/icons/delete.svg',
-                                    colorFilter: const ColorFilter.mode(
-                                        Colors.red, BlendMode.srcIn),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              InkWell(
-                                onTap: () => _editService(index),
-                                borderRadius: BorderRadius.circular(8),
-                                child: Container(
-                                  width: 40,
-                                  height: 48,
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                        color: Colors.red, width: 1.5),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: SvgPicture.asset(
-                                    'assets/icons/edit.svg',
-                                    colorFilter: const ColorFilter.mode(
-                                        Colors.red, BlendMode.srcIn),
-                                  ),
-                                ),
-                              ),
+                              Text("Diskon Voucher", style: GoogleFonts.poppins(fontSize: 14, color: Colors.green[700])),
+                              Text("- Rp ${_discountAmount.toInt().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}",
+                                  style: GoogleFonts.poppins(fontSize: 14, color: Colors.green[700], fontWeight: FontWeight.w500)),
                             ],
                           ),
                         ],
+                        const Divider(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text("Total", style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold)),
+                            Text("Rp ${_totalAmount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}",
+                                style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: mainColor)),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  Text("Catatan Teknisi", style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: technicianNoteController,
+                    maxLines: 4,
+                    decoration: InputDecoration(
+                      hintText: "Masukkan catatan teknisi...",
+                      hintStyle: GoogleFonts.poppins(fontSize: 13),
+                      contentPadding: const EdgeInsets.all(10),
+                      enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(color: mainColor, width: 1.2)),
+                      focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(color: mainColor, width: 1.5)),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              ),
+            ),
+          ),
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: 58,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                        elevation: 4,
                       ),
-                    );
-                  }),
-                ),
-
-                const SizedBox(height: 16),
-
-                // === Catatan Teknisi ===
-                Text("Catatan Teknisi",
-                    style: GoogleFonts.poppins(
-                        fontSize: 15, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: technicianNoteController,
-                  maxLines: 4,
-                  decoration: InputDecoration(
-                    hintText: "Masukkan catatan teknisi...",
-                    hintStyle: GoogleFonts.poppins(fontSize: 13),
-                    contentPadding: const EdgeInsets.all(10),
-                    enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide:
-                            BorderSide(color: mainColor, width: 1.2)),
-                    focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide:
-                            BorderSide(color: mainColor, width: 1.5)),
+                      child: Text("Batalkan",
+                          style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+                    ),
                   ),
                 ),
-
-                const SizedBox(height: 24),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: SizedBox(
+                    height: 58,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _createTransactionAndContinue,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: mainColor,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                        elevation: 4,
+                      ),
+                      child: _isLoading 
+                        ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        : Text("Lanjutkan", style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
-        ),
-
-        // === Tombol Bawah Tetap ===
-        Container(
-          color: Colors.white,
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-          child: Row(
-            children: [
-              Expanded(
-                child: SizedBox(
-                  height: 58,
-                  child: ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: mainColor,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30)),
-                      elevation: 4,
-                    ),
-                    child: Text("Batalkan",
-                        style: GoogleFonts.poppins(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white)),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: SizedBox(
-                  height: 58,
-                  child: ElevatedButton(
-                    onPressed: () {
-                    Navigator.of(context).push(
-                    MaterialPageRoute(
-                   builder: (context) => PaymentInvoicePage(),
-                     ),
-                     );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: mainColor,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30)),
-                      elevation: 4,
-                    ),
-                    child: Text("Lanjutkan",
-                        style: GoogleFonts.poppins(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white)),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-
-  String _formatDate(DateTime d) {
-    const months = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Ags","Sep","Okt","Nov","Des"];
-    return "${d.day} ${months[d.month - 1]} ${d.year}";
+        ],
+      ),
+    );
   }
 }

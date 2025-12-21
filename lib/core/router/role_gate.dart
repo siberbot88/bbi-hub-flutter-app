@@ -36,7 +36,7 @@ class RequireRole extends StatelessWidget {
 }
 
 class _Forbidden extends StatelessWidget {
-  const _Forbidden({super.key});
+  const _Forbidden();
   @override
   Widget build(BuildContext context) {
     return const Scaffold(

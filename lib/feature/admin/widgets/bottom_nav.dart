@@ -20,7 +20,6 @@ class CustomBottomNavBarAdmin extends StatelessWidget {
         'icon_active': 'assets/svg/home_tebal.svg',
       },
       {
-
         'label': 'Servis',
         'icon_inactive': 'assets/icons/service_tipis.svg',
         'icon_active': 'assets/icons/service_tebal.svg',
@@ -35,48 +34,7 @@ class CustomBottomNavBarAdmin extends StatelessWidget {
         'icon_inactive': 'assets/svg/profil_tipis.svg',
         'icon_active': 'assets/svg/profil_tebal.svg',
       },
-  
     ];
-
-  //  return Scaffold(
-  //     backgroundColor: Colors.white,
-  //     body: Center(
-  //       child: Row(
-  //         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-  //         children: List.generate(items.length, (index) {
-  //           final item = items[index];
-  //           final isActive = index == selectedIndex;
-
-  //           return Column(
-  //             mainAxisSize: MainAxisSize.min,
-  //             children: [
-  //               SvgPicture.asset(
-  //                 isActive
-  //                     ? item['icon_active']!
-  //                     : item['icon_inactive']!,
-  //                 width: 28,
-  //                 height: 28,
-  //                 colorFilter: ColorFilter.mode(
-  //                   isActive ? Colors.red : Colors.grey,
-  //                   BlendMode.srcIn,
-  //                 ),
-  //               ),
-  //               const SizedBox(height: 4),
-  //               Text(
-  //                 item['label']!,
-  //                 style: TextStyle(
-  //                   fontSize: 12,
-  //                   color: isActive ? Colors.red : Colors.grey,
-  //                 ),
-  //               ),
-  //             ],
-  //           );
-  //         }),
-  //       ),
-  //     ),
-  //   );
-
-  
 
     return SafeArea(
       top: false,
@@ -85,7 +43,7 @@ class CustomBottomNavBarAdmin extends StatelessWidget {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final totalWidth = constraints.maxWidth;
-            final itemCount = items.length;
+            final itemCount =  items.length;
             final itemWidth = totalWidth / itemCount;
 
             return Container(
@@ -95,7 +53,7 @@ class CustomBottomNavBarAdmin extends StatelessWidget {
                 borderRadius: BorderRadius.circular(18),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
+                    color: Colors.black.withAlpha(20),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -136,7 +94,6 @@ class CustomBottomNavBarAdmin extends StatelessWidget {
                           onTap: () => onTap(index),
                           splashColor: Colors.transparent,
                           highlightColor: Colors.transparent,
-                          // PERBAIKAN UTAMA: Mengganti Column dengan Stack
                           child: SizedBox(
                             height: 70,
                             child: Stack(
@@ -158,7 +115,6 @@ class CustomBottomNavBarAdmin extends StatelessWidget {
                                   ),
                                 ),
                                 // Posisi Teks diatur dari bawah
-                                // Ini memastikan semua teks akan sejajar
                                 Positioned(
                                   bottom: 12,
                                   child: Text(
@@ -186,8 +142,5 @@ class CustomBottomNavBarAdmin extends StatelessWidget {
         ),
       ),
     );
-
-
-   
   }
 }

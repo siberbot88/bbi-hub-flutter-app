@@ -4,6 +4,10 @@ import 'package:provider/provider.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
+<<<<<<< HEAD
+=======
+import 'package:bengkel_online_flutter/core/widgets/custom_alert.dart';
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -44,6 +48,10 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _loadRememberedEmail() async {
     final remembered = await _storage.read(key: 'remember_email');
+<<<<<<< HEAD
+=======
+    if (!context.mounted) return;
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
     if (remembered != null && remembered.isNotEmpty) {
       setState(() {
         emailController.text = remembered;
@@ -142,7 +150,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   GestureDetector(
                     onTap: () {
-                      Navigator.pushNamed(context, "/changePassword");
+                      Navigator.pushNamed(context, "/forgot-password");
                     },
                     child: Text(
                       "Forgot password?",
@@ -169,7 +177,7 @@ class _LoginPageState extends State<LoginPage> {
                         borderRadius: BorderRadius.circular(28)),
                     elevation: 8,
                     shadowColor:
-                    const Color.fromARGB(255, 215, 43, 28).withOpacity(0.6),
+                    const Color.fromARGB(255, 215, 43, 28).withAlpha(153),
                   ),
                   onPressed: _isLoading ? null : () async {
                     FocusScope.of(context).unfocus();
@@ -177,8 +185,11 @@ class _LoginPageState extends State<LoginPage> {
                     final password = passwordController.text.trim();
 
                     if (email.isEmpty || password.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Email dan password tidak boleh kosong')),
+                      CustomAlert.show(
+                        context,
+                        title: "Peringatan",
+                        message: "Email dan password tidak boleh kosong",
+                        type: AlertType.warning,
                       );
                       return;
                     }
@@ -191,21 +202,41 @@ class _LoginPageState extends State<LoginPage> {
                       // Simpan / hapus email remembered
                       await _persistRemember(rememberMe, email);
 
+<<<<<<< HEAD
                       if (success) {
                         // Jika server wajibkan ganti password → arahkan ke halaman ubah password
                         if (auth.mustChangePassword) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Silakan ganti password Anda terlebih dahulu')),
                           );
+=======
+                      if (!context.mounted) return;
+
+                      if (success) {
+                        // Jika server wajibkan ganti password → arahkan ke halaman ubah password
+                        if (auth.mustChangePassword) {
+                          CustomAlert.show(
+                            context,
+                            title: "Perhatian",
+                            message: "Silakan ganti password Anda terlebih dahulu",
+                            type: AlertType.warning,
+                          );
+                          if (!context.mounted) return;
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
                           Navigator.pushNamedAndRemoveUntil(context, '/changePassword', (_) => false);
                         } else {
                           Navigator.pushNamedAndRemoveUntil(context, '/main', (_) => false);
                         }
                       }
                     } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
-                      );
+                      if (context.mounted) {
+                        CustomAlert.show(
+                          context,
+                          title: "Login Gagal",
+                          message: e.toString().replaceFirst('Exception: ', ''),
+                          type: AlertType.error,
+                        );
+                      }
                     } finally {
                       if (mounted) setState(() => _isLoading = false);
                     }
@@ -330,7 +361,7 @@ class _LoginPageState extends State<LoginPage> {
               color: Color.fromARGB(255, 215, 43, 28), width: 2),
         ),
         filled: true,
-        fillColor: const Color.fromARGB(222, 255, 255, 255).withOpacity(0.4),
+        fillColor: const Color.fromARGB(222, 255, 255, 255).withAlpha(102),
       ),
       style: GoogleFonts.poppins(color: Colors.black),
     );
