@@ -150,6 +150,50 @@ class ServiceCard extends StatelessWidget {
     );
   }
 
+  Future<void> _handleAccept(BuildContext context) async {
+    // 1. Show Loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      // 2. Call API
+      // Note: provider.acceptServiceAsAdmin already calls fetchServices() internally if successful
+      // but let's be explicit if needed. AdminServiceProvider.acceptServiceAsAdmin returns void currently
+      // but throws on error.
+      await context.read<AdminServiceProvider>().acceptServiceAsAdmin(service.id);
+      
+      if (!context.mounted) return;
+      // Close loading dialog
+      Navigator.of(context, rootNavigator: true).pop();
+
+      // 3. Show Success Message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Jadwal diterima! Masuk ke tab 'Terima'"),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      
+      // No navigation needed, list updates automatically via Provider
+    } catch (e) {
+      if (!context.mounted) return;
+      // Close loading dialog
+      Navigator.of(context, rootNavigator: true).pop();
+      
+      // Show Error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Gagal menerima jadwal: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   Widget _buildActionButtons(BuildContext context) {
     final status = (service.acceptanceStatus ?? 'pending').toLowerCase();
 
@@ -185,7 +229,11 @@ class ServiceCard extends StatelessWidget {
               onPressed: () => showAcceptDialog(
                 context,
                 onConfirm: () {
-                  context.read<AdminServiceProvider>().acceptServiceAsAdmin(service.id);
+                   // Close the generic confirmation dialog first
+                   // Wait, showAcceptDialog handles onConfirm. 
+                   // Let's modify showAcceptDialog call or just call _handleAccept directly?
+                   // showAcceptDialog typically closes itself then calls onConfirm.
+                   _handleAccept(context);
                 },
               ),
               style: ElevatedButton.styleFrom(
