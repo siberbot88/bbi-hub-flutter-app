@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:bengkel_online_flutter/feature/owner/widgets/custom_header.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/repositories/feedback_repository.dart';
+import '../../../../core/models/feedback_model.dart';
+import '../widgets/custom_header.dart'; // Ensure correct import
 
 class FeedbackPage extends StatefulWidget {
   const FeedbackPage({super.key});
@@ -13,69 +15,95 @@ class FeedbackPage extends StatefulWidget {
 }
 
 class _FeedbackPageState extends State<FeedbackPage> {
+  final FeedbackRepository _repository = FeedbackRepository();
+  final ScrollController _scrollController = ScrollController();
+
+  // State
+  bool _isLoading = true;
+  bool _isLoadingMore = false;
+  String _errorMessage = '';
+  
+  // Data
+  FeedbackSummary? _summary;
+  List<FeedbackItem> _reviews = [];
+  int _currentPage = 1;
+  int _lastPage = 1;
   String _selectedFilter = 'semua'; // semua | 5 | 4 | 3 | 2 | 1
 
-  // Dummy Data
-  final _reviews = <_Review>[
-    _Review(
-      initials: 'BS',
-      name: 'Budi Santoso',
-      ago: '2 jam lalu',
-      stars: 5,
-      service: 'Ganti Oli & Tune Up',
-      text: 'Pelayanan sangat memuaskan! Mekanik ramah dan profesional. Harga juga transparan, dijelaskan detail sebelum pengerjaan. Pasti balik lagi!',
-      avatarColor: Colors.blueAccent,
-    ),
-    _Review(
-      initials: 'SN',
-      name: 'Siti Nurhaliza',
-      ago: '1 hari lalu',
-      stars: 5,
-      service: 'Service Berkala',
-      text: 'Bengkel terbaik yang pernah saya kunjungi. Ruang tunggu nyaman, wifi kenceng, dan pengerjaan cepat. Recommended!',
-      avatarColor: Colors.purpleAccent,
-    ),
-    _Review(
-      initials: 'AW',
-      name: 'Andi Wijaya',
-      ago: '3 hari lalu',
-      stars: 4,
-      service: 'Perbaikan AC Mobil',
-      text: 'Overall bagus, AC mobil jadi dingin lagi. Cuma agak lama nunggu karena ramai. Tapi hasil kerjanya oke.',
-      avatarColor: Colors.orangeAccent,
-    ),
-    _Review(
-      initials: 'DL',
-      name: 'Dewi Lestari',
-      ago: '5 hari lalu',
-      stars: 5,
-      service: 'Ganti Ban & Balancing',
-      text: 'Cepat dan rapi! Mekaniknya juga kasih saran untuk perawatan ban. Tempatnya bersih dan nyaman.',
-      avatarColor: Colors.teal,
-    ),
-    _Review(
-      initials: 'RH',
-      name: 'Rudi Hartono',
-      ago: '1 minggu lalu',
-      stars: 3,
-      service: 'Servis Rem',
-      text: 'Bagus, rem mobil jadi pakem lagi. Tapi harga agak sedikit mahal dibanding bengkel sebelah.',
-      avatarColor: Colors.redAccent,
-    ),
-    _Review(
-      initials: 'JK',
-      name: 'Joko Kendil',
-      ago: '2 minggu lalu',
-      stars: 5,
-      service: 'Cuci Mobil',
-      text: 'Bersih banget! Sampai ke sela-sela mesin juga dibersihkan. Mantap jiwa!',
-      avatarColor: Colors.indigo,
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _fetchFeedback();
+    _scrollController.addListener(_onScroll);
+  }
 
-  List<_Review> get _filteredReviews {
-    if (_selectedFilter == 'semua') return _reviews;
-    return _reviews.where((r) => r.stars.toString() == _selectedFilter).toList();
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+      if (!_isLoadingMore && _currentPage < _lastPage) {
+        _loadMore();
+      }
+    }
+  }
+
+  Future<void> _fetchFeedback({bool refresh = false}) async {
+    if (!refresh) {
+      setState(() => _isLoading = true);
+    }
+    
+    try {
+      final response = await _repository.getFeedback(page: 1, filter: _selectedFilter);
+      if (mounted) {
+        setState(() {
+          _summary = response.summary;
+          _reviews = response.reviews;
+          _currentPage = response.meta.currentPage;
+          _lastPage = response.meta.lastPage;
+          _isLoading = false;
+          _errorMessage = '';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = e.toString();
+        });
+      }
+    }
+  }
+
+  Future<void> _loadMore() async {
+    setState(() => _isLoadingMore = true);
+    try {
+      final nextPage = _currentPage + 1;
+      final response = await _repository.getFeedback(page: nextPage, filter: _selectedFilter);
+      if (mounted) {
+        setState(() {
+          _reviews.addAll(response.reviews);
+          _currentPage = response.meta.currentPage;
+          _lastPage = response.meta.lastPage;
+          _isLoadingMore = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoadingMore = false);
+    }
+  }
+
+  void _onFilterChanged(String filter) {
+    if (_selectedFilter == filter) return;
+    setState(() {
+      _selectedFilter = filter;
+      _reviews.clear();
+      _summary = null; 
+    });
+    _fetchFeedback();
   }
 
   @override
@@ -86,28 +114,76 @@ class _FeedbackPageState extends State<FeedbackPage> {
         title: "Ulasan Pelanggan",
         onBack: () => Navigator.pop(context),
       ),
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        child: Padding(
-          padding: AppSpacing.screenPadding,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AppSpacing.verticalSpaceLG,
-              _buildRatingOverview(),
-              AppSpacing.verticalSpaceXXL,
-              _buildFilterChips(),
-              AppSpacing.verticalSpaceLG,
-              _buildReviewList(),
-              AppSpacing.verticalSpaceXXL,
-            ],
+      body: _isLoading && _reviews.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: () => _fetchFeedback(refresh: true),
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Padding(
+                  padding: AppSpacing.screenPadding,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AppSpacing.verticalSpaceLG,
+                      
+                      // Show Summary if loaded
+                      if (_summary != null) ...[
+                        _buildRatingOverview(_summary!),
+                        AppSpacing.verticalSpaceXXL,
+                      ],
+                      
+                      _buildFilterChips(),
+                      AppSpacing.verticalSpaceLG,
+                      
+                      if (_reviews.isEmpty)
+                         _buildEmptyState(),
+                      
+                      if (_reviews.isNotEmpty)
+                        _buildReviewList(),
+                        
+                      if (_isLoadingMore)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 20),
+                          child: Center(child: CircularProgressIndicator()),
+                        ),
+                        
+                      AppSpacing.verticalSpaceXXL,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Container(
+      padding: const EdgeInsets.all(40),
+      alignment: Alignment.center,
+      child: Column(
+        children: [
+          Icon(Icons.rate_review_outlined, size: 60, color: Colors.grey[300]),
+          const SizedBox(height: 16),
+          Text(
+            "Belum ada ulasan",
+            style: AppTextStyles.heading4(color: AppColors.textPrimary),
           ),
-        ),
+          const SizedBox(height: 8),
+          Text(
+            _selectedFilter == 'semua' 
+                ? "Pelanggan belum memberikan ulasan."
+                : "Tidak ada ulasan dengan rating $_selectedFilter bintang.",
+            textAlign: TextAlign.center,
+            style: AppTextStyles.bodyMedium(color: AppColors.textSecondary),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildRatingOverview() {
+  Widget _buildRatingOverview(FeedbackSummary d) {
     return Container(
       padding: AppSpacing.paddingXL,
       decoration: BoxDecoration(
@@ -130,7 +206,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
-                  '4.8',
+                  d.average.toStringAsFixed(1),
                   style: AppTextStyles.heading1(color: AppColors.textPrimary).copyWith(
                     fontSize: 52,
                     height: 1,
@@ -141,16 +217,18 @@ class _FeedbackPageState extends State<FeedbackPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(5, (index) {
-                    return const Icon(
+                     // Handle partial stars visually if needed, simpler for now
+                     bool isActive = index < d.average.round();
+                    return Icon(
                       Icons.star_rounded,
-                      color: AppColors.accentOrange,
+                      color: isActive ? AppColors.accentOrange : Colors.grey[300],
                       size: 22,
                     );
                   }),
                 ),
                 AppSpacing.verticalSpaceSM,
                 Text(
-                  '247 Ulasan',
+                  '${d.total} Ulasan',
                   style: AppTextStyles.bodySmall(color: AppColors.textSecondary),
                 ),
               ],
@@ -162,11 +240,11 @@ class _FeedbackPageState extends State<FeedbackPage> {
             flex: 6,
             child: Column(
               children: [
-                _buildProgressBar('5', 0.85),
-                _buildProgressBar('4', 0.10),
-                _buildProgressBar('3', 0.03),
-                _buildProgressBar('2', 0.01),
-                _buildProgressBar('1', 0.01),
+                _buildProgressBar('5', d.distribution['5'] ?? 0),
+                _buildProgressBar('4', d.distribution['4'] ?? 0),
+                _buildProgressBar('3', d.distribution['3'] ?? 0),
+                _buildProgressBar('2', d.distribution['2'] ?? 0),
+                _buildProgressBar('1', d.distribution['1'] ?? 0),
               ],
             ),
           ),
@@ -240,9 +318,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
               ),
               selected: isSelected,
               onSelected: (bool selected) {
-                setState(() {
-                  _selectedFilter = filter;
-                });
+                if(selected) _onFilterChanged(filter);
               },
               backgroundColor: Colors.white,
               selectedColor: AppColors.primaryRed,
@@ -264,16 +340,16 @@ class _FeedbackPageState extends State<FeedbackPage> {
   }
 
   Widget _buildReviewList() {
-    final reviews = _filteredReviews;
     return Column(
-      children: reviews.map((review) => _buildReviewCard(review)).toList(),
+      children: _reviews.map((review) => _buildReviewCard(review)).toList(),
     );
   }
 
-  Widget _buildReviewCard(_Review review) {
+  Widget _buildReviewCard(FeedbackItem review) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(20),
+      // ... (rest of styling same as before)
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: AppRadius.radiusLG,
@@ -299,10 +375,12 @@ class _FeedbackPageState extends State<FeedbackPage> {
           
           // Review Text
           Text(
-            review.text,
+            review.comment.isEmpty ? "Tidak ada komentar." : review.comment,
             style: AppTextStyles.bodyMedium(color: AppColors.textPrimary).copyWith(
               height: 1.6,
               fontSize: 14,
+              fontStyle: review.comment.isEmpty ? FontStyle.italic : FontStyle.normal,
+              color: review.comment.isEmpty ? Colors.grey : AppColors.textPrimary,
             ),
           ),
           
@@ -336,7 +414,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      review.name,
+                      review.customerName,
                       style: AppTextStyles.heading5(color: AppColors.textPrimary).copyWith(
                         fontSize: 15,
                       ),
@@ -348,19 +426,24 @@ class _FeedbackPageState extends State<FeedbackPage> {
                           return Icon(
                             Icons.star_rounded,
                             size: 14,
-                            color: i < review.stars
+                            color: i < review.rating
                                 ? AppColors.accentOrange
                                 : AppColors.border,
                           );
                         }),
                         AppSpacing.horizontalSpaceSM,
                         Text(
-                          review.ago,
+                          review.timeAgo,
                           style: AppTextStyles.caption(color: AppColors.textHint).copyWith(
                             fontSize: 12,
                           ),
                         ),
                       ],
+                    ),
+                    // Show Service Name
+                    Text(
+                      review.serviceName,
+                       style: AppTextStyles.caption(color: AppColors.textSecondary).copyWith(fontSize: 10),
                     ),
                   ],
                 ),
@@ -371,24 +454,4 @@ class _FeedbackPageState extends State<FeedbackPage> {
       ),
     );
   }
-}
-
-class _Review {
-  final String initials;
-  final String name;
-  final String ago;
-  final int stars;
-  final String service;
-  final String text;
-  final Color avatarColor;
-
-  const _Review({
-    required this.initials,
-    required this.name,
-    required this.ago,
-    required this.stars,
-    required this.service,
-    required this.text,
-    required this.avatarColor,
-  });
 }

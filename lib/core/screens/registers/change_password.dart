@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+import 'package:bengkel_online_flutter/core/widgets/custom_alert.dart';
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
 import 'package:bengkel_online_flutter/feature/owner/widgets/custom_header.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -7,6 +11,16 @@ import 'package:provider/provider.dart';
 import 'package:bengkel_online_flutter/core/services/api_service.dart';
 import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
 
+<<<<<<< HEAD
+class ubahPasswordPage extends StatefulWidget {
+  const ubahPasswordPage({super.key});
+
+  @override
+  State<ubahPasswordPage> createState() => _ChangePasswordPageState();
+}
+
+class _ChangePasswordPageState extends State<ubahPasswordPage> {
+=======
 class UbahPasswordPage extends StatefulWidget {
   const UbahPasswordPage({super.key});
 
@@ -15,6 +29,7 @@ class UbahPasswordPage extends StatefulWidget {
 }
 
 class _ChangePasswordPageState extends State<UbahPasswordPage> {
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
   // --- Logika State (Semua sudah ada) ---
   final ApiService _apiService = ApiService();
   bool _saving = false;
@@ -30,6 +45,48 @@ class _ChangePasswordPageState extends State<UbahPasswordPage> {
 
   final _formKey = GlobalKey<FormState>();
   final Color primaryRed = const Color.fromARGB(255, 215, 43, 28);
+<<<<<<< HEAD
+=======
+  
+  // Password Strength State
+  String _passwordStrength = '';
+  Color _strengthColor = Colors.grey;
+  double _strengthValue = 0.0;
+
+  void _checkPasswordStrength(String password) {
+    if (password.isEmpty) {
+      setState(() {
+        _passwordStrength = '';
+        _strengthValue = 0.0;
+        _strengthColor = Colors.grey;
+      });
+      return;
+    }
+
+    double strength = 0;
+    if (password.length >= 8) strength += 0.25;
+    if (password.contains(RegExp(r'[A-Z]'))) strength += 0.25;
+    if (password.contains(RegExp(r'[0-9]'))) strength += 0.25;
+    if (password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) strength += 0.25;
+
+    setState(() {
+      _strengthValue = strength;
+      if (strength <= 0.25) {
+        _passwordStrength = 'Lemah';
+        _strengthColor = Colors.red;
+      } else if (strength <= 0.5) {
+        _passwordStrength = 'Sedang';
+        _strengthColor = Colors.orange;
+      } else if (strength <= 0.75) {
+        _passwordStrength = 'Kuat';
+        _strengthColor = Colors.lightGreen;
+      } else {
+        _passwordStrength = 'Sangat Kuat';
+        _strengthColor = Colors.green;
+      }
+    });
+  }
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
 
   // --- Fungsi _save (Logika dari file Anda) ---
   Future<void> _save() async {
@@ -48,24 +105,57 @@ class _ChangePasswordPageState extends State<UbahPasswordPage> {
         confirmPassword: confirmController.text,
       );
 
-      if (!mounted) return;
-      context.read<AuthProvider>().clearMustChangePassword();
+<<<<<<< HEAD
+      if (mounted) {
+        context.read<AuthProvider>().clearMustChangePassword();
+      }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text("Password berhasil diubah. Masuk ke Dashboard..."),
-          backgroundColor: Colors.green.shade700,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text("Password berhasil diubah. Masuk ke Dashboard..."),
+            backgroundColor: Colors.green.shade700,
+          ),
+        );
+      }
 
-      await Future.delayed(const Duration(milliseconds: 500));
-      if (!mounted) return;
-      Navigator.of(context).pushReplacementNamed('/main');
+      if (mounted) {
+        await Future.delayed(const Duration(milliseconds: 500));
+        Navigator.of(context).pushReplacementNamed('/main');
+      }
     } catch (e) {
       if (mounted) {
         setState(() {
           _errorMessage = e.toString().replaceFirst("Exception: ", "");
         });
+=======
+      if (!mounted) return;
+      context.read<AuthProvider>().clearMustChangePassword();
+
+      // Show Custom Success Alert
+      CustomAlert.show(
+        context,
+        title: 'Berhasil',
+        message: 'Password berhasil diubah. Silakan login kembali jika diperlukan.',
+        type: AlertType.success,
+      );
+
+      await Future.delayed(const Duration(milliseconds: 1500));
+      if (!mounted) return;
+      
+      // Go to main page or logout depending on flow, usually main if inside app
+      Navigator.of(context).pushReplacementNamed('/main');
+    } catch (e) {
+      if (mounted) {
+        // Show Custom Error Alert
+        final msg = e.toString().replaceFirst("Exception: ", "");
+        CustomAlert.show(
+          context,
+          title: 'Gagal Mengubah Password',
+          message: msg,
+          type: AlertType.error,
+        );
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
       }
     } finally {
       if (mounted) {
@@ -101,7 +191,11 @@ class _ChangePasswordPageState extends State<UbahPasswordPage> {
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
+<<<<<<< HEAD
+        borderSide: BorderSide(color: primaryRed.withOpacity(0.5), width: 1.5),
+=======
         borderSide: BorderSide(color: primaryRed.withAlpha(128), width: 1.5),
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -143,7 +237,11 @@ class _ChangePasswordPageState extends State<UbahPasswordPage> {
               // 2. Ornamen / Header Visual
               CircleAvatar(
                 radius: 40,
+<<<<<<< HEAD
+                backgroundColor: primaryRed.withOpacity(0.1),
+=======
                 backgroundColor: primaryRed.withAlpha(26),
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
                 child: Icon(
                   Icons.lock_reset_rounded,
                   color: primaryRed,
@@ -195,6 +293,10 @@ class _ChangePasswordPageState extends State<UbahPasswordPage> {
               TextFormField(
                 controller: newController,
                 obscureText: obscureNew,
+<<<<<<< HEAD
+=======
+                onChanged: _checkPasswordStrength,
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
                 style: GoogleFonts.poppins(fontSize: 14),
                 decoration: _buildInputDecoration(
                   label: "Password Baru",
@@ -209,6 +311,46 @@ class _ChangePasswordPageState extends State<UbahPasswordPage> {
                   return null;
                 },
               ),
+<<<<<<< HEAD
+=======
+              const SizedBox(height: 8),
+              
+              // 🔹 Password Strength Indicator
+              if (newController.text.isNotEmpty)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Kekuatan Password:',
+                          style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
+                        ),
+                        Text(
+                          _passwordStrength,
+                          style: GoogleFonts.poppins(
+                            fontSize: 12, 
+                            fontWeight: FontWeight.bold,
+                            color: _strengthColor
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(2),
+                      child: LinearProgressIndicator(
+                        value: _strengthValue,
+                        backgroundColor: Colors.grey.shade200,
+                        color: _strengthColor,
+                        minHeight: 4,
+                      ),
+                    ),
+                  ],
+                ),
+              
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
               const SizedBox(height: 18),
 
               // 🔹 Confirm Password
@@ -231,7 +373,11 @@ class _ChangePasswordPageState extends State<UbahPasswordPage> {
                 },
               ),
 
+<<<<<<< HEAD
               // 5. Error Message Display
+=======
+              // 5. Error Message Display (Secondary fallback if alert misses)
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
               if (_errorMessage != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 24.0, left: 8, right: 8),
@@ -264,7 +410,11 @@ class _ChangePasswordPageState extends State<UbahPasswordPage> {
                   borderRadius: BorderRadius.circular(12), // Sesuaikan radius
                 ),
                 elevation: 4,
+<<<<<<< HEAD
+                shadowColor: primaryRed.withOpacity(0.4),
+=======
                 shadowColor: primaryRed.withAlpha(102),
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
               ),
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),
@@ -293,4 +443,8 @@ class _ChangePasswordPageState extends State<UbahPasswordPage> {
       ),
     );
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76

@@ -1,8 +1,12 @@
 import 'dart:async';
+<<<<<<< HEAD
+import 'package:intl/date_symbol_data_local.dart'; // ✅ Import intl
+=======
 import 'package:bengkel_online_flutter/feature/admin/providers/admin_service_provider.dart';
 import 'package:bengkel_online_flutter/feature/admin/screens/homepage.dart';
 import 'package:bengkel_online_flutter/feature/admin/screens/service_page.dart';
 import 'package:intl/date_symbol_data_local.dart';
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
 
 import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +14,48 @@ import 'package:provider/provider.dart';
 
 import 'package:bengkel_online_flutter/core/screens/loading_gate.dart';
 import 'package:bengkel_online_flutter/core/screens/login.dart' as login_screen;
+<<<<<<< HEAD
+import 'package:bengkel_online_flutter/core/screens/register.dart';
+import 'package:bengkel_online_flutter/core/screens/registerBengkel.dart';
+import 'package:bengkel_online_flutter/core/screens/registers/registerOwner.dart';
+import 'package:bengkel_online_flutter/core/screens/registeruser.dart';
+import 'package:bengkel_online_flutter/core/screens/splash_screen.dart';
+import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
+
+// ADMIN
+import 'package:bengkel_online_flutter/feature/admin/screens/dashboard.dart';
+import 'package:bengkel_online_flutter/feature/admin/screens/homepage.dart';
+import 'package:bengkel_online_flutter/feature/admin/screens/profilpage.dart' as admin_profil;
+import 'package:bengkel_online_flutter/feature/admin/screens/service_page.dart' as admin;
+import 'package:bengkel_online_flutter/feature/admin/widgets/bottom_nav.dart';
+import 'package:bengkel_online_flutter/core/screens/registers/change_password.dart' as change_screen;
+
+// MECHANIC
+import 'package:bengkel_online_flutter/feature/mechanic/screens/homepageMechanic.dart';
+import 'package:bengkel_online_flutter/feature/mechanic/screens/profil_page.dart' as mechanic_profil;
+import 'package:bengkel_online_flutter/feature/mechanic/screens/service_pagemechanic.dart' as mechanic;
+import 'package:bengkel_online_flutter/feature/mechanic/widgets/bottom_navbar.dart';
+
+// OWNER
+import 'package:bengkel_online_flutter/feature/owner/providers/employee_provider.dart';
+import 'package:bengkel_online_flutter/feature/owner/providers/service_provider.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/homepageOwner.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/listWork.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/onBoarding.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/profilpage_owner.dart' as owner_profil;
+import 'package:bengkel_online_flutter/feature/owner/screens/reportPages.dart';
+import 'package:bengkel_online_flutter/feature/owner/screens/staffManagement.dart';
+import 'package:bengkel_online_flutter/feature/owner/widgets/bottom_nav_owner.dart';
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // ✅ Inisialisasi format tanggal (PENTING untuk Voucher)
+  await initializeDateFormatting('id_ID', null);
+
+=======
 
 import 'package:bengkel_online_flutter/core/screens/registers/register.dart';
 import 'package:bengkel_online_flutter/feature/auth/screens/forgot_password_page.dart' as forgot_pass;
@@ -17,6 +63,8 @@ import 'package:bengkel_online_flutter/feature/auth/screens/reset_password_page.
 
 import 'package:bengkel_online_flutter/core/screens/splash_screen.dart';
 import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
+import 'package:bengkel_online_flutter/feature/auth/screens/verify_email_page.dart';
+import 'package:bengkel_online_flutter/feature/auth/screens/workshop_waiting_page.dart';
 
 // OFFLINE DETECTION
 import 'package:bengkel_online_flutter/core/widgets/connectivity_wrapper.dart';
@@ -52,6 +100,7 @@ void main() async {
   // ✅ Inisialisasi format tanggal (PENTING untuk Voucher)
   await initializeDateFormatting('id_ID', null);
 
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
   runApp(
     MultiProvider(
       providers: [
@@ -101,7 +150,7 @@ class _MyAppState extends State<MyApp> {
 
     _linkSub = _appLinks.uriLinkStream.listen(
       (uri) {
-        _handleUri(uri);
+        if (uri != null) _handleUri(uri);
       },
       onError: (_) {},
     );
@@ -154,12 +203,18 @@ class _MyAppState extends State<MyApp> {
         "/onboarding": (context) => const OnboardingScreen(),
         "/login": (context) => const login_screen.LoginPage(),
         "/gate": (context) => const LoadingGate(),
+
+        // ✅ RoleEntry akan menangani parameter index navbar
         "/main": (context) => const RoleEntry(),
+        "/verify-email": (context) => const VerifyEmailPage(),
+        "/workshop-waiting": (context) => const WorkshopWaitingPage(),
 
         "/home": (context) => const DashboardScreen(),
         "/changePassword": (context) => const change_screen.UbahPasswordPage(),
         "/list": (context) => const ListWorkPage(),
-
+        "/register/owner/bengkel": (context) => RegisterBengkelScreen(),
+        "/register/user": (context) => RegisterScreen(),
+        
         "/dashboard": (context) => const DashboardPage(),
         "/register/owner": (context) => const RegisterFlowPage(),
         "/owner/profile": (context) => owner_profil.ProfilePageOwner(),
@@ -186,7 +241,10 @@ class _MyAppState extends State<MyApp> {
         return null;
       },
       onUnknownRoute: (_) => MaterialPageRoute(builder: (_) => const SplashScreen()),
+<<<<<<< HEAD
+=======
       ),
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
     );
   }
 }
@@ -215,7 +273,27 @@ class RoleEntry extends StatelessWidget {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
+<<<<<<< HEAD
+    if (mustChange && (role == 'mechanic' || role == 'admin')) {
+=======
+    // 2. Cek status email verify
+    if (!auth.isEmailVerified) {
+       WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushReplacementNamed(context, '/verify-email');
+      });
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    // 3. Cek status workshop (hanya owner)
+    if (role == 'owner' && !auth.isWorkshopVerified) {
+       WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushReplacementNamed(context, '/workshop-waiting');
+      });
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     if (mustChange && role == 'admin') {
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.pushReplacementNamed(context, '/changePassword');
       });
@@ -244,10 +322,19 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   late int _selectedIndex;
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> main
   
   // State for sub-navigation (deep-linking)
   int? _serviceInitialTab;
   String? _serviceInitialFilter;
+<<<<<<< HEAD
+=======
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
+>>>>>>> main
 
   @override
   void initState() {
@@ -256,6 +343,12 @@ class _MainPageState extends State<MainPage> {
     _selectedIndex = widget.initialIndex;
   }
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+  void _onItemTapped(int index) => setState(() => _selectedIndex = index);
+=======
+>>>>>>> main
   void _onItemTapped(int index, {int? serviceTab, String? serviceFilter}) {
     setState(() {
       _selectedIndex = index;
@@ -263,6 +356,10 @@ class _MainPageState extends State<MainPage> {
       _serviceInitialFilter = serviceFilter;
     });
   }
+<<<<<<< HEAD
+=======
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
+>>>>>>> main
 
   @override
   Widget build(BuildContext context) {
@@ -348,6 +445,10 @@ String? _pickWorkshopUuid(dynamic user) {
   } catch (_) {}
 
   return null;
+<<<<<<< HEAD
+}
+=======
 }
 
 
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76

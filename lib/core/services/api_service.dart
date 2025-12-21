@@ -86,9 +86,13 @@ class ApiService {
 
   // Helper untuk mengambil pesan error dengan aman dari JSON Laravel
   String _getErrorMessage(Map<String, dynamic> json) {
+<<<<<<< HEAD
     final message = json['message'];
     if (message is String) return message;
 
+=======
+    // 1. Prioritaskan 'errors' object (Validasi Laravel)
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
     final errors = json['errors'];
     if (errors is Map) {
       final firstErrorValue = errors.values.first;
@@ -98,11 +102,50 @@ class ApiService {
       }
     }
 
+<<<<<<< HEAD
+=======
+    // 2. Fallback ke 'message' generic
+    final message = json['message'];
+    if (message is String) return message;
+
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
     return 'Terjadi kesalahan yang tidak diketahui';
   }
 
   /* ========================= AUTH ========================= */
 
+<<<<<<< HEAD
+=======
+  // Generic POST helper
+  Future<dynamic> post(String endpoint, Map<String, dynamic> body) async {
+    try {
+      final uri = Uri.parse('$_baseUrl$endpoint');
+      final headers = await _getAuthHeaders();
+      final bodyString = jsonEncode(body);
+
+      _debugRequest('POST_GENERIC', uri, headers, bodyString);
+      final res = await http.post(uri, headers: headers, body: bodyString);
+      _debugResponse('POST_GENERIC', res);
+
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        if (_isJsonResponse(res)) {
+           return _tryDecodeJson(res.body);
+        }
+        return res.body; 
+      }
+      
+      if (_isJsonResponse(res)) {
+         final j = _tryDecodeJson(res.body);
+         if (j is Map<String, dynamic>) throw Exception(_getErrorMessage(j));
+      }
+      throw Exception('Request failed (HTTP ${res.statusCode})');
+
+    } catch (e) {
+      throw Exception(e.toString().replaceFirst("Exception: ", ""));
+    }
+  }
+
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
   Future<Map<String, dynamic>> login(String email, String password) async {
     try {
       final uri = Uri.parse('${_baseUrl}auth/login');
@@ -499,6 +542,11 @@ class ApiService {
 
   Future<List<Employment>> fetchOwnerEmployees({int page = 1, String? search}) async {
     try {
+<<<<<<< HEAD
+      final uri = Uri.parse('${_baseUrl}owners/employee');
+      final headers = await _getAuthHeaders();
+
+=======
       final queryParams = <String, String>{
         'page': page.toString(),
       };
@@ -509,6 +557,7 @@ class ApiService {
       final uri = Uri.parse('${_baseUrl}owners/employee').replace(queryParameters: queryParams);
       final headers = await _getAuthHeaders();
 
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
       _debugRequest('FETCH_EMPLOYEES', uri, headers, null);
       final res = await http.get(uri, headers: headers);
       _debugResponse('FETCH_EMPLOYEES', res);
@@ -532,6 +581,15 @@ class ApiService {
         final dataWrapper = decoded['data'];
 
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+      return listJson
+          .whereType<Map<String, dynamic>>()
+          .map((e) => Employment.fromJson(e))
+          .toList();
+=======
+>>>>>>> main
         // Case 1: Pagination wrapper
         if (dataWrapper is Map<String, dynamic> && dataWrapper.containsKey('data')) {
           final list = dataWrapper['data'];
@@ -562,6 +620,7 @@ class ApiService {
       }
 
       return <Employment>[];
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
     } catch (e) {
       throw Exception('Gagal mengambil data employee: '
           '${e.toString().replaceFirst("Exception: ", "")}');
@@ -818,6 +877,8 @@ class ApiService {
     } catch (e) {
       throw Exception('Gagal mengambil detail service: '
           '${e.toString().replaceFirst("Exception: ", "")}');
+<<<<<<< HEAD
+=======
     }
   }
 
@@ -854,6 +915,7 @@ class ApiService {
       throw Exception('Checkout gagal (HTTP ${res.statusCode}).');
     } catch (e) {
       throw Exception('Gagal checkout: ${e.toString().replaceFirst("Exception: ", "")}');
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
     }
   }
 
@@ -1079,6 +1141,8 @@ class ApiService {
       throw Exception('Gagal menghapus voucher (HTTP ${res.statusCode})');
     } catch (e) {
       throw Exception('Error delete voucher: $e');
+<<<<<<< HEAD
+=======
     }
   }
 
@@ -2024,6 +2088,10 @@ class ApiService {
       throw Exception('Failed to mark invoice as paid (HTTP ${res.statusCode})');
     } catch (e) {
       throw Exception('Mark invoice paid error: $e');
+<<<<<<< HEAD
+=======
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
+>>>>>>> main
     }
   }
 }

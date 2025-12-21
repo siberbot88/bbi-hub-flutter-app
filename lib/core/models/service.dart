@@ -35,6 +35,12 @@ class ServiceModel {
   /// Estimasi selesai (optional)
   final DateTime? estimatedTime;
 
+<<<<<<< HEAD
+  /// Status utama service: pending/accept/in progress/completed/cancelled
+  final String status;
+
+  /// status penerimaan (opsional, dari kolom `acceptance_status`)
+=======
   /// Status utama service:
   /// pending / in progress / completed / menunggu pembayaran / lunas / cancelled
   final String status;
@@ -43,6 +49,7 @@ class ServiceModel {
   final String? type;
 
   /// status penerimaan (dari kolom `acceptance_status`)
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
   final String? acceptanceStatus;
 
   /// Waktu saat service di-accept (admin)
@@ -63,7 +70,11 @@ class ServiceModel {
   final Vehicle? vehicle;
   final String? workshopName;
 
+<<<<<<< HEAD
+  // teknisi (opsional)
+=======
   // teknisi (opsional, dari relasi `mechanic`)
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
   final MechanicRef? mechanic;
 
   // item transaksi (sparepart/jasa tambahan)
@@ -76,7 +87,10 @@ class ServiceModel {
   final String? categoryName;
 
   final String? reason;
+<<<<<<< HEAD
+=======
   final String? reasonDescription; // <--- dari kolom reason_description
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
   final String? feedbackMechanic;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -90,7 +104,14 @@ class ServiceModel {
     this.scheduledDate,
     this.estimatedTime,
     required this.status,
+<<<<<<< HEAD
     this.type,
+=======
+<<<<<<< HEAD
+=======
+    this.type,
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
+>>>>>>> main
     this.acceptanceStatus,
     this.acceptedAt,
     this.completedAt,
@@ -107,7 +128,10 @@ class ServiceModel {
     this.note,
     this.categoryName,
     this.reason,
+<<<<<<< HEAD
+=======
     this.reasonDescription,
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
     this.feedbackMechanic,
     this.createdAt,
     this.updatedAt,
@@ -121,6 +145,13 @@ class ServiceModel {
       return null;
     }
 
+<<<<<<< HEAD
+    String? _vehicleId() {
+      if (json['vehicle_id'] != null) return json['vehicle_id'].toString();
+      if (json['vehicleId'] != null) return json['vehicleId'].toString();
+      final v = json['vehicle'];
+      if (v is Map && v['id'] != null) return v['id'].toString();
+=======
     String? vehicleId() {
       if (json['vehicle_uuid'] != null) {
         return json['vehicle_uuid'].toString();
@@ -135,11 +166,16 @@ class ServiceModel {
       if (v is Map && v['id'] != null) {
         return v['id'].toString();
       }
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
       return null;
     }
 
     // workshop name dari relasi
+<<<<<<< HEAD
+    String? _workshopName() {
+=======
     String? workshopName() {
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
       final w = json['workshop'];
       if (w is Map &&
           w['name'] is String &&
@@ -150,7 +186,11 @@ class ServiceModel {
     }
 
     // mechanic dari relasi
+<<<<<<< HEAD
+    MechanicRef? _mechanic() {
+=======
     MechanicRef? mechanic() {
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
       final m = json['mechanic'];
       if (m is Map) {
         return MechanicRef.fromJson(Map<String, dynamic>.from(m));
@@ -169,6 +209,20 @@ class ServiceModel {
       price: json['price'] is num
           ? json['price']
           : num.tryParse('${json['price']}'),
+<<<<<<< HEAD
+      scheduledDate: _parseDT(json['scheduled_date']),
+      estimatedTime: _parseDT(json['estimated_time']),
+      status: (json['status'] ?? '').toString(),
+
+      /// status & waktu status
+      acceptanceStatus: json['acceptance_status']?.toString(),
+      acceptedAt: _parseDT(json['accepted_at']),
+      completedAt: _parseDT(json['completed_at']),
+
+      customerUuid: json['customer_uuid']?.toString(),
+      workshopUuid: json['workshop_uuid']?.toString(),
+      vehicleId: _vehicleId(),
+=======
       scheduledDate: parseDT(json['scheduled_date']),
       estimatedTime: parseDT(json['estimated_time']),
       status: (json['status'] ?? '').toString(),
@@ -184,12 +238,28 @@ class ServiceModel {
       vehicleId: vehicleId(),
       mechanicUuid: json['mechanic_uuid']?.toString(),
       transactionUuid: json['transaction_uuid']?.toString() ?? json['transaction_id']?.toString(),
+<<<<<<< HEAD
+=======
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
+>>>>>>> main
 
       customer: (json['customer'] is Map)
           ? Customer.fromJson(
         Map<String, dynamic>.from(json['customer'] as Map),
       )
           : null,
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+      vehicle: (json['vehicle'] is Map)
+          ? Vehicle.fromJson(
+        Map<String, dynamic>.from(json['vehicle'] as Map),
+      )
+          : null,
+      workshopName: _workshopName(),
+      mechanic: _mechanic(),
+=======
+>>>>>>> main
       vehicle: () {
         final vJson = json['vehicle'];
         if (vJson is Map) {
@@ -201,12 +271,17 @@ class ServiceModel {
       }(),
       workshopName: workshopName(),
       mechanic: mechanic(),
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
 
       items: itemsJson
           .whereType<Map>()
           .map(
             (e) => TransactionItem.fromJson(
+<<<<<<< HEAD
+          Map<String, dynamic>.from(e as Map),
+=======
           Map<String, dynamic>.from(e),
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
         ),
       )
           .toList(),
@@ -217,16 +292,26 @@ class ServiceModel {
       (json['category_service'] ?? json['category_name'])?.toString(),
 
       reason: json['reason']?.toString(),
+<<<<<<< HEAD
+      feedbackMechanic: json['feedback_mechanic']?.toString(),
+      createdAt: _parseDT(json['created_at']),
+      updatedAt: _parseDT(json['updated_at']),
+=======
       reasonDescription: json['reason_description']?.toString(),
       feedbackMechanic: json['feedback_mechanic']?.toString(),
       createdAt: parseDT(json['created_at']),
       updatedAt: parseDT(json['updated_at']),
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
     );
   }
 
   /// Serialization ringan (tanpa memanggil `toJson()` dari model lain).
   Map<String, dynamic> toJson({bool includeRelations = false}) {
+<<<<<<< HEAD
+    Map<String, dynamic>? _customerJson() {
+=======
     Map<String, dynamic>? customerJson() {
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
       if (!includeRelations || customer == null) return null;
       try {
         final c = customer as dynamic;
@@ -239,7 +324,11 @@ class ServiceModel {
       }
     }
 
+<<<<<<< HEAD
+    Map<String, dynamic>? _vehicleJson() {
+=======
     Map<String, dynamic>? vehicleJson() {
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
       if (!includeRelations || vehicle == null) return null;
       try {
         final v = vehicle as dynamic;
@@ -255,7 +344,11 @@ class ServiceModel {
       }
     }
 
+<<<<<<< HEAD
+    List<Map<String, dynamic>>? _itemsJson() {
+=======
     List<Map<String, dynamic>>? itemsJson() {
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
       if (!includeRelations || items == null) return null;
       final out = <Map<String, dynamic>>[];
       for (final it in items!) {
@@ -284,13 +377,33 @@ class ServiceModel {
       if (estimatedTime != null)
         'estimated_time': estimatedTime!.toIso8601String(),
       'status': status,
+<<<<<<< HEAD
       if (type != null) 'type': type,
+=======
+<<<<<<< HEAD
+=======
+      if (type != null) 'type': type,
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
+>>>>>>> main
       if (acceptanceStatus != null) 'acceptance_status': acceptanceStatus,
       if (acceptedAt != null) 'accepted_at': acceptedAt!.toIso8601String(),
       if (completedAt != null) 'completed_at': completedAt!.toIso8601String(),
       if (customerUuid != null) 'customer_uuid': customerUuid,
       if (workshopUuid != null) 'workshop_uuid': workshopUuid,
       if (vehicleId != null) 'vehicle_id': vehicleId,
+<<<<<<< HEAD
+      if (includeRelations && workshopName != null)
+        'workshop': {'name': workshopName},
+      if (mechanic != null) 'mechanic': mechanic!.toJson(),
+      if (includeRelations && _customerJson() != null)
+        'customer': _customerJson(),
+      if (includeRelations && _vehicleJson() != null)
+        'vehicle': _vehicleJson(),
+      if (includeRelations && _itemsJson() != null) 'items': _itemsJson(),
+      if (note != null) 'note': note,
+      if (categoryName != null) 'category_service': categoryName,
+      if (reason != null) 'reason': reason,
+=======
       if (mechanicUuid != null) 'mechanic_uuid': mechanicUuid,
       if (includeRelations && workshopName != null)
         'workshop': {'name': workshopName},
@@ -305,6 +418,7 @@ class ServiceModel {
       if (reason != null) 'reason': reason,
       if (reasonDescription != null)
         'reason_description': reasonDescription,
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
       if (feedbackMechanic != null) 'feedback_mechanic': feedbackMechanic,
       if (createdAt != null) 'created_at': createdAt!.toIso8601String(),
       if (updatedAt != null) 'updated_at': updatedAt!.toIso8601String(),
@@ -316,6 +430,8 @@ class ServiceModel {
     final n = mechanic?.name ?? '';
     return n.isEmpty ? '-' : n;
   }
+<<<<<<< HEAD
+=======
 
   // ===== Display Getters untuk UI (Type-safe) =====
 
@@ -356,4 +472,5 @@ class ServiceModel {
   // Getters for compatibility
   String? get complaint => description;
   String? get request => description;
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
 }

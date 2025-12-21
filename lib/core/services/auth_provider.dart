@@ -11,7 +11,11 @@ class AuthProvider with ChangeNotifier {
   String? _token;
   bool _isLoggedIn = false;
   String? _authError;
+<<<<<<< HEAD
+  bool _mustChangePassword = false; // <- flag paksa ganti password
+=======
   bool _mustChangePassword = false; 
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
 
   // --- GETTERS (Untuk dibaca UI) ---
   User? get user => _user;
@@ -22,6 +26,25 @@ class AuthProvider with ChangeNotifier {
   bool hasRole(String r) => _user?.role == r;
   bool get mustChangePassword => _mustChangePassword;
 
+<<<<<<< HEAD
+=======
+  // Verification Getters
+  bool get isEmailVerified => _user?.emailVerifiedAt != null;
+  bool get isWorkshopVerified {
+    // If not owner, assume true (mechanic doesn't need workshop verification personally?)
+    // Or logic: Mechanic needs verified workshop too? For now assume only Owner login flow.
+    if (!hasRole('owner')) return true; 
+    
+    // Check user's first workshop status
+    if (_user?.workshops == null || _user!.workshops!.isEmpty) return false; // No workshop = not verified
+    return _user!.workshops!.first.status == 'active';
+  }
+  String get workshopStatus {
+      if (_user?.workshops == null || _user!.workshops!.isEmpty) return 'none';
+      return _user!.workshops!.first.status;
+  }
+
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
   /* ================= AUTH ================ */
 
   Future<bool> register({
@@ -148,12 +171,27 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+<<<<<<< HEAD
+  /// Dipanggil dari ubahPasswordPage setelah API sukses
+=======
   /// Dipanggil dari UbahPasswordPage setelah API sukses
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
   void clearMustChangePassword() {
     _mustChangePassword = false;
     notifyListeners();
   }
 
+<<<<<<< HEAD
+=======
+  Future<void> sendVerificationEmail() async {
+      try {
+          await _apiService.post('email/resend', {}); // Asumsi ApiService punya method helper atau pakai dio langsung
+      } catch (e) {
+         throw Exception("Gagal mengirim ulang email: $e");
+      }
+  }
+
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
   /* ============== Helpers ============== */
 
   bool _extractMustChangePassword(Map data, dynamic userJson) {

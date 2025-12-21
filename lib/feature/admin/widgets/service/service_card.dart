@@ -150,6 +150,7 @@ class ServiceCard extends StatelessWidget {
     );
   }
 
+<<<<<<< HEAD
   Future<void> _handleAccept(BuildContext context) async {
     // 1. Show Loading
     showDialog(
@@ -194,6 +195,8 @@ class ServiceCard extends StatelessWidget {
     }
   }
 
+=======
+>>>>>>> main
   Widget _buildActionButtons(BuildContext context) {
     final status = (service.acceptanceStatus ?? 'pending').toLowerCase();
 
@@ -229,11 +232,15 @@ class ServiceCard extends StatelessWidget {
               onPressed: () => showAcceptDialog(
                 context,
                 onConfirm: () {
+<<<<<<< HEAD
                    // Close the generic confirmation dialog first
                    // Wait, showAcceptDialog handles onConfirm. 
                    // Let's modify showAcceptDialog call or just call _handleAccept directly?
                    // showAcceptDialog typically closes itself then calls onConfirm.
                    _handleAccept(context);
+=======
+                  context.read<AdminServiceProvider>().acceptServiceAsAdmin(service.id);
+>>>>>>> main
                 },
               ),
               style: ElevatedButton.styleFrom(

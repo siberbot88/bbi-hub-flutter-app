@@ -21,6 +21,7 @@ class Workshop {
   final String closingTime;
   final String operationalDays;
   final bool isActive;
+  final String status;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -45,6 +46,7 @@ class Workshop {
     required this.closingTime,
     required this.operationalDays,
     required this.isActive,
+    this.status = 'pending',
     this.createdAt,
     this.updatedAt,
   });
@@ -109,6 +111,7 @@ class Workshop {
         closingTime: json['closing_time'] as String? ?? '00:00',
         operationalDays: json['operational_days'] as String? ?? '',
         isActive: parseBoolSafe(json['is_active']),
+        status: json['status'] as String? ?? 'pending',
         createdAt: parseDateTimeSafe(json['created_at']),
         updatedAt: parseDateTimeSafe(json['updated_at']),
       );

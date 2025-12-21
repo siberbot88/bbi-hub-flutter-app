@@ -4,7 +4,10 @@ import 'package:provider/provider.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
+<<<<<<< HEAD
+=======
 import 'package:bengkel_online_flutter/core/widgets/custom_alert.dart';
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -45,7 +48,10 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _loadRememberedEmail() async {
     final remembered = await _storage.read(key: 'remember_email');
+<<<<<<< HEAD
+=======
     if (!context.mounted) return;
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
     if (remembered != null && remembered.isNotEmpty) {
       setState(() {
         emailController.text = remembered;
@@ -196,6 +202,14 @@ class _LoginPageState extends State<LoginPage> {
                       // Simpan / hapus email remembered
                       await _persistRemember(rememberMe, email);
 
+<<<<<<< HEAD
+                      if (success) {
+                        // Jika server wajibkan ganti password → arahkan ke halaman ubah password
+                        if (auth.mustChangePassword) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Silakan ganti password Anda terlebih dahulu')),
+                          );
+=======
                       if (!context.mounted) return;
 
                       if (success) {
@@ -208,6 +222,7 @@ class _LoginPageState extends State<LoginPage> {
                             type: AlertType.warning,
                           );
                           if (!context.mounted) return;
+>>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
                           Navigator.pushNamedAndRemoveUntil(context, '/changePassword', (_) => false);
                         } else {
                           Navigator.pushNamedAndRemoveUntil(context, '/main', (_) => false);
