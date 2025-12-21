@@ -244,6 +244,10 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   late int _selectedIndex;
+  
+  // State for sub-navigation (deep-linking)
+  int? _serviceInitialTab;
+  String? _serviceInitialFilter;
 
   @override
   void initState() {
@@ -252,12 +256,23 @@ class _MainPageState extends State<MainPage> {
     _selectedIndex = widget.initialIndex;
   }
 
-  void _onItemTapped(int index) => setState(() => _selectedIndex = index);
+  void _onItemTapped(int index, {int? serviceTab, String? serviceFilter}) {
+    setState(() {
+      _selectedIndex = index;
+      _serviceInitialTab = serviceTab;
+      _serviceInitialFilter = serviceFilter;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     late final List<Widget> pages;
     late final Widget bottomNavBar;
+
+    late final Widget homePage;
+    late final Widget servicePage;
+    late final Widget dashboardPage;
+    late final Widget profilePage;
 
     switch (widget.role) {
       case "owner":
@@ -269,20 +284,28 @@ class _MainPageState extends State<MainPage> {
         ];
         bottomNavBar = CustomBottomNavBarOwner(
           selectedIndex: _selectedIndex,
-          onTap: _onItemTapped,
+          onTap: (index) => _onItemTapped(index),
         );
         break;
 
       case "admin":
+        homePage = HomePage(onTabChange: _onItemTapped);
+        servicePage = ServicePageAdmin(
+          initialTab: _serviceInitialTab,
+          initialFilter: _serviceInitialFilter,
+        );
+        dashboardPage = const DashboardPage();
+        profilePage = const admin_profil.ProfilePageAdmin();
+
         pages = [
-          const HomePage(),
-          const ServicePageAdmin(),
-          const DashboardPage(),
-          const admin_profil.ProfilePageAdmin(),
+          homePage,
+          servicePage,
+          dashboardPage,
+          profilePage,
         ];
         bottomNavBar = CustomBottomNavBarAdmin(
           selectedIndex: _selectedIndex,
-          onTap: _onItemTapped,
+          onTap: (index) => _onItemTapped(index),
         );
         break;
 

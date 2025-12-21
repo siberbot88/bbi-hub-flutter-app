@@ -8,6 +8,7 @@ class HomeStatCard extends StatelessWidget {
   final String assetPath;
   final String updateDate;
   final String percentage;
+  final bool isLoading;
 
   const HomeStatCard({
     super.key,
@@ -16,6 +17,7 @@ class HomeStatCard extends StatelessWidget {
     required this.assetPath,
     this.updateDate = "2 days ago",
     this.percentage = "+15%",
+    this.isLoading = false,
   });
 
   @override
@@ -73,15 +75,24 @@ class HomeStatCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Flexible(
-                  child: Text(
-                    value,
-                    style: TextStyle(
-                      fontSize: fontSizeValue,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFFDC2626),
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  child: isLoading 
+                    ? SizedBox(
+                        width: fontSizeValue,
+                        height: fontSizeValue,
+                        child: const CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Color(0xFFDC2626),
+                        ),
+                      )
+                    : Text(
+                        value,
+                        style: TextStyle(
+                          fontSize: fontSizeValue,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFFDC2626),
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                 ),
                 SizedBox(
                   width: iconSize,

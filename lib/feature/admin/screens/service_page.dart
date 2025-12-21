@@ -20,7 +20,9 @@ import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
 import 'package:intl/intl.dart';
 
 class ServicePageAdmin extends StatefulWidget {
-  const ServicePageAdmin({super.key});
+  final int? initialTab;
+  final String? initialFilter;
+  const ServicePageAdmin({super.key, this.initialTab, this.initialFilter});
 
   @override
   State<ServicePageAdmin> createState() => _ServicePageAdminState();
@@ -30,8 +32,8 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
   int displayedMonth = DateTime.now().month;
   int displayedYear = DateTime.now().year;
   int selectedDay = DateTime.now().day;
-  String selectedFilter = "Semua";
-  int selectedTab = 0; // 0 = Scheduled, 1 = Logging
+  late String selectedFilter;
+  late int selectedTab; // 0 = Scheduled, 1 = Logging
 
   DateTime get selectedDate =>
       DateTime(displayedYear, displayedMonth, selectedDay);
@@ -39,9 +41,22 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
   @override
   void initState() {
     super.initState();
+    selectedTab = widget.initialTab ?? 0;
+    selectedFilter = widget.initialFilter ?? "Semua";
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchData();
     });
+  }
+
+  @override
+  void didUpdateWidget(ServicePageAdmin oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialTab != oldWidget.initialTab && widget.initialTab != null) {
+      setState(() => selectedTab = widget.initialTab!);
+    }
+    if (widget.initialFilter != oldWidget.initialFilter && widget.initialFilter != null) {
+      setState(() => selectedFilter = widget.initialFilter!);
+    }
   }
 
   void _fetchData() {
@@ -118,7 +133,7 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
               children: [
                 _buildScheduledTab(provider),
                 const ServiceOnTheSitePage(),
-                const ServiceLoggingPage(),
+                ServiceLoggingPage(initialFilter: widget.initialFilter),
               ],
             ),
           ),

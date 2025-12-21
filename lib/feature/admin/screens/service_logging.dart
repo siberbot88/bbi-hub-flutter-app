@@ -15,7 +15,8 @@ import '../widgets/service_logging/logging_task_card.dart';
 // import '../widgets/service_logging/logging_helpers.dart';
 
 class ServiceLoggingPage extends StatefulWidget {
-  const ServiceLoggingPage({super.key});
+  final String? initialFilter;
+  const ServiceLoggingPage({super.key, this.initialFilter});
 
   @override
   State<ServiceLoggingPage> createState() => _ServiceLoggingPageState();
@@ -27,15 +28,24 @@ class _ServiceLoggingPageState extends State<ServiceLoggingPage> {
   int selectedDay = DateTime.now().day;
 
   String searchText = "";
-  String selectedLoggingFilter = "All";
+  late String selectedLoggingFilter;
   String? selectedTimeSlot;
 
   @override
   void initState() {
     super.initState();
+    selectedLoggingFilter = widget.initialFilter ?? "All";
     // NOTE: Do NOT call _fetchData() here!
     // Parent (ServicePageAdmin) already fetches data for the shared AdminServiceProvider.
     // Calling fetch here would cause a race condition and overwrite the parent's data.
+  }
+
+  @override
+  void didUpdateWidget(ServiceLoggingPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialFilter != oldWidget.initialFilter && widget.initialFilter != null) {
+      setState(() => selectedLoggingFilter = widget.initialFilter!);
+    }
   }
 
   // NOTE: _fetchData is kept for calendar navigation but should NOT be called from initState
