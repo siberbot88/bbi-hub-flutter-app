@@ -1,62 +1,26 @@
 // 📄 lib/feature/admin/screens/tabs/technician_tab.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:bengkel_online_flutter/core/models/dashboard_stats.dart';
 
 class TechnicianTab extends StatelessWidget {
-  final String selectedRange; // ex: "Hari ini" / "Today"
+  final String selectedRange;
   final ValueChanged<String> onRangeChange;
+  final List<MechanicStat> mechanics; // Data from API
+  final bool isLoading;
 
   const TechnicianTab({
     super.key,
     required this.selectedRange,
     required this.onRangeChange,
+    this.mechanics = const [], // Default empty list
+    this.isLoading = false,
   });
 
   static const _cardRadius = 16.0;
 
   @override
   Widget build(BuildContext context) {
-    // dummy data persis seperti layout
-    final techs = <_Tech>[
-      _Tech(
-        name: 'James Hariyanto',
-        id: 'T0001',
-        role: 'Senior Technician',
-        rating: 4.9,
-        jobsToday: 18,
-        avgHours: 2.5,
-        avatar:
-            'https://i.pravatar.cc/150?img=12', // ganti ke assets jika perlu
-      ),
-      _Tech(
-        name: 'Nanda Santoso',
-        id: 'T0001',
-        role: 'Lead Technician',
-        rating: 4.5,
-        jobsToday: 15,
-        avgHours: 1.9,
-        avatar: 'https://i.pravatar.cc/150?img=32',
-      ),
-      _Tech(
-        name: 'Dimas Doniansyah',
-        id: 'T0001',
-        role: 'Junior Technician',
-        rating: 4.2,
-        jobsToday: 10,
-        avgHours: 1.7,
-        avatar: 'https://i.pravatar.cc/150?img=14',
-      ),
-      _Tech(
-        name: 'Sandy Kanara',
-        id: 'T0001',
-        role: 'Senior Technician',
-        rating: 5.0,
-        jobsToday: 9,
-        avgHours: 2.8,
-        avatar: 'https://i.pravatar.cc/150?img=57',
-      ),
-    ];
-
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       child: Column(
@@ -96,10 +60,47 @@ class TechnicianTab extends StatelessWidget {
           ),
           const SizedBox(height: 12),
 
-          // list cards
-          ...techs
-              .map((t) => _techCard(t))
-              .expand((w) => [w, const SizedBox(height: 12)]),
+          // Loading state
+          if (isLoading)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(32),
+                child: CircularProgressIndicator(color: Color(0xFFDC2626)),
+              ),
+            )
+          // Empty state
+          else if (mechanics.isEmpty)
+            _buildEmptyState()
+          // List cards from API data
+          else
+            ...mechanics
+                .map((m) => _techCard(m))
+                .expand((w) => [w, const SizedBox(height: 12)]),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.engineering_outlined, size: 48, color: Colors.grey[400]),
+          const SizedBox(height: 12),
+          Text(
+            'Belum ada data mekanik',
+            style: GoogleFonts.poppins(
+              fontSize: 14,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ],
       ),
     );
@@ -111,8 +112,8 @@ class TechnicianTab extends StatelessWidget {
       padding: const EdgeInsets.only(left: 14, right: 6),
       height: 36,
       decoration: BoxDecoration(
-        color: const Color(0xFFDC2626), // Merah sesuai desain
-        borderRadius: BorderRadius.circular(24), // Bentuk pill
+        color: const Color(0xFFDC2626),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withAlpha(26),
@@ -123,24 +124,21 @@ class TechnicianTab extends StatelessWidget {
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
-          value: 'Hari ini', // Pilihan default sesuai gambar
+          value: selectedRange,
           icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white),
-          dropdownColor: Colors.white, // Warna dropdown tetap merah
-          style: GoogleFonts.poppins(
-              color: Colors.white, fontSize: 13), // Teks putih di tombol
+          dropdownColor: Colors.white,
+          style: GoogleFonts.poppins(color: Colors.white, fontSize: 13),
           items: const ['Hari ini', 'Minggu ini', 'Bulan ini']
               .map((e) => DropdownMenuItem(
                     value: e,
                     child: Text(
                       e,
-                      style: GoogleFonts.poppins(
-                          color: Colors.black), // Teks item dropdown putih
+                      style: GoogleFonts.poppins(color: Colors.black),
                     ),
                   ))
               .toList(),
           onChanged: (v) {
             if (v != null) {
-              // Memanggil fungsi onRangeChange untuk update
               onRangeChange(v);
             }
           },
@@ -157,7 +155,7 @@ class TechnicianTab extends StatelessWidget {
     return (parts[0][0] + parts[1][0]).toUpperCase();
   }
 
-  Widget _techCard(_Tech t) {
+  Widget _techCard(MechanicStat m) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -181,7 +179,7 @@ class TechnicianTab extends StatelessWidget {
                 radius: 18,
                 backgroundColor: const Color(0xFFDC2626).withOpacity(0.1),
                 child: Text(
-                  _getInitials(t.name),
+                  _getInitials(m.name),
                   style: GoogleFonts.poppins(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
@@ -200,11 +198,11 @@ class TechnicianTab extends StatelessWidget {
                             color: Colors.black87, fontSize: 13.5),
                         children: [
                           TextSpan(
-                              text: t.name,
+                              text: m.name,
                               style:
                                   const TextStyle(fontWeight: FontWeight.w700)),
                           TextSpan(
-                              text: '\nID:${t.id} ${t.role}',
+                              text: '\n${m.roleDisplayName}',
                               style: const TextStyle(
                                   color: Colors.black54,
                                   fontSize: 12.5,
@@ -215,13 +213,37 @@ class TechnicianTab extends StatelessWidget {
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        _buildStars(t.rating),
-                        const SizedBox(width: 8),
-                        Text('${t.rating} Rating',
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '${m.completedJobs} Selesai',
                             style: GoogleFonts.poppins(
-                                fontSize: 12.5,
-                                color: Colors.black54,
-                                fontWeight: FontWeight.w500)),
+                              fontSize: 11,
+                              color: Colors.green[700],
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '${m.activeJobs} Aktif',
+                            style: GoogleFonts.poppins(
+                              fontSize: 11,
+                              color: Colors.orange[700],
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -230,12 +252,12 @@ class TechnicianTab extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('${t.jobsToday}',
+                  Text('${m.completedJobs + m.activeJobs}',
                       style: GoogleFonts.poppins(
                           color: const Color(0xFFDC2626),
                           fontSize: 20,
                           fontWeight: FontWeight.w700)),
-                  Text('Jobs Today',
+                  Text('Total Jobs',
                       style: GoogleFonts.poppins(
                           fontSize: 12,
                           color: Colors.black54,
@@ -244,67 +266,8 @@ class TechnicianTab extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          // bottom right: avg time + arrow up
-          Row(
-            children: [
-              const Spacer(),
-              Icon(Icons.arrow_upward,
-                  size: 14, color: const Color(0xFF16A34A)),
-              const SizedBox(width: 4),
-              Text(
-                'Avg: ${t.avgHours}h per service',
-                style: GoogleFonts.poppins(
-                  fontSize: 12,
-                  color: const Color(0xFF16A34A),
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          )
         ],
       ),
     );
   }
-
-  Widget _buildStars(double rating) {
-    // bikin baris bintang 5 sesuai screenshot
-    final full = rating.floor();
-    final half = (rating - full) >= 0.25 && (rating - full) < 0.75;
-    final total = 5;
-
-    final stars = <Widget>[];
-    for (int i = 0; i < full; i++) {
-      stars.add(const Icon(Icons.star, size: 18, color: Color(0xFFFFB300)));
-    }
-    if (half) {
-      stars
-          .add(const Icon(Icons.star_half, size: 18, color: Color(0xFFFFB300)));
-    }
-    while (stars.length < total) {
-      stars.add(
-          const Icon(Icons.star_border, size: 18, color: Color(0xFFFFB300)));
-    }
-    return Row(children: stars);
-  }
-}
-
-class _Tech {
-  final String name;
-  final String id;
-  final String role;
-  final double rating;
-  final int jobsToday;
-  final double avgHours;
-  final String avatar;
-
-  const _Tech({
-    required this.name,
-    required this.id,
-    required this.role,
-    required this.rating,
-    required this.jobsToday,
-    required this.avgHours,
-    required this.avatar,
-  });
 }

@@ -170,6 +170,8 @@ class _DashboardPageState extends State<DashboardPage> {
         return TechnicianTab(
           selectedRange: selectedRange,
           onRangeChange: (v) => setState(() => selectedRange = v),
+          mechanics: _stats?.mechanicStats ?? [],
+          isLoading: _loading,
         );
       case "Pelanggan":
         return CustomerTab(
@@ -177,6 +179,9 @@ class _DashboardPageState extends State<DashboardPage> {
           chartFilter: chartFilter,
           onRangeChange: (v) => setState(() => selectedRange = v),
           onChartFilterChange: (f) => setState(() => chartFilter = f),
+          customerStats: _stats?.customerStats,
+          trend: _stats?.trend ?? [],
+          isLoading: _loading,
         );
       default:
         return const SizedBox.shrink();
@@ -185,6 +190,12 @@ class _DashboardPageState extends State<DashboardPage> {
 
   // ---------- SERVIS SECTION ----------
   Widget _buildServisSection() {
+    // Use API data or default to 0 if not available
+    final servicesToday = _stats?.servicesToday ?? 0;
+    final needsAssignment = _stats?.needsAssignment ?? 0;
+    final inProgress = _stats?.inProgress ?? 0;
+    final completed = _stats?.completed ?? 0;
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -216,22 +227,22 @@ class _DashboardPageState extends State<DashboardPage> {
           children: [
             _summaryCardPrimary(
               title: "Servis Hari Ini",
-              value: "12",
+              value: "$servicesToday",
               icon: 'assets/icons/servis.svg',
             ),
             _summaryCardWhite(
               title: "Perlu di Assign",
-              value: "8",
+              value: "$needsAssignment",
               icon: 'assets/icons/assign.svg',
             ),
             _summaryCardWhite(
               title: "Sedang Dikerjakan",
-              value: "4",
+              value: "$inProgress",
               icon: 'assets/icons/pelanggan.svg',
             ),
             _summaryCardWhite(
               title: "Selesai",
-              value: "2",
+              value: "$completed",
               icon: 'assets/icons/completed.svg',
             ),
           ],

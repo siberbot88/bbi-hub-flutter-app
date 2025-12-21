@@ -56,6 +56,7 @@ class ServiceModel {
   final String? workshopUuid;
   final String? vehicleId;
   final String? mechanicUuid; // <--- dari kolom mechanic_uuid
+  final String? transactionUuid; // <--- transaction ID dari backend saat service completed
 
   // relasi
   final Customer? customer;
@@ -97,6 +98,7 @@ class ServiceModel {
     this.workshopUuid,
     this.vehicleId,
     this.mechanicUuid,
+    this.transactionUuid,
     this.customer,
     this.vehicle,
     this.workshopName,
@@ -181,6 +183,7 @@ class ServiceModel {
       workshopUuid: json['workshop_uuid']?.toString(),
       vehicleId: vehicleId(),
       mechanicUuid: json['mechanic_uuid']?.toString(),
+      transactionUuid: json['transaction_uuid']?.toString() ?? json['transaction_id']?.toString(),
 
       customer: (json['customer'] is Map)
           ? Customer.fromJson(

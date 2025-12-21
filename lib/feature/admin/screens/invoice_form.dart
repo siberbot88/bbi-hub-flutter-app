@@ -21,18 +21,28 @@ class InvoiceFormPage extends StatefulWidget {
 class _InvoiceFormPageState extends State<InvoiceFormPage> {
   final Color mainColor = const Color(0xFFDC2626);
   final TextEditingController technicianNoteController = TextEditingController();
+  final TextEditingController voucherController = TextEditingController();
   
   bool _isLoading = false;
+  bool _isValidatingVoucher = false;
   String? _transactionId;
+  
+  // Voucher state
+  bool _voucherApplied = false;
+  String? _voucherCode;
+  num _discountAmount = 0;
+  String? _voucherError;
 
   // Service items that can be edited
   late List<Map<String, dynamic>> serviceList;
 
   final List<String> jenisOptions = [
-    "Jasa Pekerjaan",
+    "Servis Ringan",
+    "Servis Sedang",
+    "Servis Berat",
     "Sparepart",
     "Biaya Tambahan",
-    "Lainnya (PPN, dll)"
+    "Lainnya"
   ];
 
   @override
@@ -47,32 +57,36 @@ class _InvoiceFormPageState extends State<InvoiceFormPage> {
       }).toList();
     } else {
       serviceList = [
-        {"nama": widget.service.name, "jenis": "Jasa Pekerjaan", "harga": (widget.service.price ?? 0).toInt()},
+        {"nama": widget.service.name, "jenis": "Servis Ringan", "harga": (widget.service.price ?? 0).toInt()},
       ];
     }
   }
 
   String _mapItemType(String? type) {
     switch (type?.toLowerCase()) {
-      case 'jasa': return 'Jasa Pekerjaan';
+      case 'servis ringan': return 'Servis Ringan';
+      case 'servis sedang': return 'Servis Sedang';
+      case 'servis berat': return 'Servis Berat';
       case 'sparepart': return 'Sparepart';
-      case 'biaya_tambahan': return 'Biaya Tambahan';
-      default: return 'Lainnya (PPN, dll)';
+      case 'biaya tambahan': return 'Biaya Tambahan';
+      default: return 'Lainnya';
     }
   }
 
   String _reverseMapItemType(String jenis) {
     switch (jenis) {
-      case 'Jasa Pekerjaan': return 'jasa';
+      case 'Servis Ringan': return 'servis ringan';
+      case 'Servis Sedang': return 'servis sedang';
+      case 'Servis Berat': return 'servis berat';
       case 'Sparepart': return 'sparepart';
-      case 'Biaya Tambahan': return 'biaya_tambahan';
+      case 'Biaya Tambahan': return 'biaya tambahan';
       default: return 'lainnya';
     }
   }
 
   void _addService() {
     setState(() {
-      serviceList.add({"nama": "", "jenis": "Jasa Pekerjaan", "harga": 0});
+      serviceList.add({"nama": "", "jenis": "Servis Ringan", "harga": 0});
     });
   }
 
@@ -135,8 +149,69 @@ class _InvoiceFormPageState extends State<InvoiceFormPage> {
     });
   }
 
-  int get _totalAmount {
+  int get _subtotal {
     return serviceList.fold(0, (sum, item) => sum + ((item['harga'] as int?) ?? 0));
+  }
+
+  int get _totalAmount {
+    return (_subtotal - _discountAmount).toInt();
+  }
+
+  Future<void> _validateVoucher() async {
+    final code = voucherController.text.trim();
+    if (code.isEmpty) return;
+
+    setState(() {
+      _isValidatingVoucher = true;
+      _voucherError = null;
+    });
+
+    try {
+      final provider = context.read<AdminServiceProvider>();
+      final result = await provider.validateVoucher(
+        code: code,
+        amount: _subtotal,
+      );
+
+      if (mounted) {
+        setState(() {
+          _isValidatingVoucher = false;
+          if (result['valid'] == true) {
+            _voucherApplied = true;
+            _voucherCode = code;
+            // Safely parse discount_amount (may come as String or num)
+            final discountRaw = result['discount_amount'];
+            _discountAmount = discountRaw is num 
+                ? discountRaw 
+                : num.tryParse(discountRaw?.toString() ?? '0') ?? 0;
+            _voucherError = null;
+          } else {
+            _voucherApplied = false;
+            _voucherCode = null;
+            _discountAmount = 0;
+            _voucherError = result['message']?.toString() ?? 'Voucher tidak valid';
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isValidatingVoucher = false;
+          _voucherApplied = false;
+          _voucherError = e.toString().replaceFirst('Exception: ', '');
+        });
+      }
+    }
+  }
+
+  void _removeVoucher() {
+    setState(() {
+      _voucherApplied = false;
+      _voucherCode = null;
+      _discountAmount = 0;
+      _voucherError = null;
+      voucherController.clear();
+    });
   }
 
   Future<void> _createTransactionAndContinue() async {
@@ -145,22 +220,37 @@ class _InvoiceFormPageState extends State<InvoiceFormPage> {
     try {
       final provider = context.read<AdminServiceProvider>();
       
-      // Convert service list to API format
-      final items = serviceList.map((item) => {
-        'name': item['nama'],
-        'type': _reverseMapItemType(item['jenis']),
-        'quantity': 1,
-        'price': item['harga'],
-      }).toList();
+      // Check if transaction already exists (backend creates it when service marked complete)
+      String? txnId = widget.service.transactionUuid;
+      
+      if (txnId == null || txnId.isEmpty) {
+        // Fallback: Create transaction if not exists
+        print('DEBUG: No transactionUuid found, creating new transaction...');
+        final transactionData = await provider.createTransaction(
+          serviceUuid: widget.service.id,
+          notes: technicianNoteController.text,
+        );
+        txnId = transactionData['id']?.toString();
+      } else {
+        print('DEBUG: Using existing transactionUuid: $txnId');
+      }
+      
+      _transactionId = txnId;
+      
+      if (_transactionId == null) {
+        throw Exception('Transaction ID not available');
+      }
 
-      // Create transaction
-      final transactionData = await provider.createTransaction(
-        serviceUuid: widget.service.id,
-        notes: technicianNoteController.text,
-        items: items,
-      );
-
-      _transactionId = transactionData['id']?.toString();
+      // Add each item separately via transaction-items endpoint
+      for (final item in serviceList) {
+        await provider.addTransactionItem(
+          transactionUuid: _transactionId!,
+          name: item['nama'] ?? '',
+          serviceType: _reverseMapItemType(item['jenis'] ?? 'Jasa Pekerjaan'),
+          price: item['harga'] ?? 0,
+          quantity: 1,
+        );
+      }
 
       if (mounted && _transactionId != null) {
         // Navigate to payment page with transaction data
@@ -171,6 +261,9 @@ class _InvoiceFormPageState extends State<InvoiceFormPage> {
               transactionId: _transactionId!,
               items: serviceList,
               totalAmount: _totalAmount,
+              subtotal: _subtotal,
+              discountAmount: _discountAmount.toInt(),
+              voucherCode: _voucherCode,
               notes: technicianNoteController.text,
             ),
           ),
@@ -233,19 +326,111 @@ class _InvoiceFormPageState extends State<InvoiceFormPage> {
                   ),
                   const SizedBox(height: 16),
                   
-                  // Total
+                  // Voucher Input Section
+                  Text("Kode Voucher (Opsional)", style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: voucherController,
+                          enabled: !_voucherApplied,
+                          decoration: InputDecoration(
+                            hintText: "Masukkan kode voucher...",
+                            hintStyle: GoogleFonts.poppins(fontSize: 13),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(color: Colors.grey.shade400),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(color: mainColor),
+                            ),
+                            disabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(color: Colors.grey.shade300),
+                            ),
+                            filled: _voucherApplied,
+                            fillColor: _voucherApplied ? Colors.green.withOpacity(0.1) : null,
+                            suffixIcon: _voucherApplied
+                                ? const Icon(Icons.check_circle, color: Colors.green)
+                                : null,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      _voucherApplied
+                          ? IconButton(
+                              onPressed: _removeVoucher,
+                              icon: const Icon(Icons.close, color: Colors.red),
+                              style: IconButton.styleFrom(
+                                backgroundColor: Colors.red.withOpacity(0.1),
+                              ),
+                            )
+                          : ElevatedButton(
+                              onPressed: _isValidatingVoucher ? null : _validateVoucher,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: mainColor,
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                              child: _isValidatingVoucher
+                                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                  : Text("Apply", style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w600)),
+                            ),
+                    ],
+                  ),
+                  if (_voucherError != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Text(_voucherError!, style: GoogleFonts.poppins(fontSize: 12, color: Colors.red)),
+                    ),
+                  if (_voucherApplied)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Text("Voucher berhasil diterapkan!", style: GoogleFonts.poppins(fontSize: 12, color: Colors.green, fontWeight: FontWeight.w500)),
+                    ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Price Breakdown
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: mainColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    child: Column(
                       children: [
-                        Text("Total", style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold)),
-                        Text("Rp ${_totalAmount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}",
-                            style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: mainColor)),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text("Subtotal", style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[700])),
+                            Text("Rp ${_subtotal.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}",
+                                style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[700])),
+                          ],
+                        ),
+                        if (_voucherApplied && _discountAmount > 0) ...[
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text("Diskon Voucher", style: GoogleFonts.poppins(fontSize: 14, color: Colors.green[700])),
+                              Text("- Rp ${_discountAmount.toInt().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}",
+                                  style: GoogleFonts.poppins(fontSize: 14, color: Colors.green[700], fontWeight: FontWeight.w500)),
+                            ],
+                          ),
+                        ],
+                        const Divider(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text("Total", style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold)),
+                            Text("Rp ${_totalAmount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}",
+                                style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: mainColor)),
+                          ],
+                        ),
                       ],
                     ),
                   ),

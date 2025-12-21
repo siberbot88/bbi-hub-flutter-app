@@ -1712,7 +1712,7 @@ class ApiService {
 
   /* ==================== TRANSACTIONS ==================== */
 
-  /// POST /v1/admins/transactions - Create transaction
+  /// POST /v1/admins/transactions - Create transaction with items
   Future<Map<String, dynamic>> adminCreateTransaction({
     required String serviceUuid,
     String? notes,
@@ -1742,6 +1742,43 @@ class ApiService {
       throw Exception('Failed to create transaction (HTTP ${res.statusCode})');
     } catch (e) {
       throw Exception('Create transaction error: $e');
+    }
+  }
+
+  /// POST /v1/admins/transaction-items - Add item to transaction
+  Future<Map<String, dynamic>> adminAddTransactionItem({
+    required String transactionUuid,
+    required String name,
+    required String serviceType,
+    required num price,
+    int quantity = 1,
+  }) async {
+    try {
+      final uri = Uri.parse('${_baseUrl}admins/transaction-items');
+      final headers = await _getAuthHeaders();
+      
+      final bodyMap = <String, dynamic>{
+        'transaction_uuid': transactionUuid,
+        'name': name,
+        'service_type': serviceType,
+        'price': price,
+        'quantity': quantity,
+      };
+
+      final body = jsonEncode(bodyMap);
+      _debugRequest('ADMIN_ADD_TRANSACTION_ITEM', uri, headers, body);
+      final res = await http.post(uri, headers: headers, body: body);
+      _debugResponse('ADMIN_ADD_TRANSACTION_ITEM', res);
+
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        final j = _tryDecodeJson(res.body);
+        return (j is Map && j['data'] is Map) 
+            ? Map<String, dynamic>.from(j['data'])
+            : Map<String, dynamic>.from(j);
+      }
+      throw Exception('Failed to add transaction item (HTTP ${res.statusCode})');
+    } catch (e) {
+      throw Exception('Add transaction item error: $e');
     }
   }
 
@@ -1836,6 +1873,82 @@ class ApiService {
       throw Exception('Failed to finalize transaction (HTTP ${res.statusCode})');
     } catch (e) {
       throw Exception('Finalize transaction error: $e');
+    }
+  }
+
+  /* ==================== VOUCHERS ==================== */
+
+  /// POST /v1/admins/vouchers/validate - Validate voucher and get discount preview
+  Future<Map<String, dynamic>> adminValidateVoucher({
+    required String code,
+    required num amount,
+    String? workshopUuid,
+  }) async {
+    try {
+      final uri = Uri.parse('${_baseUrl}admins/vouchers/validate');
+      final headers = await _getAuthHeaders();
+      
+      final bodyMap = <String, dynamic>{
+        'code': code,
+        'amount': amount,
+      };
+      if (workshopUuid != null) bodyMap['workshop_uuid'] = workshopUuid;
+
+      final body = jsonEncode(bodyMap);
+      _debugRequest('ADMIN_VALIDATE_VOUCHER', uri, headers, body);
+      final res = await http.post(uri, headers: headers, body: body);
+      _debugResponse('ADMIN_VALIDATE_VOUCHER', res);
+
+      if (res.statusCode == 200) {
+        final j = _tryDecodeJson(res.body);
+        return Map<String, dynamic>.from(j);
+      }
+      
+      // Handle invalid voucher
+      if (res.statusCode == 422 || res.statusCode == 400) {
+        final j = _tryDecodeJson(res.body);
+        return {
+          'valid': false,
+          'message': j['message'] ?? 'Voucher tidak valid',
+        };
+      }
+      
+      throw Exception('Failed to validate voucher (HTTP ${res.statusCode})');
+    } catch (e) {
+      throw Exception('Validate voucher error: $e');
+    }
+  }
+
+  /// POST /v1/admins/transactions/{id}/apply-voucher - Apply voucher to transaction
+  Future<Map<String, dynamic>> adminApplyVoucher({
+    required String transactionId,
+    required String voucherCode,
+  }) async {
+    try {
+      final uri = Uri.parse('${_baseUrl}admins/transactions/$transactionId/apply-voucher');
+      final headers = await _getAuthHeaders();
+      
+      final body = jsonEncode({'voucher_code': voucherCode});
+      _debugRequest('ADMIN_APPLY_VOUCHER', uri, headers, body);
+      final res = await http.post(uri, headers: headers, body: body);
+      _debugResponse('ADMIN_APPLY_VOUCHER', res);
+
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        final j = _tryDecodeJson(res.body);
+        return (j is Map && j['data'] is Map) 
+            ? Map<String, dynamic>.from(j['data'])
+            : Map<String, dynamic>.from(j);
+      }
+      
+      // Handle error
+      if (res.statusCode == 422 || res.statusCode == 400) {
+        final j = _tryDecodeJson(res.body);
+        throw Exception(j['message'] ?? 'Gagal menerapkan voucher');
+      }
+      
+      throw Exception('Failed to apply voucher (HTTP ${res.statusCode})');
+    } catch (e) {
+      throw Exception('Apply voucher error: $e');
     }
   }
 

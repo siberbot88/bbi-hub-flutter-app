@@ -15,6 +15,9 @@ class PaymentInvoiceCard extends StatelessWidget {
   final String invoiceDate;
   final bool isSent;
   final VoidCallback onSend;
+  final String? voucherCode;
+  final String? discountAmount;
+  final String? paymentDuration;
 
   const PaymentInvoiceCard({
     super.key,
@@ -31,6 +34,9 @@ class PaymentInvoiceCard extends StatelessWidget {
     required this.invoiceDate,
     required this.isSent,
     required this.onSend,
+    this.voucherCode,
+    this.discountAmount,
+    this.paymentDuration,
   });
 
   @override
@@ -202,6 +208,33 @@ class PaymentInvoiceCard extends StatelessWidget {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
+                        // Show voucher discount if applied
+                        if (voucherCode != null && discountAmount != null) ...[
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.local_offer, size: 14, color: Colors.green[700]),
+                              const SizedBox(width: 4),
+                              Text(
+                                voucherCode!,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 11,
+                                  color: Colors.green[700],
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Text(
+                            '- $discountAmount',
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              color: Colors.green[700],
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                        ],
                         Text(
                           'TOTAL AMOUNT',
                           style: GoogleFonts.poppins(
@@ -257,10 +290,11 @@ class PaymentInvoiceCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            '01 : 00 : 59',
+                            paymentDuration ?? '01 : 00 : 00',
                             style: GoogleFonts.poppins(
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
+                              color: paymentDuration != null ? const Color(0xFFB31217) : Colors.black,
                             ),
                           ),
                         ],
@@ -397,7 +431,7 @@ class _InvoicePill extends StatelessWidget {
             bottom: 8,
             child: Container(
               width: 132,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(18),
@@ -410,25 +444,30 @@ class _InvoicePill extends StatelessWidget {
                 ],
               ),
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text('Total Tagihan',
                       style: GoogleFonts.poppins(
-                        fontSize: 11,
+                        fontSize: 10,
                         fontWeight: FontWeight.w600,
                         color: Colors.grey[700],
                       )),
+                  const SizedBox(height: 2),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(totalTagihan,
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                        )),
+                  ),
                   const SizedBox(height: 4),
-                  Text(totalTagihan,
-                      style: GoogleFonts.poppins(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                      )),
-                  const SizedBox(height: 6),
                   Text(
                     '● $invoiceDate',
                     style: GoogleFonts.poppins(
-                      fontSize: 10.5,
+                      fontSize: 9.5,
                       color: const Color(0xFFB31217),
                       fontWeight: FontWeight.w600,
                     ),

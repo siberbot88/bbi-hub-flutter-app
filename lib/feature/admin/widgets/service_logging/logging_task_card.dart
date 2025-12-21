@@ -5,6 +5,7 @@ import 'logging_helpers.dart';
 import '../../screens/service_pending.dart' as pending;
 import '../../screens/service_progress.dart' as progress;
 import '../../screens/invoice_form.dart' as invoice_form;
+import '../../screens/invoice_view.dart' as invoice_view;
 import 'package:bengkel_online_flutter/core/models/service.dart';
 
 class LoggingTaskCard extends StatelessWidget {
@@ -105,11 +106,11 @@ class LoggingTaskCard extends StatelessWidget {
            Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => invoice_form.InvoiceFormPage(service: service), 
+                builder: (_) => invoice_view.InvoiceViewPage(service: service), 
               ));
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.grey, // Lunas usually gray or distinct color
+          backgroundColor: Colors.green, // Green for lunas
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),

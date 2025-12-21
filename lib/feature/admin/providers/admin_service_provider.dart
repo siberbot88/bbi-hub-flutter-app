@@ -280,7 +280,7 @@ class AdminServiceProvider extends ServiceProvider {
 
   // ==================== TRANSACTIONS ====================
 
-  /// Create transaction from service
+  /// Create transaction from service with items
   Future<Map<String, dynamic>> createTransaction({
     required String serviceUuid,
     String? notes,
@@ -296,6 +296,30 @@ class AdminServiceProvider extends ServiceProvider {
       return result;
     } catch (e) {
       if (kDebugMode) print('createTransaction error: $e');
+      rethrow;
+    }
+  }
+
+  /// Add item to transaction (if needed separately)
+  Future<Map<String, dynamic>> addTransactionItem({
+    required String transactionUuid,
+    required String name,
+    required String serviceType,
+    required num price,
+    int quantity = 1,
+  }) async {
+    try {
+      final result = await _adminApi.adminAddTransactionItem(
+        transactionUuid: transactionUuid,
+        name: name,
+        serviceType: serviceType,
+        price: price,
+        quantity: quantity,
+      );
+      if (kDebugMode) print('Transaction item added: ${result['id']}');
+      return result;
+    } catch (e) {
+      if (kDebugMode) print('addTransactionItem error: $e');
       rethrow;
     }
   }
@@ -372,5 +396,44 @@ class AdminServiceProvider extends ServiceProvider {
       rethrow;
     }
   }
-}
 
+  // ==================== VOUCHERS ====================
+
+  /// Validate voucher and get discount preview
+  Future<Map<String, dynamic>> validateVoucher({
+    required String code,
+    required num amount,
+    String? workshopUuid,
+  }) async {
+    try {
+      final result = await _adminApi.adminValidateVoucher(
+        code: code,
+        amount: amount,
+        workshopUuid: workshopUuid,
+      );
+      if (kDebugMode) print('Voucher validation: ${result['valid']}');
+      return result;
+    } catch (e) {
+      if (kDebugMode) print('validateVoucher error: $e');
+      rethrow;
+    }
+  }
+
+  /// Apply voucher to transaction
+  Future<Map<String, dynamic>> applyVoucher({
+    required String transactionId,
+    required String voucherCode,
+  }) async {
+    try {
+      final result = await _adminApi.adminApplyVoucher(
+        transactionId: transactionId,
+        voucherCode: voucherCode,
+      );
+      if (kDebugMode) print('Voucher applied to transaction: $transactionId');
+      return result;
+    } catch (e) {
+      if (kDebugMode) print('applyVoucher error: $e');
+      rethrow;
+    }
+  }
+}
