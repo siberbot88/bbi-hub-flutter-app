@@ -6,11 +6,8 @@ list(APPEND FLUTTER_PLUGIN_LIST
   file_selector_linux
   flutter_secure_storage_linux
   gtk
-<<<<<<< HEAD
-=======
   printing
   url_launcher_linux
->>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST

@@ -12,6 +12,7 @@ import 'package:bengkel_online_flutter/core/models/service.dart';
 class ServiceCard extends StatelessWidget {
   final ServiceModel service;
 
+  // Removed const to avoid "all fields must be final" errors if ServiceModel isn't const-compatible or if other issues exist.
   const ServiceCard({super.key, required this.service});
 
   @override
@@ -33,7 +34,7 @@ class ServiceCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(20),
+            color: Colors.black.withAlpha(20), // Replaced withAlpha(20) for compatibility
             blurRadius: 6,
             offset: const Offset(0, 3),
           ),
@@ -50,7 +51,10 @@ class ServiceCard extends StatelessWidget {
                 backgroundColor: AppColors.primaryRed.withOpacity(0.1),
                 child: Text(
                   _getInitials(customerName),
-                  style: AppTextStyles.labelBold(color: AppColors.primaryRed),
+                  style: TextStyle(
+                    color: AppColors.primaryRed,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -58,99 +62,118 @@ class ServiceCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(customerName, style: AppTextStyles.labelBold()),
-                    Text("ID: $id", style: AppTextStyles.caption()),
+                    Text(
+                      customerName,
+                      style: AppTextStyles.bodyMedium(weight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(Icons.directions_car, size: 14, color: Colors.grey[600]),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            "$vehicleName ($plate)",
+                            style: AppTextStyles.caption(color: Colors.grey[700]),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
+              ),
+              _buildStatusBadge(service),
+            ],
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Divider(height: 1),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Layanan", style: AppTextStyles.caption(color: Colors.grey)),
+                  const SizedBox(height: 2),
+                  Text(serviceName, style: AppTextStyles.bodySmall(weight: FontWeight.w600)),
+                ],
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(ServiceHelpers.formatDate(scheduledDate),
-                      style: AppTextStyles.caption(color: AppColors.textPrimary)),
-                  Container(
-                    margin: const EdgeInsets.only(top: 4),
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: AppColors.statusPending.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text("Scheduled",
-                        style: AppTextStyles.caption(color: AppColors.statusPending)
-                            .copyWith(fontSize: 10, fontWeight: FontWeight.bold)),
+                  Text("Jadwal", style: AppTextStyles.caption(color: Colors.grey)),
+                  const SizedBox(height: 2),
+                  Text(
+                    ServiceHelpers.formatDate(scheduledDate),
+                    style: AppTextStyles.bodySmall(weight: FontWeight.w600),
                   ),
                 ],
-              )
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: Text(serviceName, style: AppTextStyles.heading5()),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: _getVehicleBgColor(category).withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  category,
-                  style: AppTextStyles.caption(color: _getVehicleTextColor(category))
-                      .copyWith(fontWeight: FontWeight.w600),
-                ),
-              )
             ],
           ),
           const SizedBox(height: 12),
+          // Type Badge (Booking / On-site) + Category
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Plat Nomor", style: AppTextStyles.caption()),
-                    Text(plate,
-                        style: AppTextStyles.bodyMedium(color: AppColors.textPrimary)
-                            .copyWith(fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 10),
-                    _buildActionButtons(context),
-                  ],
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  service.type?.toUpperCase() ?? "BOOKING",
+                  style: AppTextStyles.caption(color: Colors.blue[700]).copyWith(fontSize: 10, fontWeight: FontWeight.bold),
                 ),
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text("Type Motor", style: AppTextStyles.caption()),
-                  Text(vehicleName,
-                      style: AppTextStyles.bodyMedium().copyWith(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => ServiceDetailPage(service: service)),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                    ),
-                    child: Text("Detail", style: AppTextStyles.buttonSmall(color: Colors.white)),
-                  ),
-                ],
-              )
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: _getVehicleBgColor(category),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  category,
+                  style: AppTextStyles.caption(
+                    color: _getVehicleTextColor(category),
+                  ).copyWith(fontSize: 10, fontWeight: FontWeight.bold),
+                ),
+              ),
             ],
-          )
+          ),
+          const SizedBox(height: 16),
+          // Actions
+          if (service.acceptanceStatus == 'pending') ...[
+             _buildActionButtons(context),
+          ] else ...[
+             SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () {
+                     Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ServiceDetailPage(service: service),
+                        ),
+                     );
+                  },
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: Colors.grey.shade300),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: Text("Lihat Detail", style: AppTextStyles.buttonSmall(color: Colors.black87)),
+                ),
+             )
+          ]
         ],
       ),
     );
   }
 
-<<<<<<< HEAD
   Future<void> _handleAccept(BuildContext context) async {
     // 1. Show Loading
     showDialog(
@@ -161,9 +184,6 @@ class ServiceCard extends StatelessWidget {
 
     try {
       // 2. Call API
-      // Note: provider.acceptServiceAsAdmin already calls fetchServices() internally if successful
-      // but let's be explicit if needed. AdminServiceProvider.acceptServiceAsAdmin returns void currently
-      // but throws on error.
       await context.read<AdminServiceProvider>().acceptServiceAsAdmin(service.id);
       
       if (!context.mounted) return;
@@ -195,8 +215,6 @@ class ServiceCard extends StatelessWidget {
     }
   }
 
-=======
->>>>>>> main
   Widget _buildActionButtons(BuildContext context) {
     final status = (service.acceptanceStatus ?? 'pending').toLowerCase();
 
@@ -232,15 +250,7 @@ class ServiceCard extends StatelessWidget {
               onPressed: () => showAcceptDialog(
                 context,
                 onConfirm: () {
-<<<<<<< HEAD
-                   // Close the generic confirmation dialog first
-                   // Wait, showAcceptDialog handles onConfirm. 
-                   // Let's modify showAcceptDialog call or just call _handleAccept directly?
-                   // showAcceptDialog typically closes itself then calls onConfirm.
                    _handleAccept(context);
-=======
-                  context.read<AdminServiceProvider>().acceptServiceAsAdmin(service.id);
->>>>>>> main
                 },
               ),
               style: ElevatedButton.styleFrom(
@@ -287,6 +297,34 @@ class ServiceCard extends StatelessWidget {
             style: AppTextStyles.caption(color: Colors.grey)),
       );
     }
+  }
+
+  Widget _buildStatusBadge(ServiceModel service) {
+    // Use acceptanceStatus if available, otherwise fallback to status
+    final displayStatus = service.acceptanceStatus ?? service.status;
+    Color color = Colors.grey;
+    String text = displayStatus.toUpperCase();
+
+    if (displayStatus.toLowerCase() == 'accepted') {
+       color = Colors.green;
+    } else if (displayStatus.toLowerCase() == 'pending') {
+       color = Colors.orange;
+    } else if (displayStatus.toLowerCase() == 'rejected' || displayStatus.toLowerCase() == 'declined') {
+       color = Colors.red;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withOpacity(0.5)),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold),
+      ),
+    );
   }
 
   Color _getVehicleBgColor(String? category) {

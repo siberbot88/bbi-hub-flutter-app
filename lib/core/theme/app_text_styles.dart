@@ -46,15 +46,15 @@ class AppTextStyles {
         color: color ?? AppColors.textPrimary,
       );
 
-  static TextStyle bodyMedium({Color? color}) => GoogleFonts.poppins(
+  static TextStyle bodyMedium({Color? color, FontWeight? weight}) => GoogleFonts.poppins(
         fontSize: 14,
-        fontWeight: FontWeight.normal,
+        fontWeight: weight ?? FontWeight.normal,
         color: color ?? AppColors.textPrimary,
       );
 
-  static TextStyle bodySmall({Color? color}) => GoogleFonts.poppins(
+  static TextStyle bodySmall({Color? color, FontWeight? weight}) => GoogleFonts.poppins(
         fontSize: 12,
-        fontWeight: FontWeight.normal,
+        fontWeight: weight ?? FontWeight.normal,
         color: color ?? AppColors.textSecondary,
       );
 

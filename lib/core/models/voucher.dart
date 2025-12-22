@@ -29,25 +29,6 @@ class Voucher {
 
   factory Voucher.fromJson(Map<String, dynamic> json) {
     return Voucher(
-<<<<<<< HEAD
-      id: json['id'],
-      workshopUuid: json['workshop_uuid'],
-      codeVoucher: json['code_voucher'],
-      title: json['title'],
-      // Handle dynamic types from JSON (int/double/string)
-      discountValue: double.parse(json['discount_value'].toString()),
-      quota: int.parse(json['quota'].toString()),
-      minTransaction: double.parse(json['min_transaction'].toString()),
-      validFrom: DateTime.parse(json['valid_from']),
-      validUntil: DateTime.parse(json['valid_until']),
-      isActive: json['is_active'] == 1 || json['is_active'] == true,
-      imageUrl: json['image_url'],
-    );
-  }
-
-  String get formattedValidDate {
-    final formatter = DateFormat('d MMMM yyyy', 'id_ID'); // Pastikan initializeDateFormatting sudah dipanggil di main.dart
-=======
       id: json['id']?.toString() ?? '',
       workshopUuid: json['workshop_uuid']?.toString() ?? '',
       codeVoucher: json['code_voucher']?.toString() ?? '',
@@ -64,11 +45,9 @@ class Voucher {
 
   static String? _fixImageUrl(dynamic url) {
     if (url == null || url.toString().isEmpty) {
-      print("DEBUG_IMAGE: URL is null or empty");
       return null;
     }
     String finalUrl = url.toString();
-    print("DEBUG_IMAGE_ORIGINAL: $finalUrl");
     
     // Fix for Android Emulator 127.0.0.1 -> 10.0.2.2
     if (finalUrl.contains("127.0.0.1")) {
@@ -76,7 +55,6 @@ class Voucher {
     } else if (finalUrl.contains("localhost")) {
       finalUrl = finalUrl.replaceAll("localhost", "10.0.2.2");
     }
-    print("DEBUG_IMAGE_FIXED: $finalUrl");
     return finalUrl;
   }
 
@@ -98,7 +76,6 @@ class Voucher {
 
   String get formattedValidDate {
     final formatter = DateFormat('d MMMM yyyy', 'id_ID');
->>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
     return "${formatter.format(validFrom)} - ${formatter.format(validUntil)}";
   }
 

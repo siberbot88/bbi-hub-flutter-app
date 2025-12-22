@@ -11,8 +11,7 @@ class User {
   final List<Workshop>? workshops;
   final Employment? employment;
   final bool mustChangePassword;
-<<<<<<< HEAD
-=======
+  
   final String? subscriptionStatus; // 'active', 'pending', expired, 'trial', null
   final String? subscriptionPlanName;
   final DateTime? subscriptionExpiredAt;
@@ -23,7 +22,6 @@ class User {
   final int? trialDaysRemaining;
   final bool hasPremiumAccess;
   final DateTime? emailVerifiedAt;
->>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
 
   User({
     required this.id,
@@ -35,8 +33,6 @@ class User {
     this.workshops,
     this.employment,
     this.mustChangePassword = false,
-<<<<<<< HEAD
-=======
     this.subscriptionStatus,
     this.subscriptionPlanName,
     this.subscriptionExpiredAt,
@@ -45,7 +41,6 @@ class User {
     this.trialDaysRemaining,
     this.hasPremiumAccess = false,
     this.emailVerifiedAt,
->>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -60,33 +55,17 @@ class User {
     // Parsing workshops
     List<Workshop>? parsedWorkshops;
     if (json['workshops'] is List) {
-      try {
-        parsedWorkshops = (json['workshops'] as List)
-            .whereType<Map<String, dynamic>>()
-            .map(Workshop.fromJson)
-            .toList();
-      } catch (_) {
-        parsedWorkshops = null;
-      }
-    } else if (json['workshops'] == null) {
-      parsedWorkshops = null;
+      parsedWorkshops = (json['workshops'] as List)
+          .map((w) => Workshop.fromJson(w))
+          .toList();
     }
 
     // Parsing employment
     Employment? parsedEmployment;
     if (json['employment'] is Map<String, dynamic>) {
-      try {
-        parsedEmployment =
-            Employment.fromJson(json['employment'] as Map<String, dynamic>);
-      } catch (_) {
-        parsedEmployment = null;
-      }
+      parsedEmployment = Employment.fromJson(json['employment']);
     }
 
-<<<<<<< HEAD
-    // Parse must_change_password dengan aman
-    bool _parseMustChange(dynamic v) {
-=======
     // Parse subscription status & details
     String? subStatus;
     String? subPlanName;
@@ -113,7 +92,6 @@ class User {
 
     // Parse must_change_password dengan aman
     bool parseMustChange(dynamic v) {
->>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
       if (v is bool) return v;
       if (v is num) return v == 1;
       if (v is String) {
@@ -123,8 +101,6 @@ class User {
       return false;
     }
 
-<<<<<<< HEAD
-=======
     // Parse trial information
     DateTime? trialEnds;
     if (json['trial_ends_at'] != null) {
@@ -133,33 +109,23 @@ class User {
       } catch (_) {}
     }
 
->>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
+    // Fix Image URL
+    String? _fixImageUrl(dynamic url) {
+      if (url == null || url.toString().isEmpty) return null;
+      String finalUrl = url.toString();
+      if (finalUrl.contains("127.0.0.1")) {
+        finalUrl = finalUrl.replaceAll("127.0.0.1", "10.0.2.2");
+      } else if (finalUrl.contains("localhost")) {
+        finalUrl = finalUrl.replaceAll("localhost", "10.0.2.2");
+      }
+      return finalUrl;
+    }
+
     return User(
       id: (json['id'] ?? '').toString(),
       name: (json['name'] ?? '').toString(),
       username: (json['username'] ?? '').toString(),
       email: (json['email'] ?? '').toString(),
-<<<<<<< HEAD
-      photo: json['photo']?.toString(),
-      role: userRole,
-      workshops: parsedWorkshops,
-      employment: parsedEmployment,
-      mustChangePassword: _parseMustChange(
-          json['must_change_password'] ?? json['mustChangePassword']),
-    );
-  }
-
-  bool hasRole(String roleName) => role == roleName;
-  String? get workshopUuid {
-    if (workshops != null && workshops!.isNotEmpty) {
-      return workshops!.first.id;
-    }
-    if (employment != null && employment!.workshop != null) {
-      return employment!.workshop!.id;
-    }
-    return null;
-  }
-=======
       photo: _fixImageUrl(json['photo']),
       role: userRole,
       workshops: parsedWorkshops,
@@ -182,19 +148,17 @@ class User {
     );
   }
 
-  static String? _fixImageUrl(dynamic url) {
-    if (url == null || url.toString().isEmpty) return null;
-    String finalUrl = url.toString();
-    // Fix for Android Emulator 127.0.0.1 -> 10.0.2.2
-    if (finalUrl.contains("127.0.0.1")) {
-      finalUrl = finalUrl.replaceAll("127.0.0.1", "10.0.2.2");
-    } else if (finalUrl.contains("localhost")) {
-      finalUrl = finalUrl.replaceAll("localhost", "10.0.2.2");
-    }
-    return finalUrl;
-  }
+  // Membership/Subscription helpers
+  
+  // Check if user is in trial
+  bool get isInTrial => subscriptionStatus == 'trial' || (trialEndsAt != null && trialEndsAt!.isAfter(DateTime.now()));
 
-  bool hasRole(String roleName) => role == roleName;
+  // Premium access includes both paid subscription AND trial
+  bool get isPremium => hasPremiumAccess || subscriptionStatus == 'active' || isInTrial;
+  
+  String? get membershipStatus => subscriptionStatus; // Alias for backward compatibility
+
+  bool hasRole(String r) => role.toLowerCase() == r.toLowerCase();
   String? get workshopUuid {
     if (workshops != null && workshops!.isNotEmpty) {
       return workshops!.first.id;
@@ -204,18 +168,4 @@ class User {
     }
     return null;
   }
-  
-  // Membership/Subscription helpers
-  
-  // Check if user is in trial
-  bool get isInTrial {
-    if (trialEndsAt == null) return false;
-    return trialEndsAt!.isAfter(DateTime.now());
-  }
-  
-  // Premium access includes both paid subscription AND trial
-  bool get isPremium => hasPremiumAccess || subscriptionStatus == 'active' || isInTrial;
-  
-  String? get membershipStatus => subscriptionStatus; // Alias for backward compatibility
->>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
 }

@@ -1,81 +1,34 @@
+// Cleaned main.dart without merge conflict markers
 import 'dart:async';
-<<<<<<< HEAD
 import 'package:intl/date_symbol_data_local.dart'; // ✅ Import intl
-=======
-import 'package:bengkel_online_flutter/feature/admin/providers/admin_service_provider.dart';
-import 'package:bengkel_online_flutter/feature/admin/screens/homepage.dart';
-import 'package:bengkel_online_flutter/feature/admin/screens/service_page.dart';
-import 'package:intl/date_symbol_data_local.dart';
->>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
-
 import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+// Core screens
 import 'package:bengkel_online_flutter/core/screens/loading_gate.dart';
 import 'package:bengkel_online_flutter/core/screens/login.dart' as login_screen;
-<<<<<<< HEAD
-import 'package:bengkel_online_flutter/core/screens/register.dart';
-import 'package:bengkel_online_flutter/core/screens/registerBengkel.dart';
-import 'package:bengkel_online_flutter/core/screens/registers/registerOwner.dart';
-import 'package:bengkel_online_flutter/core/screens/registeruser.dart';
+import 'package:bengkel_online_flutter/core/screens/registers/register.dart';
 import 'package:bengkel_online_flutter/core/screens/splash_screen.dart';
 import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
+import 'package:bengkel_online_flutter/core/widgets/connectivity_wrapper.dart';
 
-// ADMIN
-import 'package:bengkel_online_flutter/feature/admin/screens/dashboard.dart';
-import 'package:bengkel_online_flutter/feature/admin/screens/homepage.dart';
-import 'package:bengkel_online_flutter/feature/admin/screens/profilpage.dart' as admin_profil;
-import 'package:bengkel_online_flutter/feature/admin/screens/service_page.dart' as admin;
-import 'package:bengkel_online_flutter/feature/admin/widgets/bottom_nav.dart';
-import 'package:bengkel_online_flutter/core/screens/registers/change_password.dart' as change_screen;
-
-// MECHANIC
-import 'package:bengkel_online_flutter/feature/mechanic/screens/homepageMechanic.dart';
-import 'package:bengkel_online_flutter/feature/mechanic/screens/profil_page.dart' as mechanic_profil;
-import 'package:bengkel_online_flutter/feature/mechanic/screens/service_pagemechanic.dart' as mechanic;
-import 'package:bengkel_online_flutter/feature/mechanic/widgets/bottom_navbar.dart';
-
-// OWNER
-import 'package:bengkel_online_flutter/feature/owner/providers/employee_provider.dart';
-import 'package:bengkel_online_flutter/feature/owner/providers/service_provider.dart';
-import 'package:bengkel_online_flutter/feature/owner/screens/homepageOwner.dart';
-import 'package:bengkel_online_flutter/feature/owner/screens/listWork.dart';
-import 'package:bengkel_online_flutter/feature/owner/screens/onBoarding.dart';
-import 'package:bengkel_online_flutter/feature/owner/screens/profilpage_owner.dart' as owner_profil;
-import 'package:bengkel_online_flutter/feature/owner/screens/reportPages.dart';
-import 'package:bengkel_online_flutter/feature/owner/screens/staffManagement.dart';
-import 'package:bengkel_online_flutter/feature/owner/widgets/bottom_nav_owner.dart';
-
-final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  // ✅ Inisialisasi format tanggal (PENTING untuk Voucher)
-  await initializeDateFormatting('id_ID', null);
-
-=======
-
-import 'package:bengkel_online_flutter/core/screens/registers/register.dart';
+// Auth related screens
 import 'package:bengkel_online_flutter/feature/auth/screens/forgot_password_page.dart' as forgot_pass;
 import 'package:bengkel_online_flutter/feature/auth/screens/reset_password_page.dart' as reset_pass;
-
-import 'package:bengkel_online_flutter/core/screens/splash_screen.dart';
-import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
 import 'package:bengkel_online_flutter/feature/auth/screens/verify_email_page.dart';
 import 'package:bengkel_online_flutter/feature/auth/screens/workshop_waiting_page.dart';
 
-// OFFLINE DETECTION
-import 'package:bengkel_online_flutter/core/widgets/connectivity_wrapper.dart';
-
-// ADMIN
+// Admin screens & widgets
 import 'package:bengkel_online_flutter/feature/admin/screens/dashboard.dart';
 import 'package:bengkel_online_flutter/feature/admin/screens/profil_page.dart' as admin_profil;
+import 'package:bengkel_online_flutter/feature/admin/screens/homepage.dart';
+import 'package:bengkel_online_flutter/feature/admin/screens/service_page.dart';
 import 'package:bengkel_online_flutter/feature/admin/widgets/bottom_nav.dart';
 import 'package:bengkel_online_flutter/core/screens/registers/change_password.dart' as change_screen;
+import 'package:bengkel_online_flutter/feature/admin/providers/admin_service_provider.dart';
 
-// OWNER
+// Owner screens & providers
 import 'package:bengkel_online_flutter/feature/owner/providers/employee_provider.dart';
 import 'package:bengkel_online_flutter/core/providers/service_provider.dart';
 import 'package:bengkel_online_flutter/feature/owner/screens/homepage_owner.dart';
@@ -87,20 +40,15 @@ import 'package:bengkel_online_flutter/feature/owner/screens/staff_management.da
 import 'package:bengkel_online_flutter/feature/owner/widgets/bottom_nav_owner.dart';
 import 'package:bengkel_online_flutter/feature/owner/screens/voucher_page.dart';
 import 'package:bengkel_online_flutter/feature/owner/screens/list_voucher_page.dart';
-
-
-
 import 'package:bengkel_online_flutter/core/services/notification_provider.dart';
 import 'package:bengkel_online_flutter/feature/owner/screens/notification_page.dart';
+
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // ✅ Inisialisasi format tanggal (PENTING untuk Voucher)
+  // ✅ Initialize date formatting (important for Voucher)
   await initializeDateFormatting('id_ID', null);
-
->>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
   runApp(
     MultiProvider(
       providers: [
@@ -147,7 +95,6 @@ class _MyAppState extends State<MyApp> {
       final initial = await _appLinks.getInitialAppLink();
       if (initial != null) _handleUri(initial);
     } catch (_) {}
-
     _linkSub = _appLinks.uriLinkStream.listen(
       (uri) {
         if (uri != null) _handleUri(uri);
@@ -161,22 +108,14 @@ class _MyAppState extends State<MyApp> {
     if (target.isEmpty && uri.pathSegments.isNotEmpty) {
       target = uri.pathSegments.first;
     }
-
     if (target == 'login') {
       final email = uri.queryParameters['email'];
-      navigatorKey.currentState?.pushNamed(
-        '/login',
-        arguments: {'email': email},
-      );
+      navigatorKey.currentState?.pushNamed('/login', arguments: {'email': email});
       return;
     }
-
     if (target == 'set-password') {
       final token = uri.queryParameters['token'];
-      navigatorKey.currentState?.pushNamed(
-        '/changePassword',
-        arguments: {'token': token},
-      );
+      navigatorKey.currentState?.pushNamed('/changePassword', arguments: {'token': token});
       return;
     }
   }
@@ -186,70 +125,64 @@ class _MyAppState extends State<MyApp> {
     return ConnectivityWrapper(
       navigatorKey: navigatorKey,
       child: MaterialApp(
-      navigatorKey: navigatorKey,
-      debugShowCheckedModeBanner: false,
-      title: 'BBI HUB PLUS',
-      theme: ThemeData(
-        primarySwatch: Colors.red,
-        fontFamily: 'Poppins',
-        textTheme: const TextTheme().apply(
-          bodyColor: Colors.black,
-          displayColor: Colors.black,
+        navigatorKey: navigatorKey,
+        debugShowCheckedModeBanner: false,
+        title: 'BBI HUB PLUS',
+        theme: ThemeData(
+          primarySwatch: Colors.red,
+          fontFamily: 'Poppins',
+          textTheme: const TextTheme().apply(
+            bodyColor: Colors.black,
+            displayColor: Colors.black,
+          ),
         ),
+        initialRoute: "/splash",
+        routes: {
+          "/splash": (_) => const SplashScreen(),
+          "/onboarding": (_) => const OnboardingScreen(),
+          "/login": (_) => const login_screen.LoginPage(),
+          "/gate": (_) => const LoadingGate(),
+          // RoleEntry will handle navbar index
+          "/main": (_) => const RoleEntry(),
+          "/verify-email": (_) => const VerifyEmailPage(),
+          "/workshop-waiting": (_) => const WorkshopWaitingPage(),
+          // Owner & Admin routes
+          "/home": (_) => const DashboardScreen(),
+          "/changePassword": (_) => const change_screen.UbahPasswordPage(),
+          "/list": (_) => const ListWorkPage(),
+          "/register/owner/bengkel": (_) => const RegisterFlowPage(),
+          "/register/user": (_) => const RegisterFlowPage(),
+          "/dashboard": (_) => const DashboardPage(),
+          "/register/owner": (_) => const RegisterFlowPage(),
+          "/owner/profile": (_) => owner_profil.ProfilePageOwner(),
+          "/voucher": (_) => const VoucherPage(),
+          "/voucher/list": (_) => const ListVoucherPage(),
+          "/forgot-password": (_) => const forgot_pass.ForgotPasswordPage(),
+          "/reset-password": (_) => const reset_pass.ResetPasswordPage(),
+          "/notifications": (_) => const NotificationPage(),
+        },
+        onGenerateRoute: (settings) {
+          if (settings.name == '/list') {
+            final args = (settings.arguments ?? {}) as Map?;
+            final providedWs = args?['workshopUuid'] as String?;
+            final auth = navigatorKey.currentContext != null
+                ? Provider.of<AuthProvider>(navigatorKey.currentContext!, listen: false)
+                : null;
+            final derivedWs = _pickWorkshopUuid(auth?.user);
+            final ws = providedWs ?? derivedWs;
+            return MaterialPageRoute(
+              builder: (_) => ListWorkPage(workshopUuid: ws),
+              settings: settings,
+            );
+          }
+          return null;
+        },
+        onUnknownRoute: (_) => MaterialPageRoute(builder: (_) => const SplashScreen()),
       ),
-      initialRoute: "/splash",
-      routes: {
-        "/splash": (context) => const SplashScreen(),
-        "/onboarding": (context) => const OnboardingScreen(),
-        "/login": (context) => const login_screen.LoginPage(),
-        "/gate": (context) => const LoadingGate(),
-
-        // ✅ RoleEntry akan menangani parameter index navbar
-        "/main": (context) => const RoleEntry(),
-        "/verify-email": (context) => const VerifyEmailPage(),
-        "/workshop-waiting": (context) => const WorkshopWaitingPage(),
-
-        "/home": (context) => const DashboardScreen(),
-        "/changePassword": (context) => const change_screen.UbahPasswordPage(),
-        "/list": (context) => const ListWorkPage(),
-        "/register/owner/bengkel": (context) => RegisterBengkelScreen(),
-        "/register/user": (context) => RegisterScreen(),
-        
-        "/dashboard": (context) => const DashboardPage(),
-        "/register/owner": (context) => const RegisterFlowPage(),
-        "/owner/profile": (context) => owner_profil.ProfilePageOwner(),
-        "/voucher": (context) => const VoucherPage(),
-        "/voucher/list": (context) => const ListVoucherPage(),
-        "/forgot-password": (context) => const forgot_pass.ForgotPasswordPage(),
-        "/reset-password": (context) => const reset_pass.ResetPasswordPage(),
-        "/notifications": (context) => const NotificationPage(),
-      },
-      onGenerateRoute: (settings) {
-        if (settings.name == '/list') {
-          final args = (settings.arguments ?? {}) as Map?;
-          final providedWs = args?['workshopUuid'] as String?;
-          final auth = navigatorKey.currentContext != null
-              ? Provider.of<AuthProvider>(navigatorKey.currentContext!, listen: false)
-              : null;
-          final derivedWs = _pickWorkshopUuid(auth?.user);
-          final ws = providedWs ?? derivedWs;
-          return MaterialPageRoute(
-            builder: (_) => ListWorkPage(workshopUuid: ws),
-            settings: settings,
-          );
-        }
-        return null;
-      },
-      onUnknownRoute: (_) => MaterialPageRoute(builder: (_) => const SplashScreen()),
-<<<<<<< HEAD
-=======
-      ),
->>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
     );
   }
 }
 
-/// ✅ Logic Update: RoleEntry sekarang membaca arguments (index tab)
 class RoleEntry extends StatelessWidget {
   const RoleEntry({super.key});
 
@@ -258,63 +191,42 @@ class RoleEntry extends StatelessWidget {
     final auth = context.watch<AuthProvider>();
     final role = auth.user?.role ?? 'guest';
     final mustChange = auth.mustChangePassword;
-
-    // 1. Tangkap arguments (misal: 3 untuk Profile)
+    // Capture initial tab index from arguments
     final args = ModalRoute.of(context)?.settings.arguments;
     int initialIndex = 0;
-    if (args is int) {
-      initialIndex = args;
-    }
-
+    if (args is int) initialIndex = args;
     if (!auth.isLoggedIn || role == 'guest') {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.pushReplacementNamed(context, '/login');
       });
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-
-<<<<<<< HEAD
-    if (mustChange && (role == 'mechanic' || role == 'admin')) {
-=======
-    // 2. Cek status email verify
     if (!auth.isEmailVerified) {
-       WidgetsBinding.instance.addPostFrameCallback((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.pushReplacementNamed(context, '/verify-email');
       });
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-
-    // 3. Cek status workshop (hanya owner)
     if (role == 'owner' && !auth.isWorkshopVerified) {
-       WidgetsBinding.instance.addPostFrameCallback((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.pushReplacementNamed(context, '/workshop-waiting');
       });
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-
     if (mustChange && role == 'admin') {
->>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.pushReplacementNamed(context, '/changePassword');
       });
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-
-    // 2. Kirim initialIndex ke MainPage
     return MainPage(role: role, initialIndex: initialIndex);
   }
 }
 
-/// ✅ Logic Update: MainPage menerima initialIndex
 class MainPage extends StatefulWidget {
   final String role;
-  final int initialIndex; // Parameter baru
-
-  const MainPage({
-    super.key,
-    required this.role,
-    this.initialIndex = 0 // Default ke 0 (Dashboard)
-  });
+  final int initialIndex;
+  const MainPage({super.key, required this.role, this.initialIndex = 0});
 
   @override
   State<MainPage> createState() => _MainPageState();
@@ -322,33 +234,15 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   late int _selectedIndex;
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
->>>>>>> main
-  
-  // State for sub-navigation (deep-linking)
   int? _serviceInitialTab;
   String? _serviceInitialFilter;
-<<<<<<< HEAD
-=======
->>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
->>>>>>> main
 
   @override
   void initState() {
     super.initState();
-    // ✅ Set tab awal berdasarkan parameter yang dikirim
     _selectedIndex = widget.initialIndex;
   }
 
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-  void _onItemTapped(int index) => setState(() => _selectedIndex = index);
-=======
->>>>>>> main
   void _onItemTapped(int index, {int? serviceTab, String? serviceFilter}) {
     setState(() {
       _selectedIndex = index;
@@ -356,16 +250,11 @@ class _MainPageState extends State<MainPage> {
       _serviceInitialFilter = serviceFilter;
     });
   }
-<<<<<<< HEAD
-=======
->>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
->>>>>>> main
 
   @override
   Widget build(BuildContext context) {
     late final List<Widget> pages;
     late final Widget bottomNavBar;
-
     late final Widget homePage;
     late final Widget servicePage;
     late final Widget dashboardPage;
@@ -384,7 +273,6 @@ class _MainPageState extends State<MainPage> {
           onTap: (index) => _onItemTapped(index),
         );
         break;
-
       case "admin":
         homePage = HomePage(onTabChange: _onItemTapped);
         servicePage = ServicePageAdmin(
@@ -393,19 +281,12 @@ class _MainPageState extends State<MainPage> {
         );
         dashboardPage = const DashboardPage();
         profilePage = const admin_profil.ProfilePageAdmin();
-
-        pages = [
-          homePage,
-          servicePage,
-          dashboardPage,
-          profilePage,
-        ];
+        pages = [homePage, servicePage, dashboardPage, profilePage];
         bottomNavBar = CustomBottomNavBarAdmin(
           selectedIndex: _selectedIndex,
           onTap: (index) => _onItemTapped(index),
         );
         break;
-
       default:
         WidgetsBinding.instance.addPostFrameCallback((_) {
           Navigator.pushReplacementNamed(context, '/login');
@@ -426,29 +307,17 @@ String? _pickWorkshopUuid(dynamic user) {
     final ws = user.workshops as List?;
     if (ws != null && ws.isNotEmpty) {
       final first = ws.first;
-      try {
-        final id = (first.id ?? first['id']) as String?;
-        if (id != null && id.isNotEmpty) return id;
-      } catch (_) {}
+      final id = (first.id ?? first['id']) as String?;
+      if (id != null && id.isNotEmpty) return id;
     }
   } catch (_) {}
-
   try {
     final emp = user.employment;
     final w = emp?.workshop ?? emp['workshop'];
     if (w != null) {
-      try {
-        final id = (w.id ?? w['id']) as String?;
-        if (id != null && id.isNotEmpty) return id;
-      } catch (_) {}
+      final id = (w.id ?? w['id']) as String?;
+      if (id != null && id.isNotEmpty) return id;
     }
   } catch (_) {}
-
   return null;
-<<<<<<< HEAD
 }
-=======
-}
-
-
->>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76

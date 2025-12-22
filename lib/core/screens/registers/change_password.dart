@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-=======
 import 'package:bengkel_online_flutter/core/widgets/custom_alert.dart';
->>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
 import 'package:bengkel_online_flutter/feature/owner/widgets/custom_header.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -11,25 +8,14 @@ import 'package:provider/provider.dart';
 import 'package:bengkel_online_flutter/core/services/api_service.dart';
 import 'package:bengkel_online_flutter/core/services/auth_provider.dart';
 
-<<<<<<< HEAD
-class ubahPasswordPage extends StatefulWidget {
-  const ubahPasswordPage({super.key});
-
-  @override
-  State<ubahPasswordPage> createState() => _ChangePasswordPageState();
-}
-
-class _ChangePasswordPageState extends State<ubahPasswordPage> {
-=======
 class UbahPasswordPage extends StatefulWidget {
-  const UbahPasswordPage({super.key});
+  const UbahPasswordPage({Key? key}) : super(key: key);
 
   @override
   State<UbahPasswordPage> createState() => _ChangePasswordPageState();
 }
 
 class _ChangePasswordPageState extends State<UbahPasswordPage> {
->>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
   // --- Logika State (Semua sudah ada) ---
   final ApiService _apiService = ApiService();
   bool _saving = false;
@@ -45,9 +31,7 @@ class _ChangePasswordPageState extends State<UbahPasswordPage> {
 
   final _formKey = GlobalKey<FormState>();
   final Color primaryRed = const Color.fromARGB(255, 215, 43, 28);
-<<<<<<< HEAD
-=======
-  
+
   // Password Strength State
   String _passwordStrength = '';
   Color _strengthColor = Colors.grey;
@@ -62,12 +46,11 @@ class _ChangePasswordPageState extends State<UbahPasswordPage> {
       });
       return;
     }
-
     double strength = 0;
     if (password.length >= 8) strength += 0.25;
     if (password.contains(RegExp(r'[A-Z]'))) strength += 0.25;
     if (password.contains(RegExp(r'[0-9]'))) strength += 0.25;
-    if (password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) strength += 0.25;
+    if (password.contains(RegExp(r'[!@#$%^&*(),.?\":{}|<>]'))) strength += 0.25;
 
     setState(() {
       _strengthValue = strength;
@@ -86,9 +69,7 @@ class _ChangePasswordPageState extends State<UbahPasswordPage> {
       }
     });
   }
->>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
 
-  // --- Fungsi _save (Logika dari file Anda) ---
   Future<void> _save() async {
     if (!(_formKey.currentState?.validate() ?? false)) {
       return;
@@ -105,57 +86,31 @@ class _ChangePasswordPageState extends State<UbahPasswordPage> {
         confirmPassword: confirmController.text,
       );
 
-<<<<<<< HEAD
       if (mounted) {
         context.read<AuthProvider>().clearMustChangePassword();
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text("Password berhasil diubah. Masuk ke Dashboard..."),
-            backgroundColor: Colors.green.shade700,
-          ),
+        CustomAlert.show(
+          context,
+          title: 'Berhasil',
+          message: 'Password berhasil diubah. Silakan login kembali jika diperlukan.',
+          type: AlertType.success,
         );
-      }
-
-      if (mounted) {
-        await Future.delayed(const Duration(milliseconds: 500));
+        await Future.delayed(const Duration(milliseconds: 1500));
         Navigator.of(context).pushReplacementNamed('/main');
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = e.toString().replaceFirst("Exception: ", "");
+          _errorMessage = e.toString().replaceFirst('Exception: ', '');
         });
-=======
-      if (!mounted) return;
-      context.read<AuthProvider>().clearMustChangePassword();
-
-      // Show Custom Success Alert
-      CustomAlert.show(
-        context,
-        title: 'Berhasil',
-        message: 'Password berhasil diubah. Silakan login kembali jika diperlukan.',
-        type: AlertType.success,
-      );
-
-      await Future.delayed(const Duration(milliseconds: 1500));
-      if (!mounted) return;
-      
-      // Go to main page or logout depending on flow, usually main if inside app
-      Navigator.of(context).pushReplacementNamed('/main');
-    } catch (e) {
-      if (mounted) {
-        // Show Custom Error Alert
-        final msg = e.toString().replaceFirst("Exception: ", "");
         CustomAlert.show(
           context,
           title: 'Gagal Mengubah Password',
-          message: msg,
+          message: _errorMessage ?? 'Terjadi kesalahan',
           type: AlertType.error,
         );
->>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
       }
     } finally {
       if (mounted) {
@@ -168,7 +123,7 @@ class _ChangePasswordPageState extends State<UbahPasswordPage> {
   InputDecoration _buildInputDecoration({
     required String label,
     required String hint,
-    required IconData icon, // Menggunakan IconData lebih fleksibel
+    required IconData icon,
     required bool obscure,
     required VoidCallback toggle,
   }) {
@@ -177,7 +132,7 @@ class _ChangePasswordPageState extends State<UbahPasswordPage> {
       labelStyle: GoogleFonts.poppins(
         color: primaryRed,
         fontWeight: FontWeight.w500,
-        fontSize: 14, // Standar font size
+        fontSize: 14,
       ),
       hintText: hint,
       hintStyle: GoogleFonts.poppins(color: Colors.grey, fontSize: 14),
@@ -191,27 +146,14 @@ class _ChangePasswordPageState extends State<UbahPasswordPage> {
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-<<<<<<< HEAD
         borderSide: BorderSide(color: primaryRed.withOpacity(0.5), width: 1.5),
-=======
-        borderSide: BorderSide(color: primaryRed.withAlpha(128), width: 1.5),
->>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: primaryRed, width: 2),
       ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.red.shade800, width: 1.5),
-      ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.red.shade800, width: 2),
-      ),
       filled: true,
       fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
     );
   }
 
@@ -220,13 +162,9 @@ class _ChangePasswordPageState extends State<UbahPasswordPage> {
     return Scaffold(
       appBar: CustomHeader(
         title: "Ubah Password",
-        onBack: () {
-          Navigator.pop(context);
-        },
+        onBack: () => Navigator.pop(context),
       ),
       backgroundColor: Colors.white,
-
-      // 1. Menggunakan SingleChildScrollView agar tidak overflow saat keyboard muncul
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
         child: Form(
@@ -234,14 +172,10 @@ class _ChangePasswordPageState extends State<UbahPasswordPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // 2. Ornamen / Header Visual
+              // Header Visual
               CircleAvatar(
                 radius: 40,
-<<<<<<< HEAD
                 backgroundColor: primaryRed.withOpacity(0.1),
-=======
-                backgroundColor: primaryRed.withAlpha(26),
->>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
                 child: Icon(
                   Icons.lock_reset_rounded,
                   color: primaryRed,
@@ -249,13 +183,11 @@ class _ChangePasswordPageState extends State<UbahPasswordPage> {
                 ),
               ),
               const SizedBox(height: 16),
-
-              // 3. Judul dan Subjudul
               Text(
                 "Buat Password Baru",
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(
-                  fontSize: 22, // Ukuran standar judul
+                  fontSize: 22,
                   fontWeight: FontWeight.w600,
                   color: Colors.black87,
                 ),
@@ -265,14 +197,12 @@ class _ChangePasswordPageState extends State<UbahPasswordPage> {
                 "Password baru Anda harus berbeda dari password yang digunakan sebelumnya.",
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(
-                  fontSize: 14, // Ukuran standar sub-judul
+                  fontSize: 14,
                   color: Colors.black54,
                 ),
               ),
               const SizedBox(height: 32),
-
-              // 4. Form Fields
-              // 🔹 Last Password
+              // Last Password
               TextFormField(
                 controller: lastController,
                 obscureText: obscureLast,
@@ -284,20 +214,15 @@ class _ChangePasswordPageState extends State<UbahPasswordPage> {
                   obscure: obscureLast,
                   toggle: () => setState(() => obscureLast = !obscureLast),
                 ),
-                validator: (v) =>
-                v == null || v.isEmpty ? "Isi password lama" : null,
+                validator: (v) => v == null || v.isEmpty ? "Isi password lama" : null,
               ),
               const SizedBox(height: 18),
-
-              // 🔹 New Password
+              // New Password
               TextFormField(
                 controller: newController,
                 obscureText: obscureNew,
-<<<<<<< HEAD
-=======
-                onChanged: _checkPasswordStrength,
->>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
                 style: GoogleFonts.poppins(fontSize: 14),
+                onChanged: _checkPasswordStrength,
                 decoration: _buildInputDecoration(
                   label: "Password Baru",
                   hint: "Masukkan password baru",
@@ -311,11 +236,7 @@ class _ChangePasswordPageState extends State<UbahPasswordPage> {
                   return null;
                 },
               ),
-<<<<<<< HEAD
-=======
-              const SizedBox(height: 8),
-              
-              // 🔹 Password Strength Indicator
+              // Password Strength Indicator
               if (newController.text.isNotEmpty)
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -330,9 +251,9 @@ class _ChangePasswordPageState extends State<UbahPasswordPage> {
                         Text(
                           _passwordStrength,
                           style: GoogleFonts.poppins(
-                            fontSize: 12, 
+                            fontSize: 12,
                             fontWeight: FontWeight.bold,
-                            color: _strengthColor
+                            color: _strengthColor,
                           ),
                         ),
                       ],
@@ -349,11 +270,8 @@ class _ChangePasswordPageState extends State<UbahPasswordPage> {
                     ),
                   ],
                 ),
-              
->>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
               const SizedBox(height: 18),
-
-              // 🔹 Confirm Password
+              // Confirm Password
               TextFormField(
                 controller: confirmController,
                 obscureText: obscureConfirm,
@@ -363,8 +281,7 @@ class _ChangePasswordPageState extends State<UbahPasswordPage> {
                   hint: "Konfirmasi password baru",
                   icon: Icons.check_circle_outline_rounded,
                   obscure: obscureConfirm,
-                  toggle: () =>
-                      setState(() => obscureConfirm = !obscureConfirm),
+                  toggle: () => setState(() => obscureConfirm = !obscureConfirm),
                 ),
                 validator: (v) {
                   if (v == null || v.isEmpty) return "Konfirmasi password";
@@ -372,12 +289,8 @@ class _ChangePasswordPageState extends State<UbahPasswordPage> {
                   return null;
                 },
               ),
-
-<<<<<<< HEAD
-              // 5. Error Message Display
-=======
-              // 5. Error Message Display (Secondary fallback if alert misses)
->>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
+              const SizedBox(height: 24),
+              // Error Message Display
               if (_errorMessage != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 24.0, left: 8, right: 8),
@@ -391,60 +304,44 @@ class _ChangePasswordPageState extends State<UbahPasswordPage> {
                     ),
                   ),
                 ),
+              const SizedBox(height: 20),
+              // Save Button
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton(
+                  onPressed: _saving ? null : _save,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryRed,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 4,
+                    shadowColor: primaryRed.withOpacity(0.4),
+                  ),
+                  child: _saving
+                      ? const SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2.5,
+                          ),
+                        )
+                      : Text(
+                          'SAVE PASSWORD',
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                ),
+              ),
             ],
-          ),
-        ),
-      ),
-
-      // 6. Tombol 'SAVE' di bawah layar (Modern UX)
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-          child: SizedBox(
-            height: 52, // Tinggi standar tombol
-            child: ElevatedButton(
-              onPressed: _saving ? null : _save,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryRed,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12), // Sesuaikan radius
-                ),
-                elevation: 4,
-<<<<<<< HEAD
-                shadowColor: primaryRed.withOpacity(0.4),
-=======
-                shadowColor: primaryRed.withAlpha(102),
->>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76
-              ),
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                child: _saving
-                    ? const SizedBox(
-                  height: 24,
-                  width: 24,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2.5,
-                  ),
-                )
-                    : Text(
-                  'SAVE PASSWORD',
-                  key: const ValueKey('save_text'),
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
           ),
         ),
       ),
     );
   }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> f69db6e40e06854413d398fd766130ce19c9aa76

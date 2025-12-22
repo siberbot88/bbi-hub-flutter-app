@@ -54,12 +54,8 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
     if (widget.initialTab != oldWidget.initialTab && widget.initialTab != null) {
       setState(() => selectedTab = widget.initialTab!);
     }
-<<<<<<< HEAD
     // Only update local filter (for Scheduled tab) if the target tab is Scheduled (0)
     if (widget.initialTab == 0 && widget.initialFilter != oldWidget.initialFilter && widget.initialFilter != null) {
-=======
-    if (widget.initialFilter != oldWidget.initialFilter && widget.initialFilter != null) {
->>>>>>> main
       setState(() => selectedFilter = widget.initialFilter!);
     }
   }
@@ -138,14 +134,10 @@ class _ServicePageAdminState extends State<ServicePageAdmin> {
               children: [
                 _buildScheduledTab(provider),
                 const ServiceOnTheSitePage(),
-<<<<<<< HEAD
-                // Only pass initialFilter if target tab is Logging (2)
+                // Pass initialFilter only when the Logging tab is selected (index 2)
                 ServiceLoggingPage(
                   initialFilter: (widget.initialTab == 2) ? widget.initialFilter : null,
                 ),
-=======
-                ServiceLoggingPage(initialFilter: widget.initialFilter),
->>>>>>> main
               ],
             ),
           ),
