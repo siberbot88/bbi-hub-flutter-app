@@ -249,13 +249,18 @@ class _AddWalkInServiceDialogState extends State<AddWalkInServiceDialog> {
   
   final _serviceNameCtrl = TextEditingController();
   final _descriptionCtrl = TextEditingController(); // For keluhan/description
-  // final _categoryCtrl = TextEditingController(); // Removed for Dropdown
+  final _voucherCtrl = TextEditingController(); // Added for Voucher
   
   String? _selectedCategory;
-  String? _selectedVehicleCategory; // Added
-  final List<String> _categoryOptions = ['ringan', 'sedang', 'berat', 'maintenance']; 
-
+  String? _selectedVehicleCategory;
+  final List<String> _categoryOptions = ['ringan', 'sedang', 'berat', 'maintenance'];
   bool _loading = false;
+  
+  // Voucher state
+  bool _isVoucherValid = false;
+  String? _voucherMessage;
+  num _discountValue = 0;
+  bool _validatingVoucher = false;
 
   @override
   void dispose() {
@@ -269,8 +274,45 @@ class _AddWalkInServiceDialogState extends State<AddWalkInServiceDialog> {
     _odometerCtrl.dispose();
     _serviceNameCtrl.dispose();
     _descriptionCtrl.dispose();
-    // _categoryCtrl.dispose();
+    _voucherCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _validateVoucher() async {
+    if (_voucherCtrl.text.isEmpty) return;
+    
+    setState(() {
+      _validatingVoucher = true;
+      _voucherMessage = null;
+    });
+
+    try {
+      final provider = context.read<AdminServiceProvider>();
+      // Use price if available, otherwise use 0 for validation
+      final amount = num.tryParse(_yearCtrl.text) ?? 0; // Temporary logic or just 0
+      
+      final result = await provider.validateVoucher(
+        code: _voucherCtrl.text,
+        amount: amount, 
+      );
+
+      setState(() {
+        _isVoucherValid = result['valid'] ?? false;
+        _voucherMessage = result['message'] ?? (result['valid'] ? 'Voucher Valid!' : 'Voucher Tidak Valid');
+        if (_isVoucherValid) {
+          _discountValue = result['discount_value'] ?? 0;
+        } else {
+          _discountValue = 0;
+        }
+      });
+    } catch (e) {
+      setState(() {
+        _isVoucherValid = false;
+        _voucherMessage = 'Error: $e';
+      });
+    } finally {
+      setState(() => _validatingVoucher = false);
+    }
   }
 
   Future<void> _submit() async {
@@ -493,11 +535,52 @@ class _AddWalkInServiceDialogState extends State<AddWalkInServiceDialog> {
                            ],
                          ),
                        ),
-                     ],
-                   ),
-                 ),
-               ),
-             ),
+                       
+                        // Voucher Field
+                        const SizedBox(height: 16),
+                        _sectionHeader(Icons.confirmation_number, "Voucher (Opsional)"),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: _voucherCtrl,
+                                decoration: InputDecoration(
+                                  labelText: "Kode Voucher",
+                                  hintText: "Contoh: DISKON10",
+                                  hintStyle: GoogleFonts.poppins(fontSize: 13, color: Colors.grey.shade400),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                  helperText: _voucherMessage,
+                                  helperStyle: GoogleFonts.poppins(
+                                    fontSize: 11, 
+                                    color: _isVoucherValid ? Colors.green : Colors.red,
+                                  ),
+                                ),
+                                style: GoogleFonts.poppins(fontSize: 14),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            SizedBox(
+                              height: 48,
+                              child: ElevatedButton(
+                                onPressed: _validatingVoucher ? null : _validateVoucher,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue.shade700,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                                child: _validatingVoucher 
+                                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                  : Text("Cek", style: GoogleFonts.poppins(color: Colors.white)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
              
              // Actions
              const Divider(height: 1),
